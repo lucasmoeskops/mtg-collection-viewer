@@ -12,7 +12,16 @@ import ViewModeProvider from "@/context/ViewModeContextProvider";
 
 
 export default async function Home() {
-  const cards: MagicCardLike[] = await getAllCards()
+  let cards: MagicCardLike[]
+  let error = false
+
+  try {
+    cards = await getAllCards()
+  } catch (e) {
+    console.log('Error:', e)
+    error = true
+    cards = []
+  }
   
   return (
     <div className={styles.page}>
@@ -20,6 +29,7 @@ export default async function Home() {
         <SetContextProvider>
           <ViewModeProvider>
             <CardSelectionContextProvider cards={cards}>
+              {error && <p>An error occurred while loading the card data.</p>}
               <ViewSwitchTabs />
               <Filters />
               <InfoBox />

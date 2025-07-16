@@ -21,7 +21,13 @@ export function getSets(sets: CardSet[], cards: MagicCardLike[]): CardSet[] {
 
 export async function fetchSets(): Promise<CardSet[]> {
     if (!cache.sets.length) {
-        const response = await fetch("https://api.scryfall.com/sets")
+        let response
+        try {
+            response = await fetch("https://api.scryfall.com/sets")
+        } catch (e) {
+            console.log('Error:', e)
+            return []
+        }
         const json = await response.json()
         cache.sets = json['data'].map(scryfallSetToCardSet).sort(setSort)
     }
