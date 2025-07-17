@@ -1,7 +1,6 @@
 'use client'
 
 import { zip } from "lodash"
-import { views } from "@/configuration/grid-views"
 import MagicCardLike from "@/interfaces/MagicCardLike"
 import RenderableMagicCardLike from "@/interfaces/RenderableMagicCardLike"
 import { allCardSelector } from "@/procedures/card-selectors"

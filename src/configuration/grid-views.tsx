@@ -13,7 +13,11 @@ export const views: ViewMode[] = [
             onlyOwned: true,
             sortingMethod: CardSorting.NAME,
         },
-        getCardInfo: (card) => card.amount_owned > 1 ? `${card.amount_owned} copies` : ''
+        getCardInfo: (card) => <>
+            {card.amount_owned > 1 ? `${card.amount_owned} copies` : ''}
+            {card.amount_owned > 1 && card.is_foil && ', '}
+            {card.is_foil ? <>Foil</> : null}
+        </>
     }),
     newViewMode({
         label: "Merchant Mode",

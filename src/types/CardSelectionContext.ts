@@ -9,7 +9,9 @@ export type CardSelectionContext = {
     isToken: boolean,
     showDuplicates: boolean,
     onlyOwned: boolean,
-    sortingMethod: CardSorting
+    sortingMethod: CardSorting,
+    nameQuery: string,
+    typeQuery: string,
 }
 
 export function newCardSelectionContext (): CardSelectionContext {
@@ -22,6 +24,8 @@ export function newCardSelectionContext (): CardSelectionContext {
         isToken: false,
         showDuplicates: true,
         onlyOwned: true,
-        sortingMethod: CardSorting.CHRONOLOGICAL_BACK
+        sortingMethod: CardSorting.CHRONOLOGICAL_BACK,
+        nameQuery: '',
+        typeQuery: '',
     }
 }

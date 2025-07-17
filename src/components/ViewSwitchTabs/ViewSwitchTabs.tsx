@@ -5,7 +5,6 @@ import { ViewModeContext } from "@/context/ViewModeContextProvider"
 import { Box, Tab, Tabs } from "@mui/material"
 import { ReactNode, useContext, useState } from "react"
 
-export interface ViewSwitchTabsProps {}
 
 function a11yProps(index: number) {
     return {
@@ -14,7 +13,7 @@ function a11yProps(index: number) {
     }
 }
 
-export default function ViewSwitchTabs(props: ViewSwitchTabsProps): ReactNode {
+export default function ViewSwitchTabs(): ReactNode {
     const {viewModeIndex, setViewModeIndex} = useContext(ViewModeContext)
     const [value, setValue] = useState(viewModeIndex)
 

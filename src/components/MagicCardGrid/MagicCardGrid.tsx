@@ -7,8 +7,6 @@ import MagicCard from "../MagicCard/MagicCard"
 import PaginationContextProvider, { PaginationContext } from "@/context/PaginationContextProvider"
 import RenderableMagicCardLike from "@/interfaces/RenderableMagicCardLike"
 
-export type MagicCardGridProps = {
-}
 
 type MagicCardGridInnerProps = {
     cards: RenderableMagicCardLike[]
@@ -34,7 +32,7 @@ function MagicCardGridInner({ cards }: MagicCardGridInnerProps) {
     </Stack>
 }
 
-export default function MagicCardGrid ({}: MagicCardGridProps): ReactNode {
+export default function MagicCardGrid (): ReactNode {
     const { cards } = useContext(CardSelectionContextContext)
 
     return <PaginationContextProvider items={cards} perPage={24}>

@@ -3,13 +3,14 @@
 
 import { ReactNode, useContext } from "react"
 import { CardSelectionContextContext } from "@/context/CardContextProvider";
-import { Checkbox, FormControl, FormControlLabel, FormGroup, FormLabel, MenuItem, Select } from '@mui/material';
+import { Checkbox, FormControl, FormControlLabel, FormGroup, FormLabel, MenuItem, Select, Stack, TextField } from '@mui/material';
 import { CardSelectionContext } from "@/types/CardSelectionContext";
 import { ViewModeContext } from "@/context/ViewModeContextProvider";
+import { throttle } from "lodash";
 
 export default function Filters({}): ReactNode {
     const { viewMode: { showColorFilter, showLegendaryFilter, showRarityFilter, showSetCompletions, showTokenFilter } } = useContext(ViewModeContext)
-    const { sets, colors, rarities, context: { set, colors: activeColors, rarities: activeRarities, isFoil, isLegendary, isToken }, setContext } = useContext(CardSelectionContextContext)
+    const { sets, colors, rarities, context: { set, colors: activeColors, rarities: activeRarities, isFoil, isLegendary, isToken, nameQuery, typeQuery }, setContext } = useContext(CardSelectionContextContext)
 
     function contextUpdater(key: string, targetProp: string) {
         return evt => setContext((ctx: CardSelectionContext) => ({...ctx, [key]: evt.target[targetProp]}))
@@ -81,5 +82,13 @@ export default function Filters({}): ReactNode {
                 ))}
             </FormGroup>
         </FormControl>}
+        <FormControl sx={{ m: 3 }}>
+            <FormLabel>Name</FormLabel>
+            <TextField label="Query" variant="outlined" value={nameQuery} onChange={throttle(contextUpdater('nameQuery', 'value'), 200)} />
+        </FormControl>
+        <FormControl sx={{ m: 3 }}>
+            <FormLabel>Card type</FormLabel>
+            <TextField label="Query" variant="outlined" value={typeQuery} onChange={throttle(contextUpdater('typeQuery', 'value'), 400)} />
+        </FormControl>
     </div>
 }

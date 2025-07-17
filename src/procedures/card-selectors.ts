@@ -20,6 +20,16 @@ const isOfColor = (card: MagicCardLike) => (color: string) => {
 export async function allCardSelector(cards: MagicCardLike[], context: CardSelectionContext): Promise<RenderableMagicCardLike[]> {
     let selectedCards = Array.from(cards)
 
+    if (context.nameQuery !== '') {
+        const query = context.nameQuery.toLowerCase()
+        selectedCards = selectedCards.filter(card => card.name.toLowerCase().includes(query))
+    }
+
+    if (context.typeQuery !== '') {
+        const query = context.typeQuery.toLowerCase()
+        selectedCards = selectedCards.filter(card => card.card_type.toLowerCase().includes(query))
+    }
+
     if (context.set !== '') {
         selectedCards = selectedCards.filter(card => card.series === context.set)
     }
@@ -101,8 +111,4 @@ export async function allCardSelector(cards: MagicCardLike[], context: CardSelec
     }
 
     return selectedCards.map(card => makeRenderable(card))
-}
-
-export async function allUniqueCardsIncludingPlaceholdersSelector(context: CardSelectionContext): Promise<RenderableMagicCardLike[]> {
-    return []
 }
