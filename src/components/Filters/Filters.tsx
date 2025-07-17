@@ -3,7 +3,7 @@
 
 import { ReactNode, useContext } from "react"
 import { CardSelectionContextContext } from "@/context/CardContextProvider";
-import { Checkbox, FormControl, FormControlLabel, FormGroup, FormLabel, MenuItem, Select, Stack, TextField } from '@mui/material';
+import { Checkbox, FormControl, FormControlLabel, FormGroup, FormLabel, MenuItem, Select, TextField } from '@mui/material';
 import { CardSelectionContext } from "@/types/CardSelectionContext";
 import { ViewModeContext } from "@/context/ViewModeContextProvider";
 import { throttle } from "lodash";
