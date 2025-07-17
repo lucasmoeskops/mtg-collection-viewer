@@ -1,9 +1,9 @@
 'use client';
 
 
-import { ReactNode, useContext } from "react"
+import { ChangeEvent, ReactNode, useContext } from "react"
 import { CardSelectionContextContext } from "@/context/CardContextProvider";
-import { Checkbox, FormControl, FormControlLabel, FormGroup, FormLabel, MenuItem, Select, TextField } from '@mui/material';
+import { Checkbox, FormControl, FormControlLabel, FormGroup, FormLabel, MenuItem, Select, SelectChangeEvent, TextField } from '@mui/material';
 import { CardSelectionContext } from "@/types/CardSelectionContext";
 import { ViewModeContext } from "@/context/ViewModeContextProvider";
 import { throttle } from "lodash";
@@ -12,14 +12,18 @@ export default function Filters({}): ReactNode {
     const { viewMode: { showColorFilter, showLegendaryFilter, showRarityFilter, showSetCompletions, showTokenFilter } } = useContext(ViewModeContext)
     const { sets, colors, rarities, context: { set, colors: activeColors, rarities: activeRarities, isFoil, isLegendary, isToken, nameQuery, typeQuery }, setContext } = useContext(CardSelectionContextContext)
 
-    function contextUpdater(key: string, targetProp: string) {
-        return evt => setContext((ctx: CardSelectionContext) => ({...ctx, [key]: evt.target[targetProp]}))
+    function contextUpdaterForInput<T extends ChangeEvent<HTMLInputElement>>(key: string, targetProp: "checked" | "value") {
+        return (evt: T) => setContext((ctx: CardSelectionContext) => ({...ctx, [key]: evt.target[targetProp]}))
     }
 
-    function colorToggler(key: string, targetProp: string) {
-        return evt => setContext((ctx: CardSelectionContext) => {
+    function contextUpdaterForSelect<T extends SelectChangeEvent>(key: string) {
+        return (evt: T) => setContext((ctx: CardSelectionContext) => ({...ctx, [key]: evt.target.value}))
+    }
+
+    function colorToggler<T extends ChangeEvent<HTMLInputElement>>(key: string) {
+        return (evt: T) => setContext((ctx: CardSelectionContext) => {
             const current: string[] = ctx.colors
-            const value = evt.target[targetProp]
+            const value = evt.target.checked
             if (value) {
                 if (!current.includes(key)) {
                     current.push(key)
@@ -31,10 +35,10 @@ export default function Filters({}): ReactNode {
         })
     }
 
-    function rarityToggler(key: string, targetProp: string) {
-        return evt => setContext((ctx: CardSelectionContext) => {
+    function rarityToggler<T extends ChangeEvent<HTMLInputElement>>(key: string) {
+        return (evt: T) => setContext((ctx: CardSelectionContext) => {
             const current: string[] = ctx.rarities
-            const value = evt.target[targetProp]
+            const value = evt.target.checked
             if (value) {
                 if (!current.includes(key)) {
                     current.push(key)
@@ -49,7 +53,7 @@ export default function Filters({}): ReactNode {
     return <div>
         <FormControl sx={{ m: 3 }}>
             <FormLabel>Set</FormLabel>
-            <Select value={set} onChange={contextUpdater('set', 'value')}>
+            <Select value={set} onChange={contextUpdaterForSelect('set')}>
                 <MenuItem value={''} selected={set === ''}>(All sets)</MenuItem>
                 {sets.map(({ code, name, completionRatio, numberOfCardsOwned, numberOfCards }, index) => <MenuItem key={index} value={code}>
                     {showSetCompletions ? `${name} (${Math.round(completionRatio * 100)}%, ${numberOfCardsOwned}/${numberOfCards})` : name}
@@ -59,9 +63,9 @@ export default function Filters({}): ReactNode {
         <FormControl sx={{ m: 3 }}>
             <FormLabel>Special</FormLabel>
             <FormGroup row={true}>
-                <FormControlLabel label="Is foil" control={<Checkbox checked={isFoil} onChange={contextUpdater('isFoil', 'checked')} />} />
-                {showLegendaryFilter && <FormControlLabel label="Is legend" control={<Checkbox checked={isLegendary} onChange={contextUpdater('isLegendary', 'checked')} />} />}
-                {showTokenFilter && <FormControlLabel label="Is token" control={<Checkbox checked={isToken} onChange={contextUpdater('isToken', 'checked')} />} />}
+                <FormControlLabel label="Is foil" control={<Checkbox checked={isFoil} onChange={contextUpdaterForInput('isFoil', 'checked')} />} />
+                {showLegendaryFilter && <FormControlLabel label="Is legend" control={<Checkbox checked={isLegendary} onChange={contextUpdaterForInput('isLegendary', 'checked')} />} />}
+                {showTokenFilter && <FormControlLabel label="Is token" control={<Checkbox checked={isToken} onChange={contextUpdaterForInput('isToken', 'checked')} />} />}
             </FormGroup>
         </FormControl>
         {showColorFilter && (
@@ -69,7 +73,7 @@ export default function Filters({}): ReactNode {
                 <FormLabel>Colors</FormLabel>
                 <FormGroup row={true}>
                     {colors.map(({ name }, index) => (
-                        <FormControlLabel label={name} key={index} control={<Checkbox checked={activeColors.includes(name)} onChange={colorToggler(name, 'checked')} />} />
+                        <FormControlLabel label={name} key={index} control={<Checkbox checked={activeColors.includes(name)} onChange={colorToggler(name)} />} />
                     ))}
                 </FormGroup>
             </FormControl>
@@ -78,17 +82,17 @@ export default function Filters({}): ReactNode {
             <FormLabel>Rarity</FormLabel>
             <FormGroup row={true}>
                 {rarities.map(({ name }, index) => (
-                    <FormControlLabel label={name} key={index} control={<Checkbox checked={activeRarities.includes(name)} onChange={rarityToggler(name, 'checked')} />} />
+                    <FormControlLabel label={name} key={index} control={<Checkbox checked={activeRarities.includes(name)} onChange={rarityToggler(name)} />} />
                 ))}
             </FormGroup>
         </FormControl>}
         <FormControl sx={{ m: 3 }}>
             <FormLabel>Name</FormLabel>
-            <TextField label="Query" variant="outlined" value={nameQuery} onChange={throttle(contextUpdater('nameQuery', 'value'), 200)} />
+            <TextField label="Query" variant="outlined" value={nameQuery} onChange={throttle(contextUpdaterForInput('nameQuery', 'value'), 200)} />
         </FormControl>
         <FormControl sx={{ m: 3 }}>
             <FormLabel>Card type</FormLabel>
-            <TextField label="Query" variant="outlined" value={typeQuery} onChange={throttle(contextUpdater('typeQuery', 'value'), 400)} />
+            <TextField label="Query" variant="outlined" value={typeQuery} onChange={throttle(contextUpdaterForInput('typeQuery', 'value'), 400)} />
         </FormControl>
     </div>
 }
