@@ -24,7 +24,7 @@ export default function ViewSwitchTabs(): ReactNode {
 
     return (
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs value={value} onChange={handleChange} aria-label="view modes">
+            <Tabs value={value} onChange={handleChange} aria-label="view modes" variant="scrollable" scrollButtons="auto">
                 {views.map(({label}, index) => <Tab label={label} key={index} {...a11yProps(index)} />)}
             </Tabs>
         </Box>
