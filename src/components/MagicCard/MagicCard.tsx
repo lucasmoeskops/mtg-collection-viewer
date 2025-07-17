@@ -15,7 +15,7 @@ export default function MagicCard({ card }: MagicCardProps) {
     const { image_url, name } = card
 
     return <>
-        <div style={{position: 'relative', aspectRatio: '488/680', borderRadius: '13px', overflow: 'hidden'}}>
+        <div style={{position: 'relative', aspectRatio: '488/680', borderRadius: '16px', overflow: 'hidden'}}>
         {card.image_url && (
             <Image src={image_url} alt={name} fill={true} loading={"lazy"} priority={false} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"/>
         )}
