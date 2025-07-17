@@ -2,7 +2,7 @@
 
 import { CardSelectionContextContext } from "@/context/CardContextProvider"
 import { Grid, Pagination, Stack } from "@mui/material"
-import { ReactNode, useContext } from "react"
+import { ChangeEvent, ReactNode, useContext } from "react"
 import MagicCard from "../MagicCard/MagicCard"
 import PaginationContextProvider, { PaginationContext } from "@/context/PaginationContextProvider"
 import RenderableMagicCardLike from "@/interfaces/RenderableMagicCardLike"
@@ -15,7 +15,7 @@ type MagicCardGridInnerProps = {
 function MagicCardGridInner({ cards }: MagicCardGridInnerProps) {
     const { page, setPage, numPages, perPage } = useContext(PaginationContext)
 
-    function handleChange(_, value: number) {
+    function handleChange<T>(_event: ChangeEvent<T>, value: number) {
         setPage(value-1)
     }
 
