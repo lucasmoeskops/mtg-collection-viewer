@@ -7,7 +7,8 @@ export interface CardSetWithCompletion extends CardSet {
 }
 
 export function setIsWithCompletion(set: CardSet): set is CardSetWithCompletion {
-    return typeof set.completionRatio === 'number' && typeof set.numberOfCardsOwned === 'number'
+    const completionSet: CardSetWithCompletion = (set as CardSetWithCompletion)
+    return typeof completionSet.completionRatio === 'number' && typeof completionSet.numberOfCardsOwned === 'number'
 }
 
 export function calculateSetCompletions(sets: CardSet[], cards: MagicCardLike[]): CardSetWithCompletion[] {
