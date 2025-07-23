@@ -6,6 +6,7 @@ import { Box, Typography } from "@mui/material"
 
 export const views: ViewMode[] = [
     newViewMode({
+        id: "browse",
         label: "Browse Mode",
         title: "Browse Mode",
         description: "In this view all owned cards are shown, starting with the most recent cards",
@@ -24,6 +25,7 @@ export const views: ViewMode[] = [
         </Box>
     }),
     newViewMode({
+        id: "merchant",
         label: "Merchant Mode",
         title: "Merchant Mode",
         description: "In this view cards are ordered by their price value. Duplicate cards are also shown",
@@ -40,6 +42,7 @@ export const views: ViewMode[] = [
         </Box>
     }),
     newViewMode({
+        id: "collection",
         label: "Collection Mode",
         title: "Collection Mode",
         description: "In this view all magic cards are shown, but the cards that are not owned are fainted.",

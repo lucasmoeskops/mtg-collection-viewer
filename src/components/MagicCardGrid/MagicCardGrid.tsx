@@ -20,7 +20,7 @@ function MagicCardGridInner({ cards }: MagicCardGridInnerProps) {
     }
 
     return <Stack spacing={2}>
-        <Pagination count={numPages} page={page+1} onChange={handleChange} variant="outlined" color="primary" />
+        <Pagination count={numPages} page={page+1} onChange={handleChange} variant="outlined" color="primary" siblingCount={3} />
         <Grid container spacing={2}>
             {cards.slice(page*perPage, (page + 1) * perPage).map((card, index) => 
             <Grid size={{xs: 12, sm: 6, md: 4, lg: 3}} key={card.image_url + index}>
@@ -28,7 +28,7 @@ function MagicCardGridInner({ cards }: MagicCardGridInnerProps) {
             </Grid>
             )}
         </Grid>
-        <Pagination count={numPages} page={page+1} onChange={handleChange} variant="outlined" color="primary" />
+        <Pagination count={numPages} page={page+1} onChange={handleChange} variant="outlined" color="primary" siblingCount={3} />
     </Stack>
 }
 

@@ -4,6 +4,7 @@ import { CardSelectionContext } from "@/types/CardSelectionContext";
 import { ReactNode } from "react";
 
 export type ViewMode = {
+    id: string,
     label: string,
     title: string | ((context: CardSelectionContext) => string),
     description: string,
@@ -20,6 +21,7 @@ export type ViewMode = {
 
 export function newViewMode(props: Partial<ViewMode>): ViewMode {
     return {
+        id: "new-view-mode",
         label: "New ViewMode",
         title: "New ViewMode",
         description: "A new view mode",

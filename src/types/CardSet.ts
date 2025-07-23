@@ -38,11 +38,12 @@ interface ScryFallSet {
     code: string,
     name: string,
     card_count: number,
+    printed_size?: number,
     released_at: string,
 }
 
-function scryfallSetToCardSet({ code, name, card_count, released_at }: ScryFallSet): CardSet {
-    return { code, name, numberOfCards: card_count, releaseDate: new Date(Date.parse(released_at)) }
+function scryfallSetToCardSet({ code, name, card_count, printed_size, released_at }: ScryFallSet): CardSet {
+    return { code, name, numberOfCards: printed_size ?? card_count, releaseDate: new Date(Date.parse(released_at)) }
 }
 
 function setSort(a: CardSet, b: CardSet) {

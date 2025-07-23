@@ -1,6 +1,7 @@
 'use client'
 
 
+import { updateQueryParams } from "@/helpers/router"
 import MagicCardLike from "@/interfaces/MagicCardLike"
 import { clamp } from "lodash"
 import { useSearchParams, useRouter } from "next/navigation"
@@ -35,16 +36,19 @@ export default function PaginationContextProvider({ children, items, perPage = 6
     const value: PaginationContextProps = {
         page,
         setPage: (newPage: number) => {
-            router.push(`?page=${newPage + 1}`, { scroll: true })
+            updateQueryParams(router, searchParams, {
+                page: clamp(newPage + 1, 1, numPages),
+            })
         },
         numPages,
         perPage,
     }
 
     // useEffect(() => {
-    //     console.log(items.length)
-    //     router.push(`?page=1`, { scroll: true })
-    // }, [items, router])
+    //     updateQueryParams(router, searchParams, {
+    //         page: 1,
+    //     })
+    // }, [items, router, searchParams])
 
     useEffect(() => {
         const newPage = searchParams.get('page')
