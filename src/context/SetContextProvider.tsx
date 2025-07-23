@@ -3,7 +3,7 @@
 
 import MagicCardLike from "@/interfaces/MagicCardLike"
 import { CardSet, fetchSets, getSets } from "@/types/CardSet"
-import { createContext, ReactNode, useEffect, useState } from "react"
+import { createContext, ReactNode, useCallback, useEffect, useState } from "react"
 
 export type SetContextProps = {
     getSets: (cards: MagicCardLike[]) => CardSet[]
@@ -20,8 +20,12 @@ export const SetContext = createContext<SetContextProps>({
 export default function SetContextProvider({ children }: SetContextProviderProps) {
     const [sets, setSets] = useState<CardSet[]>([])
 
+    const getSetsCallback = useCallback((cards: MagicCardLike[]) => {
+        return getSets(sets, cards)
+    }, [sets])
+
     const value: SetContextProps = {
-        getSets: (cards) => getSets(sets, cards)
+        getSets: getSetsCallback
     }
 
     useEffect(() => {

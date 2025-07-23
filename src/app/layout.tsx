@@ -5,6 +5,11 @@ import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import { Roboto } from 'next/font/google';
 import { ThemeProvider } from '@mui/material/styles';
 import theme from '../theme';
+import SetContextProvider from "@/context/SetContextProvider";
+import ViewModeProvider from "@/context/ViewModeContextProvider";
+import CardSelectionContextProvider from "@/context/CardContextProvider";
+import { getAllCards } from "@/supabase/helpers";
+import MagicCardLike from "@/interfaces/MagicCardLike";
 
 const roboto = Roboto({
   weight: ['300', '400', '500', '700'],
@@ -18,21 +23,40 @@ export const metadata: Metadata = {
   description: "By Lucas Moeskops",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+    let cards: MagicCardLike[]
+    let error = false
+    console.log('HERE!')
+  
+    try {
+      cards = await getAllCards()
+    } catch (e) {
+      console.log('Error:', e)
+      error = true
+      cards = []
+    }
+    
   return (
     <html lang="en" className={roboto.variable}>
       <ThemeProvider theme={theme}>
-        <body>
-          <AppRouterCacheProvider>
-              <Container>
-                {children}
-              </Container>
-          </AppRouterCacheProvider>
-        </body>
+        <SetContextProvider>
+          <ViewModeProvider>
+            <CardSelectionContextProvider cards={cards}>
+              <body>
+              {error && <p>An error occurred while loading the card data.</p>}
+                <AppRouterCacheProvider>
+                    <Container>
+                      {children}
+                    </Container>
+                </AppRouterCacheProvider>
+              </body>
+            </CardSelectionContextProvider>
+          </ViewModeProvider>
+        </SetContextProvider>
       </ThemeProvider>
     </html>
   );
