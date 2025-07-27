@@ -3,7 +3,7 @@
 import { views } from "@/configuration/grid-views"
 import { ViewModeContext } from "@/context/ViewModeContextProvider"
 import { Box, Tab, Tabs } from "@mui/material"
-import { ReactNode, useContext, useState } from "react"
+import { ReactNode, useContext } from "react"
 
 
 function a11yProps(index: number) {
