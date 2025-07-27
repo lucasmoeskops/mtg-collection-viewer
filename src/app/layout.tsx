@@ -31,7 +31,6 @@ export default async function RootLayout({
 }>) {
     let cards: MagicCardLike[]
     let error = false
-    console.log('HERE!')
   
     try {
       cards = await getAllCards()
