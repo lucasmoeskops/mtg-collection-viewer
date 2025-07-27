@@ -1,16 +1,18 @@
 'use client';
 
 
-import { ChangeEvent, ReactNode, useContext } from "react"
+import { ChangeEvent, ReactNode, useContext, useMemo } from "react"
 import { CardSelectionContextContext } from "@/context/CardContextProvider";
 import { Checkbox, FormControl, FormControlLabel, FormGroup, FormLabel, MenuItem, Select, SelectChangeEvent, TextField } from '@mui/material';
 import { CardSelectionContext } from "@/types/CardSelectionContext";
 import { ViewModeContext } from "@/context/ViewModeContextProvider";
 import { throttle } from "lodash";
+import { apply, SetSorting } from "@/enums/SetSorting";
 
 export default function Filters({}): ReactNode {
     const { viewMode: { showColorFilter, showLegendaryFilter, showRarityFilter, showSetCompletions, showTokenFilter } } = useContext(ViewModeContext)
-    const { sets, colors, rarities, context: { set, colors: activeColors, rarities: activeRarities, isFoil, isLegendary, isToken, nameQuery, typeQuery }, setContext } = useContext(CardSelectionContextContext)
+    const { sets, colors, rarities, context: { set, colors: activeColors, rarities: activeRarities, isFoil, isLegendary, isToken, nameQuery, typeQuery, releasedAfter, releasedBefore }, setContext } = useContext(CardSelectionContextContext)
+    const setsNewToOld = useMemo(() => apply(SetSorting.CHRONOLOGICAL_BACK, [...sets]), [sets])
 
     function contextUpdaterForInput<T extends ChangeEvent<HTMLInputElement>>(key: string, targetProp: "checked" | "value") {
         return (evt: T) => setContext((ctx: CardSelectionContext) => ({...ctx, [key]: evt.target[targetProp]}))
@@ -47,6 +49,24 @@ export default function Filters({}): ReactNode {
                 current.splice(current.indexOf(key), 1)
             }
             return {...ctx}
+        })
+    }
+
+    function setReleasedAfterFromSet(event: SelectChangeEvent) {
+        setContext((ctx: CardSelectionContext) => {
+            return {
+                ...ctx,
+                releasedAfter: setsNewToOld.find(s => s.code === event.target.value) || null,
+            }
+        })
+    }
+
+    function setReleasedBeforeFromSet(event: SelectChangeEvent) {
+        setContext((ctx: CardSelectionContext) => {
+            return {
+                ...ctx,
+                releasedBefore: setsNewToOld.find(s => s.code === event.target.value) || null,
+            }
         })
     }
 
@@ -93,6 +113,24 @@ export default function Filters({}): ReactNode {
         <FormControl sx={{ m: 3 }}>
             <FormLabel>Card type</FormLabel>
             <TextField label="Query" variant="outlined" value={typeQuery} onChange={throttle(contextUpdaterForInput('typeQuery', 'value'), 400)} />
+        </FormControl>
+        <FormControl sx={{ m: 3 }}>
+            <FormLabel>Release date from</FormLabel>
+            <Select value={releasedAfter?.code || ''} onChange={setReleasedAfterFromSet}>
+                <MenuItem value={''} selected={releasedAfter === null}>(None)</MenuItem>
+                {setsNewToOld.map(({ code, name, releaseDate }, index) => <MenuItem key={index} value={code}>
+                    {name} ({releaseDate.toLocaleDateString()})
+                </MenuItem>)}
+            </Select>
+        </FormControl>
+        <FormControl sx={{ m: 3 }}>
+            <FormLabel>Release date until</FormLabel>
+            <Select value={releasedBefore?.code || ''} onChange={setReleasedBeforeFromSet}>
+                <MenuItem value={''} selected={releasedBefore === null}>(None)</MenuItem>
+                {setsNewToOld.map(({ code, name, releaseDate }, index) => <MenuItem key={index} value={code}>
+                    {name} ({releaseDate.toLocaleDateString()})
+                </MenuItem>)}
+            </Select>
         </FormControl>
     </div>
 }

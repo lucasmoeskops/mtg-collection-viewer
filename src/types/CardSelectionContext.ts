@@ -1,4 +1,5 @@
 import { CardSorting } from "@/enums/CardSorting"
+import { CardSet } from "./CardSet"
 
 export type CardSelectionContext = {
     set: string,
@@ -12,6 +13,8 @@ export type CardSelectionContext = {
     sortingMethod: CardSorting,
     nameQuery: string,
     typeQuery: string,
+    releasedBefore: CardSet | null,
+    releasedAfter: CardSet | null,
 }
 
 export function newCardSelectionContext (): CardSelectionContext {
@@ -27,5 +30,7 @@ export function newCardSelectionContext (): CardSelectionContext {
         sortingMethod: CardSorting.CHRONOLOGICAL_BACK,
         nameQuery: '',
         typeQuery: '',
+        releasedBefore: null,
+        releasedAfter: null,
     }
 }

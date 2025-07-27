@@ -59,7 +59,17 @@ export async function allCardSelector(cards: MagicCardLike[], context: CardSelec
     if (context.onlyOwned) {
         selectedCards = selectedCards.filter(card => card.amount_owned > 0)
     }
-    
+
+    if (context.releasedBefore?.releaseDate) {
+        const date: Date = context.releasedBefore.releaseDate
+        selectedCards = selectedCards.filter(card => card.release_date <= date)
+    }
+
+    if (context.releasedAfter?.releaseDate) {
+        const date: Date = context.releasedAfter.releaseDate
+        selectedCards = selectedCards.filter(card => card.release_date >= date)
+    }
+
     switch (context.sortingMethod) {
     case CardSorting.CARD_TYPE:
         selectedCards = selectedCards.sort(sortCardType)

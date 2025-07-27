@@ -15,16 +15,16 @@ function a11yProps(index: number) {
 
 export default function ViewSwitchTabs(): ReactNode {
     const {viewModeIndex, setViewModeIndex} = useContext(ViewModeContext)
-    const [value, setValue] = useState(viewModeIndex)
+    // const [value, setValue] = useState(viewModeIndex)
 
     function handleChange (event: React.SyntheticEvent, newValue: number) {
-        setValue(newValue)
+        // setValue(newValue)
         setViewModeIndex(newValue)
     }
 
     return (
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs value={value} onChange={handleChange} aria-label="view modes" variant="scrollable" scrollButtons="auto">
+            <Tabs value={viewModeIndex} onChange={handleChange} aria-label="view modes" variant="scrollable" scrollButtons="auto">
                 {views.map(({label}, index) => <Tab label={label} key={index} {...a11yProps(index)} />)}
             </Tabs>
         </Box>
