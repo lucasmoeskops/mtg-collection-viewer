@@ -5,18 +5,6 @@ import { flatMap, times } from "lodash"
 import { CardSorting, sortCardType, sortChronological, sortChronologicalBack, sortName, sortPriceBack } from "@/enums/CardSorting";
 import { getSetByCode } from "@/types/CardSet";
 
-const isOfColor = (card: MagicCardLike) => (color: string) => {
-    if (color === '-' && !card.colors.length) {
-        return true
-    }
-
-    if (card.colors.includes(color)) {
-        return true
-    }
-
-    return false
-}
-
 export async function allCardSelector(cards: MagicCardLike[], context: CardSelectionContext): Promise<RenderableMagicCardLike[]> {
     let selectedCards = Array.from(cards)
 
