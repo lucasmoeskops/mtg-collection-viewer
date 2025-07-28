@@ -36,7 +36,7 @@ export async function allCardSelector(cards: MagicCardLike[], context: CardSelec
 
     if (context.colors.length) {
         const colors = context.colors
-        selectedCards = selectedCards.filter(card => colors.every(isOfColor(card)))
+        selectedCards = selectedCards.filter(card => card.colors.every(color => colors.includes(color)))
     }
 
     if (context.rarities.length) {
