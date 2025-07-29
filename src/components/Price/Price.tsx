@@ -6,13 +6,14 @@ export interface PriceProps {
 
 export function Price(props: PriceProps) {
     const {priceEstimate} = props
+    const absPriceEstimate = Math.abs(priceEstimate);
 
-    if (priceEstimate < 100) {
-        return <>&euro;<sub>{padStart(priceEstimate.toString(), 2, '0')}</sub></>
+    if (absPriceEstimate < 100) {
+        return <>&euro;<sub>{padStart(absPriceEstimate.toString(), 2, '0')}</sub></>
     }
 
-    const euroPrice = Math.floor(priceEstimate / 100)
-    const restPrice = (priceEstimate % 100).toString()
+    const euroPrice = Math.floor(absPriceEstimate / 100)
+    const restPrice = (absPriceEstimate % 100).toString()
 
     return <>&euro;{euroPrice}<sub>{padStart(restPrice, 2, '0')}</sub></>
 }

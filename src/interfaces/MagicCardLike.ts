@@ -11,6 +11,9 @@ export default interface MagicCardLike {
   is_token: boolean;
   release_date: Date;
   price_estimate: number;
+  avg_price: number; // Average price for the card, used for sorting and display
+  avg_non_foil_price: number; // Average price for the card, used for sorting and display
+  current_price_delta: number; // Optional, used for price change indicators
 }
 
 export function newEmptyCard(): MagicCardLike {
@@ -26,6 +29,9 @@ export function newEmptyCard(): MagicCardLike {
     is_foil: false,
     is_token: false,
     release_date: new Date(),
-    price_estimate: 0
+    price_estimate: 0,
+    avg_price: 0,
+    avg_non_foil_price: 0,
+    current_price_delta: 0
   }
 }

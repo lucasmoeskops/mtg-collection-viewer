@@ -10,6 +10,7 @@ export const views: ViewMode[] = [
         label: "Browse Mode",
         title: "Browse Mode",
         description: "In this view all owned cards are shown, starting with the most recent cards",
+        sortModes: [CardSorting.CHRONOLOGICAL_BACK, CardSorting.CARD_TYPE, CardSorting.NAME, CardSorting.AVG_NON_FOIL_PRICE],
         baseContext: {
             showDuplicates: false,
             onlyOwned: true,
@@ -29,13 +30,14 @@ export const views: ViewMode[] = [
         label: "Merchant Mode",
         title: "Merchant Mode",
         description: "In this view cards are ordered by their price value. Duplicate cards are also shown",
+        sortModes: [CardSorting.PRICE_DELTA, CardSorting.PRICE_BACK, CardSorting.NAME, CardSorting.AVG_PRICE, CardSorting.AVG_NON_FOIL_PRICE],
         baseContext: {
             showDuplicates: true,
             onlyOwned: true,
-            sortingMethod: CardSorting.PRICE_BACK,
+            sortingMethod: CardSorting.PRICE_DELTA,
         },
         setSortingMethod: SetSorting.NAME,
-        getCardInfo: (card) => <><Price priceEstimate={card.price_estimate} />{card.is_foil ? <>, Foil</> : null}</>,
+        getCardInfo: (card) => <><Price priceEstimate={card.price_estimate} />{card.is_foil ? <>, Foil</> : null} {card.current_price_delta ? <span style={{ color: card.current_price_delta ? (card.current_price_delta > 0 ? 'green' : 'red') : 'inherit' }}>(<Price priceEstimate={card.current_price_delta ?? 0} />)</span> : null}</>,
         statistics: (cards) => <Box sx={{p: 2}}>
             <div>Total cards selected: {cards.map(card => card.amount_owned).reduce((acc, n) => acc + n, 0)}</div>
             <div>Total card value: <Price priceEstimate={cards.map(card => card.price_estimate).reduce((acc, n) => acc + n, 0)} /></div>
@@ -46,6 +48,7 @@ export const views: ViewMode[] = [
         label: "Collection Mode",
         title: "Collection Mode",
         description: "In this view all magic cards are shown, but the cards that are not owned are fainted.",
+        sortModes: [CardSorting.CHRONOLOGICAL],
         baseContext: {
             showDuplicates: false,
             onlyOwned: false,

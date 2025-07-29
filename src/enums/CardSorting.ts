@@ -5,7 +5,44 @@ export enum CardSorting {
     CHRONOLOGICAL_BACK,
     NAME,
     PRICE_BACK,
-    CARD_TYPE
+    CARD_TYPE,
+    AVG_PRICE,
+    AVG_NON_FOIL_PRICE,
+    PRICE_DELTA
+}
+
+export const CardSortingValues: CardSorting[] = [
+    CardSorting.CHRONOLOGICAL,
+    CardSorting.CHRONOLOGICAL_BACK,
+    CardSorting.NAME,
+    CardSorting.PRICE_BACK,
+    CardSorting.CARD_TYPE,
+    CardSorting.AVG_PRICE,
+    CardSorting.AVG_NON_FOIL_PRICE,
+    CardSorting.PRICE_DELTA
+]
+
+export const CardSortingLabels: Record<CardSorting, string> = {
+    [CardSorting.CHRONOLOGICAL]: "Chronological",
+    [CardSorting.CHRONOLOGICAL_BACK]: "Chronological (Backwards)",
+    [CardSorting.NAME]: "Name",
+    [CardSorting.PRICE_BACK]: "Price (Backwards)",
+    [CardSorting.CARD_TYPE]: "Card Type",
+    [CardSorting.AVG_PRICE]: "Average Price",
+    [CardSorting.AVG_NON_FOIL_PRICE]: "Average Non-Foil Price",
+    [CardSorting.PRICE_DELTA]: "Price Change"
+}
+
+export function sortingMethodToKey(method: CardSorting): string {
+    return CardSortingValues.findIndex(key => key === method)?.toString() || "Unknown"
+}
+
+export function sortingMethodFromKey(key: string): CardSorting {
+    const index = parseInt(key, 10)
+    if (isNaN(index) || index < 0 || index >= CardSortingValues.length) {
+        throw new Error(`Invalid CardSorting key: ${key}`)
+    }
+    return CardSortingValues[index]
 }
 
 export function sortChronological(a: MagicCardLike, b: MagicCardLike): number {
@@ -54,4 +91,28 @@ export function sortCardType(a: MagicCardLike, b: MagicCardLike): number {
     }
 
     return sortName(a, b)
+}
+
+export function sortAvgPrice(a: MagicCardLike, b: MagicCardLike): number {
+    if (a.avg_price !== b.avg_price) {
+        return a.avg_price > b.avg_price ? -1 : 1
+    }
+
+    return sortChronologicalBack(a, b)
+}
+
+export function sortAvgNonFoilPrice(a: MagicCardLike, b: MagicCardLike): number {
+    if (a.avg_non_foil_price !== b.avg_non_foil_price) {
+        return a.avg_non_foil_price > b.avg_non_foil_price ? -1 : 1
+    }
+
+    return sortChronologicalBack(a, b)
+}
+
+export function sortByPriceDelta(a: MagicCardLike, b: MagicCardLike): number {
+    if (a.current_price_delta !== b.current_price_delta) {
+        return a.current_price_delta > b.current_price_delta ? -1 : 1
+    }
+
+    return sortChronologicalBack(a, b)
 }

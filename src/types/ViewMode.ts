@@ -1,3 +1,4 @@
+import { CardSorting } from "@/enums/CardSorting";
 import { SetSorting } from "@/enums/SetSorting";
 import MagicCardLike from "@/interfaces/MagicCardLike";
 import { CardSelectionContext } from "@/types/CardSelectionContext";
@@ -7,6 +8,7 @@ export type ViewMode = {
     id: string,
     label: string,
     title: string | ((context: CardSelectionContext) => string),
+    sortModes: CardSorting[],
     description: string,
     showSetCompletions: boolean,
     showColorFilter: boolean,
@@ -24,6 +26,7 @@ export function newViewMode(props: Partial<ViewMode>): ViewMode {
         id: "new-view-mode",
         label: "New ViewMode",
         title: "New ViewMode",
+        sortModes: [CardSorting.CHRONOLOGICAL_BACK],
         description: "A new view mode",
         showSetCompletions: false,
         showColorFilter: true,

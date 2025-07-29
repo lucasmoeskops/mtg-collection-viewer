@@ -2,7 +2,7 @@ import { CardSelectionContext } from "@/types/CardSelectionContext";
 import RenderableMagicCardLike, { makeRenderable } from "@/interfaces/RenderableMagicCardLike";
 import MagicCardLike, { newEmptyCard } from "@/interfaces/MagicCardLike";
 import { flatMap, times } from "lodash"
-import { CardSorting, sortCardType, sortChronological, sortChronologicalBack, sortName, sortPriceBack } from "@/enums/CardSorting";
+import { CardSorting, sortAvgNonFoilPrice, sortAvgPrice, sortByPriceDelta, sortCardType, sortChronological, sortChronologicalBack, sortName, sortPriceBack } from "@/enums/CardSorting";
 import { getSetByCode } from "@/types/CardSet";
 
 export async function allCardSelector(cards: MagicCardLike[], context: CardSelectionContext): Promise<RenderableMagicCardLike[]> {
@@ -74,6 +74,17 @@ export async function allCardSelector(cards: MagicCardLike[], context: CardSelec
     case CardSorting.PRICE_BACK:
         selectedCards = selectedCards.sort(sortPriceBack)
         break
+        case CardSorting.AVG_PRICE:
+        selectedCards = selectedCards.sort(sortAvgPrice)
+        break
+    case CardSorting.AVG_NON_FOIL_PRICE:
+        selectedCards = selectedCards.sort(sortAvgNonFoilPrice)
+        break
+    case CardSorting.PRICE_DELTA:
+        selectedCards = selectedCards.sort(sortByPriceDelta)
+        break
+    default:
+        throw new Error(`Unknown sorting method: ${context.sortingMethod}`)
     }
 
     if (context.showDuplicates) {

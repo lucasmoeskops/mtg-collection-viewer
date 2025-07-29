@@ -8,10 +8,11 @@ import { CardSelectionContext } from "@/types/CardSelectionContext";
 import { ViewModeContext } from "@/context/ViewModeContextProvider";
 import { throttle } from "lodash";
 import { apply, SetSorting } from "@/enums/SetSorting";
+import { CardSortingLabels, sortingMethodFromKey, sortingMethodToKey } from "@/enums/CardSorting";
 
 export default function Filters({}): ReactNode {
-    const { viewMode: { showColorFilter, showLegendaryFilter, showRarityFilter, showSetCompletions, showTokenFilter } } = useContext(ViewModeContext)
-    const { sets, colors, rarities, context: { set, colors: activeColors, rarities: activeRarities, isFoil, isLegendary, isToken, nameQuery, typeQuery, releasedAfter, releasedBefore }, setContext } = useContext(CardSelectionContextContext)
+    const { viewMode: { showColorFilter, showLegendaryFilter, showRarityFilter, showSetCompletions, showTokenFilter, sortModes } } = useContext(ViewModeContext)
+    const { sets, colors, rarities, context: { set, colors: activeColors, rarities: activeRarities, isFoil, isLegendary, isToken, nameQuery, typeQuery, releasedAfter, releasedBefore, sortingMethod }, setContext } = useContext(CardSelectionContextContext)
     const setsNewToOld = useMemo(() => apply(SetSorting.CHRONOLOGICAL_BACK, [...sets]), [sets])
 
     function contextUpdaterForInput<T extends ChangeEvent<HTMLInputElement>>(key: string, targetProp: "checked" | "value") {
@@ -68,6 +69,10 @@ export default function Filters({}): ReactNode {
                 releasedBefore: setsNewToOld.find(s => s.code === event.target.value) || null,
             }
         })
+    }
+
+    function updateSortMethod(event: SelectChangeEvent) {
+        setContext((ctx: CardSelectionContext) => ({...ctx, sortingMethod: sortingMethodFromKey(event.target.value)}))
     }
 
     return <div>
@@ -132,5 +137,11 @@ export default function Filters({}): ReactNode {
                 </MenuItem>)}
             </Select>
         </FormControl>
+        {sortModes.length > 1 && <FormControl sx={{ m: 3 }}>
+            <FormLabel>Sort by</FormLabel>
+            <Select value={sortingMethodToKey(sortingMethod)} onChange={updateSortMethod}>
+                {sortModes.map((mode, index) => <MenuItem key={index} value={sortingMethodToKey(mode)}>{CardSortingLabels[mode]}</MenuItem>)}
+            </Select>
+        </FormControl>}
     </div>
 }
