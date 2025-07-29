@@ -30,11 +30,11 @@ export const views: ViewMode[] = [
         label: "Merchant Mode",
         title: "Merchant Mode",
         description: "In this view cards are ordered by their price value. Duplicate cards are also shown",
-        sortModes: [CardSorting.PRICE_DELTA, CardSorting.PRICE_BACK, CardSorting.NAME, CardSorting.AVG_PRICE, CardSorting.AVG_NON_FOIL_PRICE],
+        sortModes: [CardSorting.PRICE_BACK, CardSorting.NAME, CardSorting.AVG_PRICE, CardSorting.AVG_NON_FOIL_PRICE, CardSorting.PRICE_DELTA],
         baseContext: {
             showDuplicates: true,
             onlyOwned: true,
-            sortingMethod: CardSorting.PRICE_DELTA,
+            sortingMethod: CardSorting.AVG_PRICE,
         },
         setSortingMethod: SetSorting.NAME,
         getCardInfo: (card) => <><Price priceEstimate={card.price_estimate} />{card.is_foil ? <>, Foil</> : null} {card.current_price_delta ? <span style={{ color: card.current_price_delta ? (card.current_price_delta > 0 ? 'green' : 'red') : 'inherit' }}>(<Price priceEstimate={card.current_price_delta ?? 0} />)</span> : null}</>,
