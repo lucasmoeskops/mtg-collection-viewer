@@ -1,12 +1,12 @@
 'use client';
 
 
-import { ChangeEvent, ReactNode, useContext, useMemo } from "react"
+import { ChangeEvent, ReactNode, useContext, useMemo, useState } from "react"
 import { CardSelectionContextContext } from "@/context/CardContextProvider";
 import { Checkbox, FormControl, FormControlLabel, FormGroup, FormLabel, MenuItem, Select, SelectChangeEvent, TextField } from '@mui/material';
 import { CardSelectionContext } from "@/types/CardSelectionContext";
 import { ViewModeContext } from "@/context/ViewModeContextProvider";
-import { throttle } from "lodash";
+import { debounce } from "lodash";
 import { apply, SetSorting } from "@/enums/SetSorting";
 import { CardSortingLabels, sortingMethodFromKey, sortingMethodToKey } from "@/enums/CardSorting";
 
@@ -14,9 +14,16 @@ export default function Filters({}): ReactNode {
     const { viewMode: { showColorFilter, showLegendaryFilter, showRarityFilter, showSetCompletions, showTokenFilter, sortModes } } = useContext(ViewModeContext)
     const { sets, colors, rarities, context: { set, colors: activeColors, rarities: activeRarities, isFoil, isLegendary, isToken, nameQuery, typeQuery, releasedAfter, releasedBefore, sortingMethod }, setContext } = useContext(CardSelectionContextContext)
     const setsNewToOld = useMemo(() => apply(SetSorting.CHRONOLOGICAL_BACK, [...sets]), [sets])
+    const [currentNameQuery, setCurrentNameQuery] = useState(nameQuery);
+    const [currentTypeQuery, setCurrentTypeQuery] = useState(typeQuery);
 
-    function contextUpdaterForInput<T extends ChangeEvent<HTMLInputElement>>(key: string, targetProp: "checked" | "value") {
-        return (evt: T) => setContext((ctx: CardSelectionContext) => ({...ctx, [key]: evt.target[targetProp]}))
+    function contextUpdaterForInput<T extends ChangeEvent<HTMLInputElement>>(setter: React.Dispatch<React.SetStateAction<string>> | undefined, key: string, targetProp: "checked" | "value") {
+        return (evt: T) => {
+            const value = evt.target[targetProp] as string;
+            if (setter) setter(value);
+            // Throttle the update to avoid too many re-renders
+            debounce(() => setContext((ctx: CardSelectionContext) => ({...ctx, [key]: value})), 200)();
+        }
     }
 
     function contextUpdaterForSelect<T extends SelectChangeEvent>(key: string) {
@@ -25,31 +32,31 @@ export default function Filters({}): ReactNode {
 
     function colorToggler<T extends ChangeEvent<HTMLInputElement>>(key: string) {
         return (evt: T) => setContext((ctx: CardSelectionContext) => {
-            const current: string[] = ctx.colors
             const value = evt.target.checked
+            const newColors = [...ctx.colors]
             if (value) {
-                if (!current.includes(key)) {
-                    current.push(key)
+                if (!newColors.includes(key)) {
+                    newColors.push(key)
                 }
-            } else if (current.includes(key)) {
-                current.splice(current.indexOf(key), 1)
+            } else if (newColors.includes(key)) {
+                newColors.splice(newColors.indexOf(key), 1)
             }
-            return {...ctx}
+            return {...ctx, colors: newColors}
         })
     }
 
     function rarityToggler<T extends ChangeEvent<HTMLInputElement>>(key: string) {
         return (evt: T) => setContext((ctx: CardSelectionContext) => {
-            const current: string[] = ctx.rarities
             const value = evt.target.checked
+            const newRarities = [...ctx.rarities]
             if (value) {
-                if (!current.includes(key)) {
-                    current.push(key)
+                if (!newRarities.includes(key)) {
+                    newRarities.push(key)
                 }
-            } else if (current.includes(key)) {
-                current.splice(current.indexOf(key), 1)
+            } else if (newRarities.includes(key)) {
+                newRarities.splice(newRarities.indexOf(key), 1)
             }
-            return {...ctx}
+            return {...ctx, rarities: newRarities}
         })
     }
 
@@ -88,9 +95,9 @@ export default function Filters({}): ReactNode {
         <FormControl sx={{ m: 3 }}>
             <FormLabel>Special</FormLabel>
             <FormGroup row={true}>
-                <FormControlLabel label="Is foil" control={<Checkbox checked={isFoil} onChange={contextUpdaterForInput('isFoil', 'checked')} />} />
-                {showLegendaryFilter && <FormControlLabel label="Is legend" control={<Checkbox checked={isLegendary} onChange={contextUpdaterForInput('isLegendary', 'checked')} />} />}
-                {showTokenFilter && <FormControlLabel label="Is token" control={<Checkbox checked={isToken} onChange={contextUpdaterForInput('isToken', 'checked')} />} />}
+                <FormControlLabel label="Is foil" control={<Checkbox checked={isFoil} onChange={contextUpdaterForInput(undefined, 'isFoil', 'checked')} />} />
+                {showLegendaryFilter && <FormControlLabel label="Is legend" control={<Checkbox checked={isLegendary} onChange={contextUpdaterForInput(undefined, 'isLegendary', 'checked')} />} />}
+                {showTokenFilter && <FormControlLabel label="Is token" control={<Checkbox checked={isToken} onChange={contextUpdaterForInput(undefined, 'isToken', 'checked')} />} />}
             </FormGroup>
         </FormControl>
         {showColorFilter && (
@@ -113,11 +120,11 @@ export default function Filters({}): ReactNode {
         </FormControl>}
         <FormControl sx={{ m: 3 }}>
             <FormLabel>Name</FormLabel>
-            <TextField label="Query" variant="outlined" value={nameQuery} onChange={throttle(contextUpdaterForInput('nameQuery', 'value'), 200)} />
+            <TextField label="Query" variant="outlined" value={currentNameQuery} onChange={contextUpdaterForInput(setCurrentNameQuery, 'nameQuery', 'value')} />
         </FormControl>
         <FormControl sx={{ m: 3 }}>
             <FormLabel>Card type</FormLabel>
-            <TextField label="Query" variant="outlined" value={typeQuery} onChange={throttle(contextUpdaterForInput('typeQuery', 'value'), 400)} />
+            <TextField label="Query" variant="outlined" value={currentTypeQuery} onChange={contextUpdaterForInput(setCurrentTypeQuery, 'typeQuery', 'value')} />
         </FormControl>
         <FormControl sx={{ m: 3 }}>
             <FormLabel>Release date from</FormLabel>

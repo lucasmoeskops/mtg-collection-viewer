@@ -39,10 +39,10 @@ function queryParametersToContext(query: Record<string, string>, sets: CardSet[]
         set: query.set || '',
         colors: (query.colors || '').split(',').filter(Boolean),
         rarities: (query.rarities || '').split(',').filter(Boolean),
-        isFoil: query.isFoil === 'true',
-        isLegendary: query.isLegendary === 'true',
-        isToken: query.isToken === 'true',
-        // showDuplicates: query.showDuplicates === 'true',
+        isFoil: query.isFoil === '1',
+        isLegendary: query.isLegendary === '1',
+        isToken: query.isToken === '1',
+        // showDuplicates: query.showDuplicates === '1',
         sortingMethod: sortingMethodFromKey(query.sortingMethod) || baseContext.sortingMethod,
         nameQuery: query.nameQuery || '',
         typeQuery: query.typeQuery || '',
@@ -120,6 +120,7 @@ export default function CardSelectionContextProvider({ cards, children }: CardSe
 
     useEffect(() => {
         const newContext = queryParametersToContext(Object.fromEntries(searchParams.entries()), sets, viewMode.baseContext)
+        console.log('Updating context from query parameters?', JSON.stringify(context), JSON.stringify(newContext))
         if (JSON.stringify(newContext) !== JSON.stringify(context)) {
             setContext(newContext)
         }

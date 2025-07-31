@@ -15,10 +15,8 @@ function a11yProps(index: number) {
 
 export default function ViewSwitchTabs(): ReactNode {
     const {viewModeIndex, setViewModeIndex} = useContext(ViewModeContext)
-    // const [value, setValue] = useState(viewModeIndex)
 
     function handleChange (event: React.SyntheticEvent, newValue: number) {
-        // setValue(newValue)
         setViewModeIndex(newValue)
     }
 
