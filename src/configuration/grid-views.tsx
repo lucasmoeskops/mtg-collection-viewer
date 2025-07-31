@@ -13,7 +13,6 @@ export const views: ViewMode[] = [
         sortModes: [CardSorting.CHRONOLOGICAL_BACK, CardSorting.CARD_TYPE, CardSorting.NAME, CardSorting.AVG_NON_FOIL_PRICE],
         baseContext: {
             showDuplicates: false,
-            onlyOwned: true,
             sortingMethod: CardSorting.NAME,
         },
         getCardInfo: (card) => <>
@@ -33,7 +32,6 @@ export const views: ViewMode[] = [
         sortModes: [CardSorting.PRICE_BACK, CardSorting.NAME, CardSorting.AVG_PRICE, CardSorting.AVG_NON_FOIL_PRICE, CardSorting.PRICE_DELTA],
         baseContext: {
             showDuplicates: true,
-            onlyOwned: true,
             sortingMethod: CardSorting.AVG_PRICE,
         },
         setSortingMethod: SetSorting.NAME,
@@ -51,7 +49,6 @@ export const views: ViewMode[] = [
         sortModes: [CardSorting.CHRONOLOGICAL],
         baseContext: {
             showDuplicates: false,
-            onlyOwned: false,
             sortingMethod: CardSorting.CHRONOLOGICAL,
         },
         setSortingMethod: SetSorting.COMPLETION_BACK,

@@ -68,6 +68,7 @@ export async function getAllCards(): Promise<MagicCardLike[]> {
                 colors,
                 rarity
             `)
+            .gt('amount_owned', 0)
             .order('series, cardnumber')
             .limit(10000)
 

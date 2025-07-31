@@ -44,10 +44,6 @@ export async function allCardSelector(cards: MagicCardLike[], context: CardSelec
         selectedCards = selectedCards.filter(card => card.is_token)
     }
 
-    if (context.onlyOwned) {
-        selectedCards = selectedCards.filter(card => card.amount_owned > 0)
-    }
-
     if (context.releasedBefore?.releaseDate) {
         const date: Date = context.releasedBefore.releaseDate
         selectedCards = selectedCards.filter(card => card.release_date <= date)
@@ -93,7 +89,7 @@ export async function allCardSelector(cards: MagicCardLike[], context: CardSelec
         );
     }
 
-    if (!context.onlyOwned && context.set && context.sortingMethod === CardSorting.CHRONOLOGICAL) {
+    if (context.set && context.sortingMethod === CardSorting.CHRONOLOGICAL) {
         const cardSet = await getSetByCode(context.set)
         if (cardSet) {
             const outcards: MagicCardLike[] = []

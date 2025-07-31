@@ -72,7 +72,7 @@ export default function Filters({}): ReactNode {
     }
 
     function updateSortMethod(event: SelectChangeEvent) {
-        setContext((ctx: CardSelectionContext) => ({...ctx, sortingMethod: sortingMethodFromKey(event.target.value)}))
+        setContext((ctx: CardSelectionContext) => ({...ctx, sortingMethod: sortingMethodFromKey(event.target.value) || sortModes[0]}))
     }
 
     return <div>

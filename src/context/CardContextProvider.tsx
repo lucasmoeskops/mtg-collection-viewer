@@ -12,6 +12,50 @@ import { CardRarity, getRarities } from "@/types/CardRarity"
 import { calculateSetCompletions, CardSetWithCompletion } from "@/types/SetCompletion"
 import { apply } from "@/enums/SetSorting"
 import { ViewModeContext } from "./ViewModeContextProvider"
+import { useRouter, useSearchParams } from "next/navigation"
+import { sortingMethodFromKey, sortingMethodToKey } from "@/enums/CardSorting"
+import { CardSet } from "@/types/CardSet"
+import { updateQueryParams } from "@/helpers/router"
+
+function contextToQueryParameters(context: CardSelectionContext): Record<string, string> {
+    return {
+        set: context.set,
+        colors: context.colors.join(','),
+        rarities: context.rarities.join(','),
+        isFoil: context.isFoil ? '1': '',
+        isLegendary: context.isLegendary ? '1' : '',
+        isToken: context.isToken ? '1' : '',
+        // showDuplicates: context.showDuplicates ? '1' : '',
+        sortingMethod: sortingMethodToKey(context.sortingMethod),
+        nameQuery: context.nameQuery,
+        typeQuery: context.typeQuery,
+        releasedBefore: context.releasedBefore?.code || '',
+        releasedAfter: context.releasedAfter?.code || '',
+    }
+}
+
+function queryParametersToContext(query: Record<string, string>, sets: CardSet[], baseContext: Partial<CardSelectionContext>): CardSelectionContext {
+    const newContext: Partial<CardSelectionContext> = {
+        set: query.set || '',
+        colors: (query.colors || '').split(',').filter(Boolean),
+        rarities: (query.rarities || '').split(',').filter(Boolean),
+        isFoil: query.isFoil === 'true',
+        isLegendary: query.isLegendary === 'true',
+        isToken: query.isToken === 'true',
+        // showDuplicates: query.showDuplicates === 'true',
+        sortingMethod: sortingMethodFromKey(query.sortingMethod) || baseContext.sortingMethod,
+        nameQuery: query.nameQuery || '',
+        typeQuery: query.typeQuery || '',
+        releasedBefore: query.releasedBefore ? sets.find(set => set.code === query.releasedBefore) ?? null : null,
+        releasedAfter: query.releasedAfter ? sets.find(set => set.code === query.releasedAfter) ?? null : null,
+    }
+
+    return {
+        ...newCardSelectionContext(),
+        ...baseContext,
+        ...Object.fromEntries(Object.entries(newContext).filter(([key, value]) => key && value)),
+    }
+}
 
 export type CardSelectionContextContextProps = {
     context: CardSelectionContext,
@@ -52,6 +96,8 @@ export default function CardSelectionContextProvider({ cards, children }: CardSe
     const [selectedCards, setSelectedCards] = useState<RenderableMagicCardLike[]>([])
     const statistics = viewMode.statistics ? viewMode.statistics(selectedCards) : undefined
     const showSetCompletions = viewMode.showSetCompletions
+    const searchParams = useSearchParams()
+    const router = useRouter()
 
     useEffect(() => {
         setSets(calculateSetCompletions(getSets(cards), cards))
@@ -72,6 +118,13 @@ export default function CardSelectionContextProvider({ cards, children }: CardSe
         allCardSelector(cards, context).then(setSelectedCards)
     }, [cards, context])
 
+    useEffect(() => {
+        const newContext = queryParametersToContext(Object.fromEntries(searchParams.entries()), sets, viewMode.baseContext)
+        if (JSON.stringify(newContext) !== JSON.stringify(context)) {
+            setContext(newContext)
+        }
+    }, [searchParams, sets, viewMode.baseContext, context])
+
     const value: CardSelectionContextContextProps = {
         context,
         cards: selectedCards,
@@ -81,7 +134,9 @@ export default function CardSelectionContextProvider({ cards, children }: CardSe
         showSetCompletions,
         getCardInfo: viewMode.getCardInfo,
         generalInfo: statistics,
-        setContext,
+        setContext: (newContext: SetStateAction<CardSelectionContext>) => {
+            updateQueryParams(router, searchParams, contextToQueryParameters(typeof newContext === 'function' ? newContext(context) : newContext))
+        },  
     }
 
     return <CardSelectionContextContext.Provider value={value}>

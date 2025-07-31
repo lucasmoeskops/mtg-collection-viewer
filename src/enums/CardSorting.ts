@@ -37,10 +37,10 @@ export function sortingMethodToKey(method: CardSorting): string {
     return CardSortingValues.findIndex(key => key === method)?.toString() || "Unknown"
 }
 
-export function sortingMethodFromKey(key: string): CardSorting {
+export function sortingMethodFromKey(key: string): CardSorting | undefined {
     const index = parseInt(key, 10)
     if (isNaN(index) || index < 0 || index >= CardSortingValues.length) {
-        throw new Error(`Invalid CardSorting key: ${key}`)
+        return undefined
     }
     return CardSortingValues[index]
 }

@@ -9,8 +9,8 @@ export function updateQueryParams(
     const finalSearchParams = new URLSearchParams(searchParams.toString());
 
     Object.entries(newParams).forEach(([key, value]) => {
-        if (value !== searchParams.get(key)) {
-            if (value === undefined) {
+        if (value !== searchParams.get(key) || !value && searchParams.has(key)) {
+            if (!value) {
                 finalSearchParams.delete(key);
             } else {
                 finalSearchParams.set(key, String(value));
