@@ -2,7 +2,7 @@ import { CardSelectionContext } from "@/types/CardSelectionContext";
 import RenderableMagicCardLike, { makeRenderable } from "@/interfaces/RenderableMagicCardLike";
 import MagicCardLike, { newEmptyCard } from "@/interfaces/MagicCardLike";
 import { flatMap, times } from "lodash"
-import { artistSort, CardSorting, CardSortingLabels, sortAvgNonFoilPrice, sortAvgPrice, sortByPriceDelta, sortCardType, sortChronological, sortChronologicalBack, sortManaCost, sortName, sortPriceBack } from "@/enums/CardSorting";
+import { artistSort, CardSorting, sortAvgNonFoilPrice, sortAvgPrice, sortByPriceDelta, sortCardType, sortChronological, sortChronologicalBack, sortManaCost, sortName, sortPriceBack } from "@/enums/CardSorting";
 import { getSetByCode } from "@/types/CardSet";
 
 export async function allCardSelector(cards: MagicCardLike[], context: CardSelectionContext): Promise<RenderableMagicCardLike[]> {
