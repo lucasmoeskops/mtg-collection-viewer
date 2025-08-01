@@ -11,11 +11,13 @@ import { apply, SetSorting } from "@/enums/SetSorting";
 import { CardSortingLabels, sortingMethodFromKey, sortingMethodToKey } from "@/enums/CardSorting";
 
 export default function Filters({}): ReactNode {
-    const { viewMode: { showColorFilter, showLegendaryFilter, showRarityFilter, showSetCompletions, showTokenFilter, sortModes } } = useContext(ViewModeContext)
-    const { sets, colors, rarities, context: { set, colors: activeColors, rarities: activeRarities, isFoil, isLegendary, isToken, nameQuery, typeQuery, releasedAfter, releasedBefore, sortingMethod }, setContext } = useContext(CardSelectionContextContext)
+    const { viewMode: { showColorFilter, showDateFilter, showLegendaryFilter, showRarityFilter, showSetCompletions, showTokenFilter, sortModes } } = useContext(ViewModeContext)
+    const { sets, colors, rarities, context: { set, colors: activeColors, rarities: activeRarities, isFoil, isLegendary, isToken, nameQuery, textQuery, typeQuery, artistQuery, releasedAfter, releasedBefore, sortingMethod }, setContext } = useContext(CardSelectionContextContext)
     const setsNewToOld = useMemo(() => apply(SetSorting.CHRONOLOGICAL_BACK, [...sets]), [sets])
     const [currentNameQuery, setCurrentNameQuery] = useState(nameQuery);
     const [currentTypeQuery, setCurrentTypeQuery] = useState(typeQuery);
+    const [currentTextQuery, setCurrentTextQuery] = useState(textQuery);
+    const [currentArtistQuery, setCurrentArtistQuery] = useState(artistQuery);
 
     function contextUpdaterForInput<T extends ChangeEvent<HTMLInputElement>>(setter: React.Dispatch<React.SetStateAction<string>> | undefined, key: string, targetProp: "checked" | "value") {
         return (evt: T) => {
@@ -127,6 +129,14 @@ export default function Filters({}): ReactNode {
             <TextField label="Query" variant="outlined" value={currentTypeQuery} onChange={contextUpdaterForInput(setCurrentTypeQuery, 'typeQuery', 'value')} />
         </FormControl>
         <FormControl sx={{ m: 3 }}>
+            <FormLabel>Text</FormLabel>
+            <TextField label="Query" variant="outlined" value={currentTextQuery} onChange={contextUpdaterForInput(setCurrentTextQuery, 'textQuery', 'value')} />
+        </FormControl>
+        <FormControl sx={{ m: 3 }}>
+            <FormLabel>Artist</FormLabel>
+            <TextField label="Query" variant="outlined" value={currentArtistQuery} onChange={contextUpdaterForInput(setCurrentArtistQuery, 'artistQuery', 'value')} />
+        </FormControl>
+        {showDateFilter && <><FormControl sx={{ m: 3 }}>
             <FormLabel>Release date from</FormLabel>
             <Select value={releasedAfter?.code || ''} onChange={setReleasedAfterFromSet}>
                 <MenuItem value={''} selected={releasedAfter === null}>(None)</MenuItem>
@@ -143,7 +153,7 @@ export default function Filters({}): ReactNode {
                     {name} ({releaseDate.toLocaleDateString()})
                 </MenuItem>)}
             </Select>
-        </FormControl>
+        </FormControl></>}
         {sortModes.length > 1 && <FormControl sx={{ m: 3 }}>
             <FormLabel>Sort by</FormLabel>
             <Select value={sortingMethodToKey(sortingMethod)} onChange={updateSortMethod}>

@@ -10,7 +10,7 @@ export const views: ViewMode[] = [
         label: "Browse Mode",
         title: "Browse Mode",
         description: "In this view all owned cards are shown, starting with the most recent cards",
-        sortModes: [CardSorting.CHRONOLOGICAL_BACK, CardSorting.CARD_TYPE, CardSorting.NAME, CardSorting.AVG_NON_FOIL_PRICE],
+        sortModes: [CardSorting.CHRONOLOGICAL_BACK, CardSorting.CARD_TYPE, CardSorting.NAME, CardSorting.AVG_NON_FOIL_PRICE, CardSorting.MANA_COST, CardSorting.ARTIST],
         baseContext: {
             showDuplicates: false,
             sortingMethod: CardSorting.NAME,
@@ -29,7 +29,7 @@ export const views: ViewMode[] = [
         label: "Merchant Mode",
         title: "Merchant Mode",
         description: "In this view cards are ordered by their price value. Duplicate cards are also shown",
-        sortModes: [CardSorting.PRICE_BACK, CardSorting.NAME, CardSorting.AVG_PRICE, CardSorting.AVG_NON_FOIL_PRICE, CardSorting.PRICE_DELTA],
+        sortModes: [CardSorting.PRICE_BACK, CardSorting.NAME, CardSorting.ARTIST, CardSorting.AVG_PRICE, CardSorting.AVG_NON_FOIL_PRICE, CardSorting.PRICE_DELTA],
         baseContext: {
             showDuplicates: true,
             sortingMethod: CardSorting.AVG_PRICE,
@@ -54,6 +54,7 @@ export const views: ViewMode[] = [
         setSortingMethod: SetSorting.COMPLETION_BACK,
         showSetCompletions: true,
         showColorFilter: false,
+        showDateFilter: false,
         showRarityFilter: false,
         showTokenFilter: false,
     }),

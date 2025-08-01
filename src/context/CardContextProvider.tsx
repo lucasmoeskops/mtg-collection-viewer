@@ -22,13 +22,15 @@ function contextToQueryParameters(context: CardSelectionContext): Record<string,
         set: context.set,
         colors: context.colors.join(','),
         rarities: context.rarities.join(','),
-        isFoil: context.isFoil ? '1': '',
-        isLegendary: context.isLegendary ? '1' : '',
-        isToken: context.isToken ? '1' : '',
+        foil: context.isFoil ? '1': '',
+        legendary: context.isLegendary ? '1' : '',
+        token: context.isToken ? '1' : '',
         // showDuplicates: context.showDuplicates ? '1' : '',
-        sortingMethod: sortingMethodToKey(context.sortingMethod),
-        nameQuery: context.nameQuery,
-        typeQuery: context.typeQuery,
+        sort: sortingMethodToKey(context.sortingMethod),
+        name: context.nameQuery,
+        type: context.typeQuery,
+        text: context.textQuery,
+        artist: context.artistQuery, 
         releasedBefore: context.releasedBefore?.code || '',
         releasedAfter: context.releasedAfter?.code || '',
     }
@@ -39,13 +41,15 @@ function queryParametersToContext(query: Record<string, string>, sets: CardSet[]
         set: query.set || '',
         colors: (query.colors || '').split(',').filter(Boolean),
         rarities: (query.rarities || '').split(',').filter(Boolean),
-        isFoil: query.isFoil === '1',
-        isLegendary: query.isLegendary === '1',
-        isToken: query.isToken === '1',
+        isFoil: query.foil === '1',
+        isLegendary: query.legendary === '1',
+        isToken: query.token === '1',
         // showDuplicates: query.showDuplicates === '1',
-        sortingMethod: sortingMethodFromKey(query.sortingMethod) || baseContext.sortingMethod,
-        nameQuery: query.nameQuery || '',
-        typeQuery: query.typeQuery || '',
+        sortingMethod: sortingMethodFromKey(query.sort) || baseContext.sortingMethod,
+        nameQuery: query.name || '',
+        typeQuery: query.type || '',
+        textQuery: query.text || '',
+        artistQuery: query.artist || '',
         releasedBefore: query.releasedBefore ? sets.find(set => set.code === query.releasedBefore) ?? null : null,
         releasedAfter: query.releasedAfter ? sets.find(set => set.code === query.releasedAfter) ?? null : null,
     }
@@ -120,7 +124,6 @@ export default function CardSelectionContextProvider({ cards, children }: CardSe
 
     useEffect(() => {
         const newContext = queryParametersToContext(Object.fromEntries(searchParams.entries()), sets, viewMode.baseContext)
-        console.log('Updating context from query parameters?', JSON.stringify(context), JSON.stringify(newContext))
         if (JSON.stringify(newContext) !== JSON.stringify(context)) {
             setContext(newContext)
         }

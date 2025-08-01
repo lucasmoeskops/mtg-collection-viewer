@@ -12,6 +12,8 @@ export type CardSelectionContext = {
     sortingMethod: CardSorting,
     nameQuery: string,
     typeQuery: string,
+    textQuery: string,
+    artistQuery: string,
     releasedBefore: CardSet | null,
     releasedAfter: CardSet | null,
 }
@@ -28,6 +30,8 @@ export function newCardSelectionContext (): CardSelectionContext {
         sortingMethod: CardSorting.CHRONOLOGICAL_BACK,
         nameQuery: '',
         typeQuery: '',
+        textQuery: '',
+        artistQuery: '',
         releasedBefore: null,
         releasedAfter: null,
     }

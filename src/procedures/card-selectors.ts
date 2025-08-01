@@ -2,21 +2,11 @@ import { CardSelectionContext } from "@/types/CardSelectionContext";
 import RenderableMagicCardLike, { makeRenderable } from "@/interfaces/RenderableMagicCardLike";
 import MagicCardLike, { newEmptyCard } from "@/interfaces/MagicCardLike";
 import { flatMap, times } from "lodash"
-import { CardSorting, sortAvgNonFoilPrice, sortAvgPrice, sortByPriceDelta, sortCardType, sortChronological, sortChronologicalBack, sortName, sortPriceBack } from "@/enums/CardSorting";
+import { artistSort, CardSorting, CardSortingLabels, sortAvgNonFoilPrice, sortAvgPrice, sortByPriceDelta, sortCardType, sortChronological, sortChronologicalBack, sortManaCost, sortName, sortPriceBack } from "@/enums/CardSorting";
 import { getSetByCode } from "@/types/CardSet";
 
 export async function allCardSelector(cards: MagicCardLike[], context: CardSelectionContext): Promise<RenderableMagicCardLike[]> {
     let selectedCards = Array.from(cards)
-
-    if (context.nameQuery !== '') {
-        const query = context.nameQuery.toLowerCase()
-        selectedCards = selectedCards.filter(card => card.name.toLowerCase().includes(query))
-    }
-
-    if (context.typeQuery !== '') {
-        const query = context.typeQuery.toLowerCase()
-        selectedCards = selectedCards.filter(card => card.card_type.toLowerCase().includes(query))
-    }
 
     if (context.set !== '') {
         selectedCards = selectedCards.filter(card => card.series === context.set)
@@ -24,7 +14,6 @@ export async function allCardSelector(cards: MagicCardLike[], context: CardSelec
 
     if (context.colors.length) {
         const colors = context.colors
-        console.log('Filtering by colors:', colors)
         selectedCards = selectedCards.filter(card => card.colors.every(color => colors.includes(color)))
     }
 
@@ -55,6 +44,28 @@ export async function allCardSelector(cards: MagicCardLike[], context: CardSelec
         selectedCards = selectedCards.filter(card => card.release_date >= date)
     }
 
+    if (context.nameQuery !== '') {
+        const query = context.nameQuery.toLowerCase()
+        selectedCards = selectedCards.filter(card => card.name.toLowerCase().includes(query))
+    }
+
+    if (context.typeQuery !== '') {
+        const query = context.typeQuery.toLowerCase()
+        selectedCards = selectedCards.filter(card => card.card_type.toLowerCase().includes(query))
+    }
+
+    if (context.artistQuery !== '') {
+        const query = context.artistQuery.toLowerCase()
+        selectedCards = selectedCards.filter(card => card.artist.toLowerCase().includes(query))
+    }
+
+    if (context.textQuery !== '') {
+        const query = context.textQuery.toLowerCase()
+        selectedCards = selectedCards.filter(card => card.text.toLowerCase().includes(query))
+    }
+
+    console.log(`Selected ${selectedCards.length} cards from ${cards.length} total.`)
+
     switch (context.sortingMethod) {
     case CardSorting.CARD_TYPE:
         selectedCards = selectedCards.sort(sortCardType)
@@ -71,7 +82,7 @@ export async function allCardSelector(cards: MagicCardLike[], context: CardSelec
     case CardSorting.PRICE_BACK:
         selectedCards = selectedCards.sort(sortPriceBack)
         break
-        case CardSorting.AVG_PRICE:
+    case CardSorting.AVG_PRICE:
         selectedCards = selectedCards.sort(sortAvgPrice)
         break
     case CardSorting.AVG_NON_FOIL_PRICE:
@@ -79,6 +90,12 @@ export async function allCardSelector(cards: MagicCardLike[], context: CardSelec
         break
     case CardSorting.PRICE_DELTA:
         selectedCards = selectedCards.sort(sortByPriceDelta)
+        break
+    case CardSorting.MANA_COST:
+        selectedCards = selectedCards.sort(sortManaCost)
+        break
+    case CardSorting.ARTIST:
+        selectedCards = selectedCards.sort(artistSort)
         break
     default:
         throw new Error(`Unknown sorting method: ${context.sortingMethod}`)

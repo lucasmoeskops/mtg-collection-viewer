@@ -8,7 +8,9 @@ export enum CardSorting {
     CARD_TYPE,
     AVG_PRICE,
     AVG_NON_FOIL_PRICE,
-    PRICE_DELTA
+    PRICE_DELTA,
+    MANA_COST,
+    ARTIST,
 }
 
 export const CardSortingValues: CardSorting[] = [
@@ -19,7 +21,9 @@ export const CardSortingValues: CardSorting[] = [
     CardSorting.CARD_TYPE,
     CardSorting.AVG_PRICE,
     CardSorting.AVG_NON_FOIL_PRICE,
-    CardSorting.PRICE_DELTA
+    CardSorting.PRICE_DELTA,
+    CardSorting.MANA_COST,
+    CardSorting.ARTIST,
 ]
 
 export const CardSortingLabels: Record<CardSorting, string> = {
@@ -30,7 +34,9 @@ export const CardSortingLabels: Record<CardSorting, string> = {
     [CardSorting.CARD_TYPE]: "Card Type",
     [CardSorting.AVG_PRICE]: "Average Price",
     [CardSorting.AVG_NON_FOIL_PRICE]: "Average Non-Foil Price",
-    [CardSorting.PRICE_DELTA]: "Price Change"
+    [CardSorting.PRICE_DELTA]: "Price Change",
+    [CardSorting.MANA_COST]: "Mana Cost",
+    [CardSorting.ARTIST]: "Artist",
 }
 
 export function sortingMethodToKey(method: CardSorting): string {
@@ -46,8 +52,8 @@ export function sortingMethodFromKey(key: string): CardSorting | undefined {
 }
 
 export function sortChronological(a: MagicCardLike, b: MagicCardLike): number {
-    if (a.release_date !== b.release_date) {
-        return a.release_date > b.release_date ? 1 : -1
+    if (a.release_date.getTime() !== b.release_date.getTime()) {
+        return a.release_date.getTime() > b.release_date.getTime() ? 1 : -1
     }
 
     if (a.series !== b.series) {
@@ -115,4 +121,20 @@ export function sortByPriceDelta(a: MagicCardLike, b: MagicCardLike): number {
     }
 
     return sortChronologicalBack(a, b)
+}
+
+export function sortManaCost(a: MagicCardLike, b: MagicCardLike): number {
+    if (a.manacost_amount !== b.manacost_amount) {
+        return a.manacost_amount > b.manacost_amount ? 1 : -1
+    }
+
+    return sortChronological(a, b)
+}
+
+export function artistSort(a: MagicCardLike, b: MagicCardLike): number {
+    if (a.artist !== b.artist) {
+        return a.artist > b.artist ? 1 : -1
+    }
+
+    return sortChronological(a, b)
 }

@@ -1,4 +1,4 @@
-import MagicCardLike from "@/interfaces/MagicCardLike";
+import MagicCardLike, { parseManaCostAmount } from "@/interfaces/MagicCardLike";
 import { getClient } from "./client";
 
 
@@ -14,6 +14,9 @@ type SupabaseMagicCardLike = {
     amount_owned: number;
     is_foil: boolean;
     is_token: boolean;
+    artist?: string;
+    text?: string;
+    manacost?: string;
     release_date: string;
     price_estimate: number;
     avg_price?: number;
@@ -39,6 +42,10 @@ function cardTransformer(card: SupabaseMagicCardLike): MagicCardLike {
         price_estimate: card.price_estimate,
         colors: card.colors,
         rarity: card.rarity,
+        artist: card.artist || '',
+        text: card.text || '',
+        manacost: card.manacost || '',
+        manacost_amount: parseManaCostAmount(card.manacost || ''),
         avg_price: Math.floor(card.avg_price ?? 0),
         avg_non_foil_price: Math.floor(card.avg_non_foil_price ?? 0),
         current_price_delta: card.price_estimate && card.avg_price ? Math.floor(card.price_estimate - card.avg_price) : 0,
@@ -66,7 +73,10 @@ export async function getAllCards(): Promise<MagicCardLike[]> {
                 release_date,
                 price_estimate,
                 colors,
-                rarity
+                rarity,
+                manacost,
+                artist,
+                text
             `)
             .gt('amount_owned', 0)
             .order('series, cardnumber')
