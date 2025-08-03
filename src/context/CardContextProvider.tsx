@@ -5,7 +5,7 @@ import MagicCardLike from "@/interfaces/MagicCardLike"
 import RenderableMagicCardLike from "@/interfaces/RenderableMagicCardLike"
 import { allCardSelector } from "@/procedures/card-selectors"
 import { CardSelectionContext, newCardSelectionContext } from "@/types/CardSelectionContext"
-import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useEffect, useMemo, useState } from "react"
+import { createContext, Dispatch, ReactNode, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from "react"
 import { SetContext } from "./SetContextProvider"
 import { CardColor, getColors } from "@/types/CardColor"
 import { CardRarity, getRarities } from "@/types/CardRarity"
@@ -16,6 +16,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { sortingMethodFromKey, sortingMethodToKey } from "@/enums/CardSorting"
 import { CardSet } from "@/types/CardSet"
 import { updateQueryParams } from "@/helpers/router"
+import { ViewMode } from "@/types/ViewMode"
 
 function contextToQueryParameters(context: CardSelectionContext): Record<string, string> {
     return {
@@ -92,16 +93,28 @@ export const CardSelectionContextContext = createContext<CardSelectionContextCon
 
 export default function CardSelectionContextProvider({ cards, children }: CardSelectionContextProviderProps) {
     const { getSets } = useContext(SetContext)
+    const [currentViewMode, setCurrentViewMode] = useState<ViewMode | null>(null)
     const {viewMode} = useContext(ViewModeContext)
     const [context, setContext] = useState<CardSelectionContext>({...newCardSelectionContext(), ...viewMode.baseContext})
     const [sets, setSets] = useState<CardSetWithCompletion[]>([])
     const colors: CardColor[] = useMemo(() => getColors(cards), [cards])
     const rarities: CardRarity[] = useMemo(() => getRarities(cards), [cards])
     const [selectedCards, setSelectedCards] = useState<RenderableMagicCardLike[]>([])
-    const statistics = viewMode.statistics ? viewMode.statistics(selectedCards) : undefined
+    const statistics = viewMode.statistics ? viewMode.statistics(selectedCards, context) : undefined
     const showSetCompletions = viewMode.showSetCompletions
     const searchParams = useSearchParams()
     const router = useRouter()
+
+    const updateQuery = useCallback((context: CardSelectionContext, newContext: SetStateAction<CardSelectionContext>) => {
+        updateQueryParams(router, searchParams, contextToQueryParameters(typeof newContext === 'function' ? newContext(context) : newContext))
+    }, [router, searchParams])
+
+    useEffect(() => {
+        if (currentViewMode !== viewMode) {
+            setCurrentViewMode(viewMode)
+            updateQuery(context, { ...context, ...viewMode.baseContext })
+        }
+    }, [currentViewMode, viewMode, context, updateQuery])
 
     useEffect(() => {
         setSets(calculateSetCompletions(getSets(cards), cards))
@@ -139,8 +152,8 @@ export default function CardSelectionContextProvider({ cards, children }: CardSe
         getCardInfo: viewMode.getCardInfo,
         generalInfo: statistics,
         setContext: (newContext: SetStateAction<CardSelectionContext>) => {
-            updateQueryParams(router, searchParams, contextToQueryParameters(typeof newContext === 'function' ? newContext(context) : newContext))
-        },  
+            updateQuery(context, newContext)
+        },
     }
 
     return <CardSelectionContextContext.Provider value={value}>

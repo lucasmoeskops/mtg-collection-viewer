@@ -3,6 +3,10 @@ import { Price } from "@/components/Price/Price"
 import { newViewMode, ViewMode } from "@/types/ViewMode"
 import { SetSorting } from "@/enums/SetSorting"
 import { Box, Typography } from "@mui/material"
+import { PriceDelta } from "@/components/PriceDelta/PriceDelta"
+import { getAverageTotalValue, getTotalCardValue } from "@/procedures/card-selectors"
+import MagicCardLike from "@/interfaces/MagicCardLike"
+import { CardSelectionContext } from "@/types/CardSelectionContext"
 
 export const views: ViewMode[] = [
     newViewMode({
@@ -35,10 +39,10 @@ export const views: ViewMode[] = [
             sortingMethod: CardSorting.AVG_PRICE,
         },
         setSortingMethod: SetSorting.NAME,
-        getCardInfo: (card) => <><Price priceEstimate={card.price_estimate} />{card.is_foil ? <>, Foil</> : null} {card.current_price_delta ? <span style={{ color: card.current_price_delta ? (card.current_price_delta > 0 ? 'green' : 'red') : 'inherit' }}>(<Price priceEstimate={card.current_price_delta ?? 0} />)</span> : null}</>,
-        statistics: (cards) => <Box sx={{p: 2}}>
+        getCardInfo: (card) => <><Price label="Card price" priceEstimate={card.price_estimate} />{card.is_foil ? <>, Foil</> : null}, <PriceDelta label="Price change since july 2025" price={card.price_estimate} avgPrice={card.avg_price} /></>,
+        statistics: (cards: MagicCardLike[], context: CardSelectionContext) => <Box sx={{p: 2}}>
             <div>Total cards selected: {cards.map(card => card.amount_owned).reduce((acc, n) => acc + n, 0)}</div>
-            <div>Total card value: <Price priceEstimate={cards.map(card => card.price_estimate).reduce((acc, n) => acc + n, 0)} /></div>
+            <div>Total card value: <Price label="Total card value" priceEstimate={getTotalCardValue(cards, context)} />, <PriceDelta label="Total card value change since july 2025" price={getTotalCardValue(cards, context)} avgPrice={getAverageTotalValue(cards, context)} /></div>
         </Box>
     }),
     newViewMode({

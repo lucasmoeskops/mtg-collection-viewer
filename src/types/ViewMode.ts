@@ -19,7 +19,7 @@ export type ViewMode = {
     setSortingMethod: SetSorting,
     baseContext: Partial<CardSelectionContext>,
     getCardInfo: (card: MagicCardLike) => string | ReactNode | ReactNode[],
-    statistics: ((cards: MagicCardLike[]) => ReactNode) | undefined,
+    statistics: ((cards: MagicCardLike[], context: CardSelectionContext) => ReactNode) | undefined,
 }
 
 export function newViewMode(props: Partial<ViewMode>): ViewMode {

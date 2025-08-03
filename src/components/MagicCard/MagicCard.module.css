@@ -1,0 +1,36 @@
+.default {
+    position: relative;
+    aspect-ratio: 488/680;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.foil {
+    &::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(-45deg, transparent 40%, #fafafa 50%, transparent 60%);
+        background-size: 300%;
+        background-position-x: 100%;
+        animation: shimmer 3s infinite linear;
+        opacity: 0.2;
+
+        pointer-events: none;
+    }
+}
+
+@keyframes shimmer {
+   33% {
+      background-position-x: 0%
+   }
+   100% {
+      background-position-x: 0%
+   }
+}

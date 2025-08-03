@@ -4,6 +4,8 @@ import MagicCardLike, { newEmptyCard } from "@/interfaces/MagicCardLike";
 import { flatMap, times } from "lodash"
 import { artistSort, CardSorting, sortAvgNonFoilPrice, sortAvgPrice, sortByPriceDelta, sortCardType, sortChronological, sortChronologicalBack, sortManaCost, sortName, sortPriceBack } from "@/enums/CardSorting";
 import { getSetByCode } from "@/types/CardSet";
+import { RenderMode } from "@/enums/RenderMode";
+import { RenderEffect } from "@/enums/RenderEffect";
 
 export async function allCardSelector(cards: MagicCardLike[], context: CardSelectionContext): Promise<RenderableMagicCardLike[]> {
     let selectedCards = Array.from(cards)
@@ -133,5 +135,24 @@ export async function allCardSelector(cards: MagicCardLike[], context: CardSelec
         }
     }
 
-    return selectedCards.map(card => makeRenderable(card))
+    return selectedCards.map(card => {
+        const effects = card.is_foil ? [RenderEffect.FOIL] : []
+        return makeRenderable(card, RenderMode.DEFAULT, effects)
+    })
+}
+
+export function getTotalCardValue(cards: MagicCardLike[], context: CardSelectionContext): number {
+    if (context.showDuplicates) {
+        return cards.reduce((total, card) => total + card.price_estimate, 0)
+    } else {
+        return cards.reduce((total, card) => total + card.price_estimate * card.amount_owned, 0)
+    }
+}
+
+export function getAverageTotalValue(cards: MagicCardLike[], context: CardSelectionContext): number {
+    if (context.showDuplicates) {
+        return cards.reduce((total, card) => total + card.avg_price, 0)
+    } else {
+        return cards.reduce((total, card) => total + card.avg_price * card.amount_owned, 0)
+    }
 }

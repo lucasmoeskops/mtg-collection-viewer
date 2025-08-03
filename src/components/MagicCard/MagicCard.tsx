@@ -5,6 +5,7 @@ import RenderableMagicCardLike from "@/interfaces/RenderableMagicCardLike"
 import { Typography } from "@mui/material"
 import Image from "next/image"
 import { useContext } from "react"
+import styles from "./MagicCard.module.css"
 
 export type MagicCardProps = {
     card: RenderableMagicCardLike
@@ -13,9 +14,10 @@ export type MagicCardProps = {
 export default function MagicCard({ card }: MagicCardProps) {
     const { getCardInfo } = useContext(CardSelectionContextContext)
     const { image_url, name } = card
+    // const isFoil = card.renderEffects.includes(RenderEffect.FOIL)
 
     return <>
-        <div style={{position: 'relative', aspectRatio: '488/680', borderRadius: '16px', overflow: 'hidden'}}>
+        <div className={[styles.default, card.is_foil && styles.foil].join(' ')}>
         {card.image_url && (
             <Image src={image_url} alt={name} fill={true} loading={"lazy"} priority={false} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"/>
         )}
