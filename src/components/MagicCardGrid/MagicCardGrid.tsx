@@ -28,7 +28,7 @@ function MagicCardGridInner({ cards }: MagicCardGridInnerProps) {
             </Grid>
             )}
         </Grid>
-        <Pagination count={numPages} pawo e={page+1} onChange={handleChange} variant="outlined" color="primary" siblingCount={3} />
+        <Pagination count={numPages} page={page+1} onChange={handleChange} variant="outlined" color="primary" siblingCount={3} />
     </Stack>
 }
 
