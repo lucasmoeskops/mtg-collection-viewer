@@ -1,7 +1,7 @@
 .default {
     position: relative;
     aspect-ratio: 488/680;
-    border-radius: 16px;
+    border-radius: 3%;
     overflow: hidden;
 }
 

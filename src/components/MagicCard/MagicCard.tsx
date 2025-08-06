@@ -19,7 +19,7 @@ export default function MagicCard({ card }: MagicCardProps) {
     return <>
         <div className={[styles.default, card.is_foil && styles.foil].join(' ')}>
         {card.image_url && (
-            <Image src={image_url} alt={name} fill={true} loading={"lazy"} priority={false} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"/>
+            <Image src={image_url} alt={name} fill={true} loading={"lazy"} priority={false} unoptimized={true} />
         )}
         </div>
         <Typography>{getCardInfo(card)}</Typography>
