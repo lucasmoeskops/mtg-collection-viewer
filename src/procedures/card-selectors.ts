@@ -66,8 +66,6 @@ export async function allCardSelector(cards: MagicCardLike[], context: CardSelec
         selectedCards = selectedCards.filter(card => card.text.toLowerCase().includes(query))
     }
 
-    console.log(`Selected ${selectedCards.length} cards from ${cards.length} total.`)
-
     switch (context.sortingMethod) {
     case CardSorting.CARD_TYPE:
         selectedCards = selectedCards.sort(sortCardType)

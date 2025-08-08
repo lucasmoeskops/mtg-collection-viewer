@@ -1,10 +1,13 @@
 'use client'
 
 import { views } from "@/configuration/grid-views"
-import { createContext, ReactNode, useEffect, useState } from "react"
+import { createContext, ReactNode, useContext, useEffect, useState } from "react"
 import { ViewMode } from "@/types/ViewMode"
 import { useRouter, useSearchParams } from "next/navigation"
 import { updateQueryParams } from "@/helpers/router"
+import { SetContext } from "./SetContextProvider"
+import { apply } from "@/enums/SetSorting"
+import { CardSet } from "@/types/CardSet"
 
 export type ViewModeContextProps = {
     viewModeIndex: number,
@@ -24,6 +27,7 @@ export const ViewModeContext = createContext<ViewModeContextProps>({
 
 export default function ViewModeProvider({ children }: ViewModeProviderProps) {
     const [viewModeIndex, setViewModeIndex] = useState<number>(0)
+    const { setSets } = useContext(SetContext)
     const viewMode = views[viewModeIndex]
     const searchParams = useSearchParams()
     const router = useRouter()
@@ -37,6 +41,16 @@ export default function ViewModeProvider({ children }: ViewModeProviderProps) {
             })
         },
     }
+
+    useEffect(() => {
+        setSets((allSets: CardSet[]) => {
+            if (!allSets || allSets.length === 0) {
+                return allSets
+            }
+            
+            return [...apply(viewMode.setSortingMethod, allSets)]
+        })
+    }, [setSets, viewMode.setSortingMethod])
 
     useEffect(() => {
         const newViewMode = searchParams.get('viewMode')

@@ -1,6 +1,5 @@
 'use client'
 
-import { zip } from "lodash"
 import MagicCardLike from "@/interfaces/MagicCardLike"
 import RenderableMagicCardLike from "@/interfaces/RenderableMagicCardLike"
 import { allCardSelector } from "@/procedures/card-selectors"
@@ -10,13 +9,14 @@ import { SetContext } from "./SetContextProvider"
 import { CardColor, getColors } from "@/types/CardColor"
 import { CardRarity, getRarities } from "@/types/CardRarity"
 import { calculateSetCompletions, CardSetWithCompletion } from "@/types/SetCompletion"
-import { apply } from "@/enums/SetSorting"
 import { ViewModeContext } from "./ViewModeContextProvider"
 import { useRouter, useSearchParams } from "next/navigation"
 import { sortingMethodFromKey, sortingMethodToKey } from "@/enums/CardSorting"
 import { CardSet } from "@/types/CardSet"
 import { updateQueryParams } from "@/helpers/router"
 import { ViewMode } from "@/types/ViewMode"
+import { AccountContext } from "./AccountContextProvider"
+import { apply } from "@/enums/SetSorting"
 
 function contextToQueryParameters(context: CardSelectionContext): Record<string, string> {
     return {
@@ -75,7 +75,6 @@ export type CardSelectionContextContextProps = {
 }
 
 export type CardSelectionContextProviderProps = {
-    cards: MagicCardLike[],
     children: ReactNode | ReactNode[]
 }
 
@@ -91,7 +90,8 @@ export const CardSelectionContextContext = createContext<CardSelectionContextCon
     setContext: () => {},
 })
 
-export default function CardSelectionContextProvider({ cards, children }: CardSelectionContextProviderProps) {
+export default function CardSelectionContextProvider({ children }: CardSelectionContextProviderProps) {
+    const { cards } = useContext(AccountContext)
     const { getSets } = useContext(SetContext)
     const [currentViewMode, setCurrentViewMode] = useState<ViewMode | null>(null)
     const {viewMode} = useContext(ViewModeContext)
@@ -117,19 +117,36 @@ export default function CardSelectionContextProvider({ cards, children }: CardSe
     }, [currentViewMode, viewMode, context, updateQuery])
 
     useEffect(() => {
-        setSets(calculateSetCompletions(getSets(cards), cards))
-    }, [cards, getSets])
+        const withCompletions = calculateSetCompletions(getSets(cards), cards)
+        apply(viewMode.setSortingMethod, withCompletions)
+        setSets(withCompletions)
+    }, [cards, getSets, viewMode.setSortingMethod])
 
     useEffect(() => {
-        setContext(ctx => ({...ctx, ...viewMode.baseContext}))
-        setSets(sets => {
-            const sorted = apply(viewMode.setSortingMethod, sets) as CardSetWithCompletion[]
-            if (zip(sets || [], sorted || []).some(([a, b]) => a != b)) {
-                return sorted
+        setContext(ctx => {
+            const needsUpdate = Object.entries(viewMode.baseContext).some(([key, value]) => {
+                if (key === 'sortingMethod') {
+                    return ctx.sortingMethod !== value
+                }
+                return ctx[key as keyof CardSelectionContext] !== value
+            })
+            if (!needsUpdate) {
+                return ctx
             }
-            return sets
+            return {
+                ...ctx,
+                ...viewMode.baseContext,
+            }
         })
-    }, [sets, viewMode])
+        // setContext(ctx => ({...ctx, ...viewMode.baseContext}))
+        // setSets(sets => {
+        //     const sorted = apply(viewMode.setSortingMethod, sets) as CardSetWithCompletion[]
+        //     if (zip(sets || [], sorted || []).some(([a, b]) => a != b)) {
+        //         return sorted
+        //     }
+        //     return sets
+        // })
+    }, [viewMode])
 
     useEffect(() => {
         allCardSelector(cards, context).then(setSelectedCards)
