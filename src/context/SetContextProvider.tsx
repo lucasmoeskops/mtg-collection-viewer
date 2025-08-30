@@ -33,7 +33,10 @@ export default function SetContextProvider({ children }: SetContextProviderProps
     }
 
     useEffect(() => {
-        fetchSets().then(setSets)
+        fetchSets().then(setSets).catch((e) => {
+            console.log('Error fetching sets', e)
+            setSets([])
+        })
     }, [])
 
     return <SetContext.Provider value={value}>

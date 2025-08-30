@@ -10,7 +10,7 @@ import styles from "./MainComponent.module.css";
 
 export function MainComponent ({ username }: { username: string }) {
   'use client'
-  const { setAccountIdByUsername } = useContext(AccountContext);
+  const { errorCode, isLoading, setAccountIdByUsername } = useContext(AccountContext);
 
   useEffect(() => {
     setAccountIdByUsername(username).then(() => {
@@ -19,6 +19,24 @@ export function MainComponent ({ username }: { username: string }) {
       console.error("Failed to set account ID by username:", error);
     });
   }, [username, setAccountIdByUsername]);
+
+  if (isLoading) {
+    return (
+      <div className={styles.page}>
+      <main className={styles.main}>
+        Loading...
+      </main>
+    </div>
+    )
+  }
+
+  if (errorCode) {
+    return <div className={styles.page}>
+      <main className={styles.main}>
+        Something went wrong unfortunately.
+      </main>
+    </div>
+  }
 
   return <div className={styles.page}>
       <main className={styles.main}>

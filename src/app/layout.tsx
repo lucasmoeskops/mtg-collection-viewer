@@ -32,7 +32,7 @@ export default async function RootLayout({
     <html lang="en" className={roboto.variable}>
       <body>
         <ThemeProvider theme={theme}>
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={<div>Something went wrong...</div>}>
             <SetContextProvider>
               <AccountProvider>
                 <ViewModeProvider>
