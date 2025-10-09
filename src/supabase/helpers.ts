@@ -124,8 +124,8 @@ export async function getAllCards(accountId: number): Promise<MagicCardLike[]> {
                     card.avg_price = prices.avg_price;
                     card.avg_non_foil_price = prices.avg_non_foil_price;
                 } else {
-                    card.avg_price = 0;
-                    card.avg_non_foil_price = 0;
+                    card.avg_price = card.card.price_estimate;
+                    card.avg_non_foil_price = card.card.is_foil ? 0 : card.card.price_estimate;
                 }
             });
             cards = data.map(cardTransformer)
