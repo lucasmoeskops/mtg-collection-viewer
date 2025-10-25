@@ -4,10 +4,11 @@ export interface PriceDeltaProps {
     price: number,
     avgPrice: number,
     label: string,
+    history?: { cardId: number },
 }
 
 export function PriceDelta(props: PriceDeltaProps) {
-    const { price, avgPrice, label } = props;
+    const { price, avgPrice, label, history } = props;
 
     if (!avgPrice) {
         return null;
@@ -22,6 +23,6 @@ export function PriceDelta(props: PriceDeltaProps) {
 
     return <span style={{ color: delta > 0 ? 'green' : 'red' }}>
         {delta > 0 ? '+' : '-'}
-        <Price label={label} priceEstimate={absDelta} />
+        <Price label={label} priceEstimate={absDelta} history={history} />
     </span>
 }

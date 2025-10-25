@@ -35,6 +35,7 @@ type SupabaseMagicCardLike = {
 function cardTransformer(card: SupabaseMagicCardLike): MagicCardLike {
     const cardData = card.card;
     return {
+        id: cardData.id,
         series: cardData.series,
         cardnumber: cardData.cardnumber,
         card_type: cardData.card_type,

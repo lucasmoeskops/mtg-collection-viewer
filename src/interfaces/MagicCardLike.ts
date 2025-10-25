@@ -1,4 +1,5 @@
 export default interface MagicCardLike {
+  id: number;
   name: string;
   series: string;
   colors: string[];
@@ -22,6 +23,7 @@ export default interface MagicCardLike {
 
 export function newEmptyCard(): MagicCardLike {
   return {
+    id: 0,
     name: '?',
     series: '?',
     colors: [],

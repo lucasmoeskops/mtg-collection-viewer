@@ -214,8 +214,8 @@ export type Database = {
           id: number
           mtg_data_id: number
           non_foil_price_cents: number | null
-          price_cents: number | null
-          timestamp: string | null
+          price_cents: number
+          timestamp: string
         }
         Insert: {
           created_at?: string
