@@ -7,13 +7,102 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
   }
   public: {
     Tables: {
+      honey_game: {
+        Row: {
+          created_at: string
+          id: number
+          score: number
+          words_available: number | null
+          words_correct: number | null
+          words_played: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          score: number
+          words_available?: number | null
+          words_correct?: number | null
+          words_played?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          score?: number
+          words_available?: number | null
+          words_correct?: number | null
+          words_played?: number | null
+        }
+        Relationships: []
+      }
+      honey_translations: {
+        Row: {
+          created_at: string
+          english: string
+          id: number
+          mastery: number | null
+          sentence: string | null
+          sentence_translation: string | null
+          times_correct: number | null
+          times_played: number | null
+          word: number
+        }
+        Insert: {
+          created_at?: string
+          english: string
+          id?: number
+          mastery?: number | null
+          sentence?: string | null
+          sentence_translation?: string | null
+          times_correct?: number | null
+          times_played?: number | null
+          word: number
+        }
+        Update: {
+          created_at?: string
+          english?: string
+          id?: number
+          mastery?: number | null
+          sentence?: string | null
+          sentence_translation?: string | null
+          times_correct?: number | null
+          times_played?: number | null
+          word?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "honey_translations_word_fkey"
+            columns: ["word"]
+            isOneToOne: false
+            referencedRelation: "honey_words"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      honey_words: {
+        Row: {
+          created_at: string
+          dutch: string
+          id: number
+        }
+        Insert: {
+          created_at?: string
+          dutch: string
+          id?: number
+        }
+        Update: {
+          created_at?: string
+          dutch?: string
+          id?: number
+        }
+        Relationships: []
+      }
       mtg_account: {
         Row: {
           created_at: string
@@ -222,16 +311,16 @@ export type Database = {
           id?: number
           mtg_data_id?: number
           non_foil_price_cents?: number | null
-          price_cents?: number | null
-          timestamp?: string | null
+          price_cents: number
+          timestamp: string
         }
         Update: {
           created_at?: string
           id?: number
           mtg_data_id?: number
           non_foil_price_cents?: number | null
-          price_cents?: number | null
-          timestamp?: string | null
+          price_cents?: number
+          timestamp?: string
         }
         Relationships: [
           {
@@ -248,7 +337,35 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      random_card: {
+        Args: never
+        Returns: {
+          amount_owned: number | null
+          artist: string
+          card_type: string
+          cardmarket_url: string | null
+          cardnumber: number
+          colors: string[]
+          created_at: string
+          id: number
+          image_url: string | null
+          is_foil: boolean
+          is_token: boolean
+          manacost: string
+          name: string
+          price_estimate: number
+          rarity: string
+          release_date: string
+          series: string
+          text: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "mtg_data"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
     }
     Enums: {
       [_ in never]: never

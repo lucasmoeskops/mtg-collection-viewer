@@ -1,62 +1,8 @@
 'use server'
 
-import MagicCardLike, { parseManaCostAmount } from "@/interfaces/MagicCardLike";
+import MagicCardLike, { fromSupabaseCard } from "@/interfaces/MagicCardLike";
 import { getClient } from "./client";
-
-
-type SupabaseMagicCardLike = {
-    card: {
-        id: number;
-        name: string;
-        series: string;
-        colors: string[];
-        rarity: string;
-        cardnumber: number;
-        card_type: string;
-        image_url: string | null;
-        is_foil: boolean;
-        is_token: boolean;
-        artist?: string;
-        text?: string;
-        manacost?: string;
-        release_date: string;
-        price_estimate: number;
-    }
-    amount: number;
-    avg_price?: number;
-    avg_non_foil_price?: number;
-    // mtg_price: {
-    //     avg_price: number;
-    //     avg_non_foil_price: number;
-    // }[];
-}
-
-
-function cardTransformer(card: SupabaseMagicCardLike): MagicCardLike {
-    const cardData = card.card;
-    return {
-        id: cardData.id,
-        series: cardData.series,
-        cardnumber: cardData.cardnumber,
-        card_type: cardData.card_type,
-        name: cardData.name,
-        image_url: cardData.image_url || '',
-        amount_owned: card.amount,
-        is_foil: cardData.is_foil,
-        is_token: cardData.is_token,
-        release_date: new Date(cardData.release_date),
-        price_estimate: cardData.price_estimate,
-        colors: cardData.colors,
-        rarity: cardData.rarity,
-        artist: cardData.artist || '',
-        text: cardData.text || '',
-        manacost: cardData.manacost || '',
-        manacost_amount: parseManaCostAmount(cardData.manacost || ''),
-        avg_price: Math.floor(card.avg_price ?? 0),
-        avg_non_foil_price: Math.floor(card.avg_non_foil_price ?? 0),
-        current_price_delta: cardData.price_estimate && card.avg_price ? Math.floor(cardData.price_estimate - card.avg_price) : 0,
-    }
-}
+import { SupabaseBoundMagicCardLike } from "./utils";
 
 
 export async function getAllCards(accountId: number): Promise<MagicCardLike[]> {
@@ -90,7 +36,7 @@ export async function getAllCards(accountId: number): Promise<MagicCardLike[]> {
             `)
             .eq('account', accountId)
             .gt('amount', 0)
-            .limit(10000)
+            .limit(10000);
 
         const { data: mtgPriceData, error: mtgPriceError } = await client
             .from('mtg_price')
@@ -101,6 +47,7 @@ export async function getAllCards(accountId: number): Promise<MagicCardLike[]> {
             `)
             .order('mtg_data_id')
             .limit(10000)
+
         if (mtgPriceError) {
             console.log(mtgPriceError)
             throw new Error('Supabase error: see console')
@@ -119,7 +66,7 @@ export async function getAllCards(accountId: number): Promise<MagicCardLike[]> {
                     avg_non_foil_price: price.avg_non_foil_price ?? 0
                 });
             });
-            data.forEach((card: SupabaseMagicCardLike) => {
+            data.forEach((card: SupabaseBoundMagicCardLike) => {
                 const prices = priceMap.get(card.card.id);
                 if (prices) {
                     card.avg_price = prices.avg_price;
@@ -129,7 +76,7 @@ export async function getAllCards(accountId: number): Promise<MagicCardLike[]> {
                     card.avg_non_foil_price = card.card.is_foil ? 0 : card.card.price_estimate;
                 }
             });
-            cards = data.map(cardTransformer)
+            cards = data.map(fromSupabaseCard)
         }
     }
 

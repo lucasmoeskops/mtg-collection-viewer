@@ -17,12 +17,8 @@ export function PriceDelta(props: PriceDeltaProps) {
     const delta = Math.floor(price - avgPrice);
     const absDelta = Math.abs(delta);
 
-    if (!absDelta) {
-        return null;
-    }
-
     return <span style={{ color: delta > 0 ? 'green' : 'red' }}>
-        {delta > 0 ? '+' : '-'}
+        {delta >= 0 ? '+' : '-'}
         <Price label={label} priceEstimate={absDelta} history={history} />
     </span>
 }

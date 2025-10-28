@@ -1,4 +1,5 @@
 import MagicCardLike from "@/interfaces/MagicCardLike";
+import { rateLimitedFetch, setsEndpoint } from "@/scryfall/utils";
 
 export interface CardSet {
     code: string,
@@ -23,7 +24,7 @@ export async function fetchSets(): Promise<CardSet[]> {
     if (!cache.sets.length) {
         let response
         try {
-            response = await fetch("https://api.scryfall.com/sets")
+            response = await rateLimitedFetch(setsEndpoint)
         } catch (e) {
             console.log('Error:', e)
             return []
