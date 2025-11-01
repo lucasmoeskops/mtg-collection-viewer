@@ -2,7 +2,7 @@ import { CardSorting } from "@/enums/CardSorting"
 import { Price } from "@/components/Price/Price"
 import { newViewMode, ViewMode } from "@/types/ViewMode"
 import { SetSorting } from "@/enums/SetSorting"
-import { Box, Typography } from "@mui/material"
+import { Typography } from "@mui/material"
 import { PriceDelta } from "@/components/PriceDelta/PriceDelta"
 import { getAverageTotalValue, getTotalCardValue } from "@/procedures/card-selectors"
 import MagicCardLike from "@/interfaces/MagicCardLike"
@@ -24,9 +24,7 @@ export const views: ViewMode[] = [
             {card.amount_owned > 1 && card.is_foil && ', '}
             {card.is_foil ? <>Foil</> : null}
         </>,
-        statistics: (cards) => <Box sx={{p: 2}}>
-            <Typography>Total cards selected: {cards.length}</Typography>
-        </Box>
+        statistics: (cards) => <Typography>Total cards selected: {cards.length}</Typography>
     }),
     newViewMode({
         id: "merchant",
@@ -40,10 +38,10 @@ export const views: ViewMode[] = [
         },
         setSortingMethod: SetSorting.NAME,
         getCardInfo: (card) => <><Price label="Card price" priceEstimate={card.price_estimate} />{card.is_foil ? <>, Foil</> : null}, <PriceDelta label="Price change since july 2025" price={card.price_estimate} avgPrice={card.avg_price} history={{ cardId: card.id }} /></>,
-        statistics: (cards: MagicCardLike[], context: CardSelectionContext) => <Box sx={{p: 2}}>
+        statistics: (cards: MagicCardLike[], context: CardSelectionContext) => <>
             <div>Total cards selected: {cards.map(card => card.amount_owned).reduce((acc, n) => acc + n, 0)}</div>
             <div>Total card value: <Price label="Total card value" priceEstimate={getTotalCardValue(cards, context)} />, <PriceDelta label="Total card value change since july 2025" price={getTotalCardValue(cards, context)} avgPrice={getAverageTotalValue(cards, context)} /></div>
-        </Box>
+        </>
     }),
     newViewMode({
         id: "collection",
@@ -59,6 +57,7 @@ export const views: ViewMode[] = [
         showSetCompletions: true,
         showColorFilter: false,
         showDateFilter: false,
+        showLegendaryFilter: false,
         showRarityFilter: false,
         showTokenFilter: false,
     }),

@@ -10,6 +10,7 @@ import ViewModeProvider from "@/context/ViewModeContextProvider";
 import CardSelectionContextProvider from "@/context/CardContextProvider";
 import { Suspense } from "react";
 import AccountProvider from "@/context/AccountContextProvider";
+import Background from "@/components/Background/Background";
 
 const roboto = Roboto({
   weight: ['300', '400', '500', '700'],
@@ -32,7 +33,7 @@ export default async function RootLayout({
     <html lang="en" className={roboto.variable}>
       <body>
         <ThemeProvider theme={theme}>
-          <Suspense fallback={<div>Something went wrong...</div>}>
+          <Suspense fallback={<Background><div>Something went wrong...</div></Background>}>
             <SetContextProvider>
               <AccountProvider>
                 <ViewModeProvider>

@@ -97,9 +97,9 @@ export default function Filters({}): ReactNode {
         <FormControl sx={{ m: 3 }}>
             <FormLabel>Special</FormLabel>
             <FormGroup row={true}>
-                <FormControlLabel label="Is foil" control={<Checkbox checked={isFoil} onChange={contextUpdaterForInput(undefined, 'isFoil', 'checked')} />} />
-                {showLegendaryFilter && <FormControlLabel label="Is legend" control={<Checkbox checked={isLegendary} onChange={contextUpdaterForInput(undefined, 'isLegendary', 'checked')} />} />}
-                {showTokenFilter && <FormControlLabel label="Is token" control={<Checkbox checked={isToken} onChange={contextUpdaterForInput(undefined, 'isToken', 'checked')} />} />}
+                <FormControlLabel label="Foil" control={<Checkbox checked={isFoil} onChange={contextUpdaterForInput(undefined, 'isFoil', 'checked')} />} />
+                {showLegendaryFilter && <FormControlLabel label="Legend" control={<Checkbox checked={isLegendary} onChange={contextUpdaterForInput(undefined, 'isLegendary', 'checked')} />} />}
+                {showTokenFilter && <FormControlLabel label="Token" control={<Checkbox checked={isToken} onChange={contextUpdaterForInput(undefined, 'isToken', 'checked')} />} />}
             </FormGroup>
         </FormControl>
         {showColorFilter && (

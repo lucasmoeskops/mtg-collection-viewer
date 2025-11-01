@@ -18,7 +18,7 @@ async function fetchBackground(): Promise<MagicCardLike | null> {
     return cardFromScryfall;
 }
 
-export default function Background({ children }: { children?: React.ReactNode }) {
+export default function Background({ children, fullBackground=false }: { children?: React.ReactNode, fullBackground?: boolean }) {
     const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
     const [card, setCard] = useState<MagicCardLike | null>(null);
 
@@ -35,7 +35,7 @@ export default function Background({ children }: { children?: React.ReactNode })
         <div className={styles.background} style={{
             backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
         }}>
-            <div className={styles.overlay}>
+            <div className={`${styles.overlay} ${fullBackground ? styles.overlayFull : styles.overlayPartial}`}>
                 {children}
             </div>
             <div className={styles.attribution}>

@@ -38,7 +38,7 @@ export default function ViewModeProvider({ children }: ViewModeProviderProps) {
         setViewModeIndex: (viewModeIndex: number) => {
             updateQueryParams(router, searchParams, {
                 viewMode: views[viewModeIndex].id,
-            })
+            }, true);
         },
     }
 

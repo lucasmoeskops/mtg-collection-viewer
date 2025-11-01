@@ -3,7 +3,7 @@
 import MagicCardLike from "@/interfaces/MagicCardLike"
 import RenderableMagicCardLike from "@/interfaces/RenderableMagicCardLike"
 import { allCardSelector } from "@/procedures/card-selectors"
-import { CardSelectionContext, newCardSelectionContext } from "@/types/CardSelectionContext"
+import { CardSelectionContext, cardSelectionContextToHumanReadableString, newCardSelectionContext } from "@/types/CardSelectionContext"
 import { createContext, Dispatch, ReactNode, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from "react"
 import { SetContext } from "./SetContextProvider"
 import { CardColor, getColors } from "@/types/CardColor"
@@ -17,24 +17,54 @@ import { updateQueryParams } from "@/helpers/router"
 import { ViewMode } from "@/types/ViewMode"
 import { AccountContext } from "./AccountContextProvider"
 import { apply } from "@/enums/SetSorting"
+import { Box, Typography } from "@mui/material"
 
-function contextToQueryParameters(context: CardSelectionContext): Record<string, string> {
-    return {
-        set: context.set,
-        colors: context.colors.join(','),
-        rarities: context.rarities.join(','),
-        foil: context.isFoil ? '1': '',
-        legendary: context.isLegendary ? '1' : '',
-        token: context.isToken ? '1' : '',
-        // showDuplicates: context.showDuplicates ? '1' : '',
-        sort: sortingMethodToKey(context.sortingMethod),
-        name: context.nameQuery,
-        type: context.typeQuery,
-        text: context.textQuery,
-        artist: context.artistQuery, 
-        releasedBefore: context.releasedBefore?.code || '',
-        releasedAfter: context.releasedAfter?.code || '',
+
+function partialContextToQueryParameters(context: Partial<CardSelectionContext>): Record<string, string> {
+    const parameters: Record<string, string> = {};
+    if (context.set !== undefined) {
+        parameters.set = context.set;
     }
+    if (context.colors !== undefined) {
+        parameters.colors = context.colors.join(',');
+    }
+    if (context.rarities !== undefined) {
+        parameters.rarities = context.rarities.join(',');
+    }
+    if (context.isFoil !== undefined) {
+        parameters.foil = context.isFoil ? '1' : '';
+    }
+    if (context.isLegendary !== undefined) {
+        parameters.legendary = context.isLegendary ? '1' : '';
+    }
+    if (context.isToken !== undefined) {
+        parameters.token = context.isToken ? '1' : '';
+    }
+    // if (context.showDuplicates !== undefined) {
+    //     parameters.showDuplicates = context.showDuplicates ? '1' : '';
+    // }
+    if (context.sortingMethod !== undefined) {
+        parameters.sort = sortingMethodToKey(context.sortingMethod);
+    }
+    if (context.nameQuery !== undefined) {
+        parameters.name = context.nameQuery;
+    }
+    if (context.typeQuery !== undefined) {  
+        parameters.type = context.typeQuery;
+    }
+    if (context.textQuery !== undefined) {
+        parameters.text = context.textQuery;
+    }
+    if (context.artistQuery !== undefined) {
+        parameters.artist = context.artistQuery;
+    }
+    if (context.releasedBefore !== undefined) {
+        parameters.releasedBefore = context.releasedBefore?.code || '';
+    }
+    if (context.releasedAfter !== undefined) {
+        parameters.releasedAfter = context.releasedAfter?.code || '';
+    }
+    return parameters;
 }
 
 function queryParametersToContext(query: Record<string, string>, sets: CardSet[], baseContext: Partial<CardSelectionContext>): CardSelectionContext {
@@ -105,14 +135,14 @@ export default function CardSelectionContextProvider({ children }: CardSelection
     const searchParams = useSearchParams()
     const router = useRouter()
 
-    const updateQuery = useCallback((context: CardSelectionContext, newContext: SetStateAction<CardSelectionContext>) => {
-        updateQueryParams(router, searchParams, contextToQueryParameters(typeof newContext === 'function' ? newContext(context) : newContext))
+    const updateQuery = useCallback((context: CardSelectionContext, newContext: SetStateAction<Partial<CardSelectionContext>>) => {
+        updateQueryParams(router, searchParams, partialContextToQueryParameters(typeof newContext === 'function' ? newContext(context) : newContext))
     }, [router, searchParams])
 
     useEffect(() => {
         if (currentViewMode !== viewMode) {
             setCurrentViewMode(viewMode)
-            updateQuery(context, { ...context, ...viewMode.baseContext })
+            updateQuery(context, viewMode.baseContext)
         }
     }, [currentViewMode, viewMode, context, updateQuery])
 
@@ -167,9 +197,9 @@ export default function CardSelectionContextProvider({ children }: CardSelection
         rarities,
         showSetCompletions,
         getCardInfo: viewMode.getCardInfo,
-        generalInfo: statistics,
+        generalInfo: <Box sx={{p: 2}}><Typography>{cardSelectionContextToHumanReadableString(context)}</Typography>{statistics}</Box>,
         setContext: (newContext: SetStateAction<CardSelectionContext>) => {
-            updateQuery(context, newContext)
+            updateQuery(context, newContext as Partial<CardSelectionContext>)
         },
     }
 
