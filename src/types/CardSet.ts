@@ -6,6 +6,7 @@ export interface CardSet {
     name: string,
     numberOfCards: number,
     releaseDate: Date,
+    iconSvgUri: string,
 }
 
 const cache = {
@@ -41,10 +42,11 @@ interface ScryFallSet {
     card_count: number,
     printed_size?: number,
     released_at: string,
+    icon_svg_uri: string,
 }
 
-function scryfallSetToCardSet({ code, name, card_count, printed_size, released_at }: ScryFallSet): CardSet {
-    return { code, name, numberOfCards: printed_size ?? card_count, releaseDate: new Date(Date.parse(released_at)) }
+function scryfallSetToCardSet({ code, name, card_count, printed_size, released_at, icon_svg_uri }: ScryFallSet): CardSet {
+    return { code, name, numberOfCards: printed_size ?? card_count, releaseDate: new Date(Date.parse(released_at)), iconSvgUri: icon_svg_uri }
 }
 
 function setSort(a: CardSet, b: CardSet) {

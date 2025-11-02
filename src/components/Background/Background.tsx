@@ -23,12 +23,17 @@ export default function Background({ children, fullBackground=false }: { childre
     const [card, setCard] = useState<MagicCardLike | null>(null);
 
     useEffect(() => {
-        async function loadBackground() {
-            const card = await fetchBackground();
+        let relevant = true;
+        fetchBackground().then(card => {
+            if (!relevant) {
+                return;
+            }
             setBackgroundImage(card?.art_crop_url || null);
             setCard(card);
-        }
-        loadBackground();
+        }).catch(() => {}); 
+        return () => {
+            relevant = false;
+        };
     }, []);
 
     return (

@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Container } from "@mui/material";
+import { Box, Container } from "@mui/material";
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import { Roboto } from 'next/font/google';
 import { ThemeProvider } from '@mui/material/styles';
 import theme from '../theme';
 import SetContextProvider from "@/context/SetContextProvider";
-import ViewModeProvider from "@/context/ViewModeContextProvider";
-import CardSelectionContextProvider from "@/context/CardContextProvider";
 import { Suspense } from "react";
 import AccountProvider from "@/context/AccountContextProvider";
 import Background from "@/components/Background/Background";
@@ -33,18 +31,14 @@ export default async function RootLayout({
     <html lang="en" className={roboto.variable}>
       <body>
         <ThemeProvider theme={theme}>
-          <Suspense fallback={<Background><div>Something went wrong...</div></Background>}>
+          <Suspense fallback={<Background><Box sx={{ p: 2 }}>Loading...</Box></Background>}>
             <SetContextProvider>
               <AccountProvider>
-                <ViewModeProvider>
-                  <CardSelectionContextProvider>
-                    <AppRouterCacheProvider>
-                        <Container>
-                          {children}
-                        </Container>
-                    </AppRouterCacheProvider>
-                  </CardSelectionContextProvider>
-                </ViewModeProvider>
+                <AppRouterCacheProvider>
+                  <Container>
+                    {children}
+                  </Container>
+                </AppRouterCacheProvider>
               </AccountProvider>
             </SetContextProvider>
           </Suspense>

@@ -11,10 +11,8 @@ import { CardRarity, getRarities } from "@/types/CardRarity"
 import { calculateSetCompletions, CardSetWithCompletion } from "@/types/SetCompletion"
 import { ViewModeContext } from "./ViewModeContextProvider"
 import { useRouter, useSearchParams } from "next/navigation"
-import { sortingMethodFromKey, sortingMethodToKey } from "@/enums/CardSorting"
-import { CardSet } from "@/types/CardSet"
+import { sortingMethodToKey } from "@/enums/CardSorting"
 import { updateQueryParams } from "@/helpers/router"
-import { ViewMode } from "@/types/ViewMode"
 import { AccountContext } from "./AccountContextProvider"
 import { apply } from "@/enums/SetSorting"
 import { Box, Typography } from "@mui/material"
@@ -67,31 +65,6 @@ function partialContextToQueryParameters(context: Partial<CardSelectionContext>)
     return parameters;
 }
 
-function queryParametersToContext(query: Record<string, string>, sets: CardSet[], baseContext: Partial<CardSelectionContext>): CardSelectionContext {
-    const newContext: Partial<CardSelectionContext> = {
-        set: query.set || '',
-        colors: (query.colors || '').split(',').filter(Boolean),
-        rarities: (query.rarities || '').split(',').filter(Boolean),
-        isFoil: query.foil === '1',
-        isLegendary: query.legendary === '1',
-        isToken: query.token === '1',
-        // showDuplicates: query.showDuplicates === '1',
-        sortingMethod: sortingMethodFromKey(query.sort) || baseContext.sortingMethod,
-        nameQuery: query.name || '',
-        typeQuery: query.type || '',
-        textQuery: query.text || '',
-        artistQuery: query.artist || '',
-        releasedBefore: query.releasedBefore ? sets.find(set => set.code === query.releasedBefore) ?? null : null,
-        releasedAfter: query.releasedAfter ? sets.find(set => set.code === query.releasedAfter) ?? null : null,
-    }
-
-    return {
-        ...newCardSelectionContext(),
-        ...baseContext,
-        ...Object.fromEntries(Object.entries(newContext).filter(([key, value]) => key && value)),
-    }
-}
-
 export type CardSelectionContextContextProps = {
     context: CardSelectionContext,
     cards: RenderableMagicCardLike[],
@@ -105,6 +78,7 @@ export type CardSelectionContextContextProps = {
 }
 
 export type CardSelectionContextProviderProps = {
+    extraContext: Partial<CardSelectionContext>,
     children: ReactNode | ReactNode[]
 }
 
@@ -120,12 +94,11 @@ export const CardSelectionContextContext = createContext<CardSelectionContextCon
     setContext: () => {},
 })
 
-export default function CardSelectionContextProvider({ children }: CardSelectionContextProviderProps) {
+export default function CardSelectionContextProvider({ extraContext, children }: CardSelectionContextProviderProps) {
     const { cards } = useContext(AccountContext)
     const { getSets } = useContext(SetContext)
-    const [currentViewMode, setCurrentViewMode] = useState<ViewMode | null>(null)
     const {viewMode} = useContext(ViewModeContext)
-    const [context, setContext] = useState<CardSelectionContext>({...newCardSelectionContext(), ...viewMode.baseContext})
+    const [context, setContext] = useState<CardSelectionContext>({...newCardSelectionContext(), ...viewMode.baseContext, ...extraContext})
     const [sets, setSets] = useState<CardSetWithCompletion[]>([])
     const colors: CardColor[] = useMemo(() => getColors(cards), [cards])
     const rarities: CardRarity[] = useMemo(() => getRarities(cards), [cards])
@@ -140,54 +113,14 @@ export default function CardSelectionContextProvider({ children }: CardSelection
     }, [router, searchParams])
 
     useEffect(() => {
-        if (currentViewMode !== viewMode) {
-            setCurrentViewMode(viewMode)
-            updateQuery(context, viewMode.baseContext)
-        }
-    }, [currentViewMode, viewMode, context, updateQuery])
-
-    useEffect(() => {
         const withCompletions = calculateSetCompletions(getSets(cards), cards)
         apply(viewMode.setSortingMethod, withCompletions)
         setSets(withCompletions)
     }, [cards, getSets, viewMode.setSortingMethod])
 
     useEffect(() => {
-        setContext(ctx => {
-            const needsUpdate = Object.entries(viewMode.baseContext).some(([key, value]) => {
-                if (key === 'sortingMethod') {
-                    return ctx.sortingMethod !== value
-                }
-                return ctx[key as keyof CardSelectionContext] !== value
-            })
-            if (!needsUpdate) {
-                return ctx
-            }
-            return {
-                ...ctx,
-                ...viewMode.baseContext,
-            }
-        })
-        // setContext(ctx => ({...ctx, ...viewMode.baseContext}))
-        // setSets(sets => {
-        //     const sorted = apply(viewMode.setSortingMethod, sets) as CardSetWithCompletion[]
-        //     if (zip(sets || [], sorted || []).some(([a, b]) => a != b)) {
-        //         return sorted
-        //     }
-        //     return sets
-        // })
-    }, [viewMode])
-
-    useEffect(() => {
         allCardSelector(cards, context).then(setSelectedCards)
     }, [cards, context])
-
-    useEffect(() => {
-        const newContext = queryParametersToContext(Object.fromEntries(searchParams.entries()), sets, viewMode.baseContext)
-        if (JSON.stringify(newContext) !== JSON.stringify(context)) {
-            setContext(newContext)
-        }
-    }, [searchParams, sets, viewMode.baseContext, context])
 
     const value: CardSelectionContextContextProps = {
         context,
@@ -199,7 +132,8 @@ export default function CardSelectionContextProvider({ children }: CardSelection
         getCardInfo: viewMode.getCardInfo,
         generalInfo: <Box sx={{p: 2}}><Typography>{cardSelectionContextToHumanReadableString(context)}</Typography>{statistics}</Box>,
         setContext: (newContext: SetStateAction<CardSelectionContext>) => {
-            updateQuery(context, newContext as Partial<CardSelectionContext>)
+            updateQuery(context, newContext as Partial<CardSelectionContext>);
+            setContext(newContext);
         },
     }
 

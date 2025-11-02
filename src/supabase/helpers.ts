@@ -1,4 +1,4 @@
-'use server'
+'use server';
 
 import MagicCardLike, { fromSupabaseCard } from "@/interfaces/MagicCardLike";
 import { getClient } from "./client";
@@ -6,7 +6,7 @@ import { SupabaseBoundMagicCardLike } from "./utils";
 
 
 export async function getAllCards(accountId: number): Promise<MagicCardLike[]> {
-    'use server'
+    console.log('getAllCards called for accountId', accountId);
 
     const client = getClient()
     let cards: MagicCardLike[] = [];

@@ -1,13 +1,10 @@
 
-import Background from "@/components/Background/Background";
-import { MainComponent } from "@/components/MainComponent/MainComponent";
+import { HomeComponent } from "@/components/HomeComponent/HomeComponent";
+import { Box } from "@mui/material";
 
 
-export default async function Home({ params}: { params: Promise<{ username: string }> }) {
-  const { username } = await params;
-  return (
-    <Background fullBackground={true}>
-      <MainComponent username={username} />
-    </Background>
-  );
+export default async function Home() {
+  return <Box m={2}>
+    <HomeComponent />
+  </Box>;
 }

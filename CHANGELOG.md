@@ -1,6 +1,12 @@
 # MTG Collection Viewer
 ## Changelog
 
+### v2025.11.02
++ Integrated the Collection Editor into this project.
++ Added a login option with password to enable editing functions.
++ Reworked menu to allow different views than card views.
++ Added a home, settings and colofon page.
+
 ### v2025.11.01
 + Improved the error screen flashing
 + Every screen now has a background image

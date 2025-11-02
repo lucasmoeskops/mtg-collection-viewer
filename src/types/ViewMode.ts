@@ -3,9 +3,10 @@ import { SetSorting } from "@/enums/SetSorting";
 import MagicCardLike from "@/interfaces/MagicCardLike";
 import { CardSelectionContext } from "@/types/CardSelectionContext";
 import { ReactNode } from "react";
+import { ViewModes } from "./ViewModes";
 
 export type ViewMode = {
-    id: string,
+    id: ViewModes,
     label: string,
     title: string | ((context: CardSelectionContext) => string),
     sortModes: CardSorting[],
@@ -22,9 +23,8 @@ export type ViewMode = {
     statistics: ((cards: MagicCardLike[], context: CardSelectionContext) => ReactNode) | undefined,
 }
 
-export function newViewMode(props: Partial<ViewMode>): ViewMode {
+export function newViewMode(props: Partial<ViewMode> & { id: ViewModes }): ViewMode {
     return {
-        id: "new-view-mode",
         label: "New ViewMode",
         title: "New ViewMode",
         sortModes: [CardSorting.CHRONOLOGICAL_BACK],

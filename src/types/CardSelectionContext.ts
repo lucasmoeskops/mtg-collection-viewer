@@ -1,4 +1,4 @@
-import { CardSorting } from "@/enums/CardSorting"
+import { CardSorting, sortingMethodFromKey } from "@/enums/CardSorting"
 import { CardSet } from "./CardSet"
 
 export type CardSelectionContext = {
@@ -83,4 +83,25 @@ export function cardSelectionContextToHumanReadableString(context: CardSelection
         return `Filters: ${parts.join(', ')} and ${lastPart}.`;
     }
     return `Filter: ${parts[0]}.`;
+}
+
+export function queryParametersToContext(query: Record<string, string>, sets: CardSet[]): Partial<CardSelectionContext> {
+    const newContext: Partial<CardSelectionContext> = {
+        set: query.set || '',
+        colors: (query.colors || '').split(',').filter(Boolean),
+        rarities: (query.rarities || '').split(',').filter(Boolean),
+        isFoil: query.foil === '1',
+        isLegendary: query.legendary === '1',
+        isToken: query.token === '1',
+        // showDuplicates: query.showDuplicates === '1',
+        sortingMethod: sortingMethodFromKey(query.sort),
+        nameQuery: query.name || '',
+        typeQuery: query.type || '',
+        textQuery: query.text || '',
+        artistQuery: query.artist || '',
+        releasedBefore: query.releasedBefore ? sets.find(set => set.code === query.releasedBefore) ?? null : null,
+        releasedAfter: query.releasedAfter ? sets.find(set => set.code === query.releasedAfter) ?? null : null,
+    }
+
+    return Object.fromEntries(Object.entries(newContext).filter(([key, value]) => key && value));
 }
