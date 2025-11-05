@@ -104,16 +104,10 @@ export default function AccountProvider({ children }: AccountProviderProps) {
     }, [accountId, errorCode, accountName]);
 
     useEffect(() => {
-        const randint = Math.floor(Math.random() * 100000);
         let relevant = true;
-        async function fetchCards() {
-            console.log('Fetching cards for account', accountId, randint);
-            await new Promise(resolve => setTimeout(resolve, 500)); // Artificial delay for better UX
-            return getAllCards(accountId);
-        };
         if (cardDataNeeded && !cardDataValid && accountId !== -1) {
             setIsLoading(true)
-            fetchCards().then((cards) => {
+            getAllCards(accountId).then((cards) => {
                 if (relevant) {
                     setCards(cards)
                     setCardDataValid(true);

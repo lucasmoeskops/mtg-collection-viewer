@@ -1,6 +1,10 @@
 # MTG Collection Viewer
 ## Changelog
 
+### v2025.11.03
++ Add search option in editor set list.
++ Remove "Artificial delay for better UX" in AccountContextProvider.
+
 ### v2025.11.02
 + Integrated the Collection Editor into this project.
 + Added a login option with password to enable editing functions.

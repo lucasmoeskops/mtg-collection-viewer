@@ -57,6 +57,14 @@ function setSort(a: CardSet, b: CardSet) {
     return 0
 }
 
+export function setDateSort(a: CardSet, b: CardSet) {
+    if (a.releaseDate.getTime() !== b.releaseDate.getTime()) {
+        return b.releaseDate.getTime() - a.releaseDate.getTime()
+    }
+
+    return 0
+}
+
 export async function getSetByCode(code: string): Promise<CardSet | undefined> {
     const sets = await fetchSets()
     return sets.find(set => set.code === code)

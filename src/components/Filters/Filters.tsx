@@ -3,7 +3,7 @@
 
 import { ChangeEvent, ReactNode, useContext, useMemo, useState } from "react"
 import { CardSelectionContextContext } from "@/context/CardContextProvider";
-import { Checkbox, FormControl, FormControlLabel, FormGroup, FormLabel, MenuItem, Select, SelectChangeEvent, TextField } from '@mui/material';
+import { Autocomplete, Checkbox, FormControl, FormControlLabel, FormGroup, FormLabel, MenuItem, Select, SelectChangeEvent, TextField } from '@mui/material';
 import { CardSelectionContext } from "@/types/CardSelectionContext";
 import { ViewModeContext } from "@/context/ViewModeContextProvider";
 import { debounce } from "lodash";
@@ -26,10 +26,6 @@ export default function Filters({}): ReactNode {
             // Throttle the update to avoid too many re-renders
             debounce(() => setContext((ctx: CardSelectionContext) => ({...ctx, [key]: value})), 200)();
         }
-    }
-
-    function contextUpdaterForSelect<T extends SelectChangeEvent>(key: string) {
-        return (evt: T) => setContext((ctx: CardSelectionContext) => ({...ctx, [key]: evt.target.value}))
     }
 
     function colorToggler<T extends ChangeEvent<HTMLInputElement>>(key: string) {
@@ -84,15 +80,37 @@ export default function Filters({}): ReactNode {
         setContext((ctx: CardSelectionContext) => ({...ctx, sortingMethod: sortingMethodFromKey(event.target.value) || sortModes[0]}))
     }
 
+    const setOptions = useMemo(() => {
+        return sets.map(({ code, name, completionRatio, numberOfCardsOwned, numberOfCards }) => {
+            let label;
+            if (showSetCompletions) {
+                label = `${name} (${Math.round(completionRatio * 100)}%, ${numberOfCardsOwned}/${numberOfCards})`;
+            } else {
+                label = name;
+            }
+            return {
+                label,
+                value: code,
+            };
+        });
+    }, [sets, showSetCompletions]);
+
     return <div>
         <FormControl sx={{ m: 3 }}>
             <FormLabel>Set</FormLabel>
-            <Select value={set} onChange={contextUpdaterForSelect('set')}>
-                <MenuItem value={''} selected={set === ''}>(All sets)</MenuItem>
-                {sets.map(({ code, name, completionRatio, numberOfCardsOwned, numberOfCards }, index) => <MenuItem key={index} value={code}>
-                    {showSetCompletions ? `${name} (${Math.round(completionRatio * 100)}%, ${numberOfCardsOwned}/${numberOfCards})` : name}
-                </MenuItem>)}
-            </Select>
+            <Autocomplete
+                options={setOptions}
+                sx={{ minWidth: 350 }}
+                getOptionLabel={(option) => option.label}
+                onChange={(event, newValue) => {
+                    if (newValue) {
+                        setContext(ctx => ({...ctx, set: newValue.value}));
+                    } else {
+                        setContext(ctx => ({...ctx, set: ''}));
+                    }
+                }}
+                renderInput={(params) => <TextField {...params} variant="outlined" />}
+            />
         </FormControl>
         <FormControl sx={{ m: 3 }}>
             <FormLabel>Special</FormLabel>
