@@ -15,10 +15,9 @@ MEDIUM
 + Make a card preview in the editor
 
 SMALL
-+ One shared background for all background pages, so that there is less loading of the background.
-+ Option to refresh the background for a random other background. 
 + Add alt-text/text of card title when image is not loaded yet on browse pages.
 + Don't name every page function "Home".
 + Install a linter.
-+ In the loading screen, show the full mtg card background without an overlay.
 + In the price graph, if there is no price data, show a message that price data is updated weekly. Historical price data will also be corrected then.
++ Fix price graph bug that loads twice.
++ Option to refresh the background for a random other background.

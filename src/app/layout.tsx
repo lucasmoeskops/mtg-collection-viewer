@@ -9,6 +9,7 @@ import SetContextProvider from "@/context/SetContextProvider";
 import { Suspense } from "react";
 import AccountProvider from "@/context/AccountContextProvider";
 import Background from "@/components/Background/Background";
+import BackgroundContextProvider from "@/context/BackgroundContentProvider";
 
 const roboto = Roboto({
   weight: ['300', '400', '500', '700'],
@@ -30,19 +31,21 @@ export default async function RootLayout({
   return (
     <html lang="en" className={roboto.variable}>
       <body>
-        <ThemeProvider theme={theme}>
-          <Suspense fallback={<Background><Box sx={{ p: 2 }}>Loading...</Box></Background>}>
-            <SetContextProvider>
-              <AccountProvider>
-                <AppRouterCacheProvider>
-                  <Container>
-                    {children}
-                  </Container>
-                </AppRouterCacheProvider>
-              </AccountProvider>
-            </SetContextProvider>
-          </Suspense>
-        </ThemeProvider>
+        <BackgroundContextProvider>
+          <ThemeProvider theme={theme}>
+            <Suspense fallback={<Background hasOverlay={false}><Box sx={{ p: 2 }}>Loading...</Box></Background>}>
+              <SetContextProvider>
+                <AccountProvider>
+                  <AppRouterCacheProvider>
+                    <Container>
+                      {children}
+                    </Container>
+                  </AppRouterCacheProvider>
+                </AccountProvider>
+              </SetContextProvider>
+            </Suspense>
+          </ThemeProvider>
+        </BackgroundContextProvider>
       </body>
     </html>
   );

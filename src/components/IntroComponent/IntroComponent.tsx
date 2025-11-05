@@ -6,6 +6,7 @@ import { AppBar, Box, Button, FormControl, FormLabel, Stack, Tab, Tabs, TextFiel
 import Link from "next/link";
 import { AccountContext } from "@/context/AccountContextProvider";
 import { useRouter } from "next/navigation";
+import { BackgroundContext } from "@/context/BackgroundContentProvider";
 
 function EnterAccountNameAndRedirectComponent() {
 
@@ -70,6 +71,7 @@ function LoginComponent() {
 
 export default function IntroComponent() {
   const { logout } = useContext(AccountContext);
+  const { refreshBackgroundCard } = useContext(BackgroundContext);
   const [currentTab, setCurrentTab] = useState<string>("view");
   const logoutCalled = useRef(false);
 
@@ -83,6 +85,13 @@ export default function IntroComponent() {
       logout();
     }
   }, [logout]);
+
+  useEffect(() => {
+    const refreshInterval = setInterval(() => {
+      refreshBackgroundCard();
+    }, 15 * 1000); // Refresh every 15 seconds
+    return () => clearInterval(refreshInterval);
+  }, [refreshBackgroundCard]);
 
   return (
     <main style={{ minWidth: '400px', minHeight: '350px' }}>

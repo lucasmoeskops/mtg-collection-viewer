@@ -1,8 +1,7 @@
 'use client';
 
 import { CardSet, fetchSets, setDateSort } from "@/types/CardSet";
-import { Autocomplete, FormControl, FormLabel, MenuItem, Select, TextField } from "@mui/material";
-import Image from "next/image";
+import { Autocomplete, FormControl, FormLabel, TextField } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 
 type SetSelectorProps = {

@@ -1,50 +1,36 @@
 'use client';
 
-import MagicCardLike, { getCard } from "@/interfaces/MagicCardLike";
-import { getRandomCard } from "@/supabase/server";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import styles from './Background.module.css';
 import Link from "next/link";
+import { BackgroundContext } from "@/context/BackgroundContentProvider";
 
-async function fetchBackground(): Promise<MagicCardLike | null> {
-    const card = await getRandomCard();
-    if (!card) {
-        return null;
-    }
-    const cardFromScryfall = await getCard(card.series, card.cardnumber.toString());
-    if (!cardFromScryfall || !cardFromScryfall.art_crop_url) {
-        return null;
-    }
-    return cardFromScryfall;
+
+export type BackgroundProps = {
+    children?: React.ReactNode;
+    hasOverlay?: boolean;
+    fullBackground?: boolean;
 }
 
-export default function Background({ children, fullBackground=false }: { children?: React.ReactNode, fullBackground?: boolean }) {
-    const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
-    const [card, setCard] = useState<MagicCardLike | null>(null);
+
+export default function Background({ children, hasOverlay=true, fullBackground=false }: BackgroundProps) {
+    const { backgroundCard, isRefreshing } = useContext(BackgroundContext);
+    const [fadeOut, setFadeOut] = useState<boolean>(false);
+    const backgroundImage = backgroundCard?.art_crop_url || null;
 
     useEffect(() => {
-        let relevant = true;
-        fetchBackground().then(card => {
-            if (!relevant) {
-                return;
-            }
-            setBackgroundImage(card?.art_crop_url || null);
-            setCard(card);
-        }).catch(() => {}); 
-        return () => {
-            relevant = false;
-        };
-    }, []);
+        setFadeOut(isRefreshing);
+    }, [isRefreshing]);
 
     return (
-        <div className={styles.background} style={{
-            backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
-        }}>
-            <div className={`${styles.overlay} ${fullBackground ? styles.overlayFull : styles.overlayPartial}`}>
+        <div className={styles.background}>
+            <div className={`${styles.overlayBackground} ${fadeOut ? styles.fadeOut : ''}`}  style={{
+            backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none'}} />
+            {hasOverlay ? <div className={`${styles.overlay} ${fullBackground ? styles.overlayFull : styles.overlayPartial}`}>
                 {children}
-            </div>
+            </div> : children}
             <div className={styles.attribution}>
-                <Link href={card?.cardmarket_url || '#'} target="blank">{card ? `Art from "${card.name}" by ${card.artist}` : ''}</Link>
+                <Link href={backgroundCard?.cardmarket_url || '#'} target="blank">{backgroundCard ? `Art from "${backgroundCard.name}" by ${backgroundCard.artist}` : ''}</Link>
             </div>
         </div>
     );

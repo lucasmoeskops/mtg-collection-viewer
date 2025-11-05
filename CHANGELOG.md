@@ -1,7 +1,8 @@
 # MTG Collection Viewer
 ## Changelog
 
-### v2025.11.03
+### v2025.11.05
++ Background stays the same once you login. Changes every 15 seconds on the intro screen.
 + Add search option in editor set list.
 + Remove "Artificial delay for better UX" in AccountContextProvider.
 

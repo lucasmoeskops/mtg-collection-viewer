@@ -102,7 +102,8 @@ export default function Filters({}): ReactNode {
                 options={setOptions}
                 sx={{ minWidth: 350 }}
                 getOptionLabel={(option) => option.label}
-                onChange={(event, newValue) => {
+                value={setOptions.find(o => o.value === set) || null}
+                onChange={(_event, newValue) => {
                     if (newValue) {
                         setContext(ctx => ({...ctx, set: newValue.value}));
                     } else {
