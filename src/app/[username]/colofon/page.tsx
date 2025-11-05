@@ -13,11 +13,19 @@ export default async function Home() {
         Hosted on <Link href="https://vercel.com/" target="blank">Vercel</Link> and uses <Link href="https://scryfall.com/docs/api" target="blank">Scryfall API</Link> and <Link href="https://supabase.com/" target="blank">Supabase</Link> as backend services.
       </Typography>
       <Typography variant="body1" gutterBottom>
-        Version 2025.11.2
+        Version 2025.11.5
       </Typography>
       <Typography variant="h5" gutterBottom sx={{ marginTop: '20px' }}>
         Change Log
       </Typography>
+      <Typography variant="body2" gutterBottom>
+        <strong>2025.11.5</strong>:
+      </Typography>
+      <List>
+        <ListItem>Background stays the same once you login. Changes every 15 seconds on the intro screen.</ListItem>
+        <ListItem>Add search option in editor set list.</ListItem>
+        <ListItem>Remove artificial delay in AccountContextProvider.</ListItem>
+      </List>
       <Typography variant="body2" gutterBottom>
         <strong>2025.11.2</strong>:
       </Typography>
