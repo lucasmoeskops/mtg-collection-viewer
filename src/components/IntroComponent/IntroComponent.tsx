@@ -7,6 +7,7 @@ import Link from "next/link";
 import { AccountContext } from "@/context/AccountContextProvider";
 import { useRouter } from "next/navigation";
 import { BackgroundContext } from "@/context/BackgroundContentProvider";
+import styles from './IntroComponent.module.css';
 
 function EnterAccountNameAndRedirectComponent() {
 
@@ -87,14 +88,19 @@ export default function IntroComponent() {
   }, [logout]);
 
   useEffect(() => {
-    const refreshInterval = setInterval(() => {
-      refreshBackgroundCard();
-    }, 15 * 1000); // Refresh every 15 seconds
-    return () => clearInterval(refreshInterval);
+    let timeoutId: NodeJS.Timeout;
+
+    const refreshBackground = async () => {
+      await refreshBackgroundCard();
+      timeoutId = setTimeout(refreshBackground, 15 * 1000);
+    };
+
+    timeoutId = setTimeout(refreshBackground, 15 * 1000);
+    return () => clearTimeout(timeoutId);
   }, [refreshBackgroundCard]);
 
   return (
-    <main style={{ minWidth: '400px', minHeight: '350px' }}>
+    <main className={styles.main}>
       <AppBar position="static" color="primary">
         <Tabs variant="fullWidth" indicatorColor="primary" textColor="inherit" value={currentTab} onChange={handleTabChange}>
           <Tab label="View" value="view" />

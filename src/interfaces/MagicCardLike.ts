@@ -26,7 +26,7 @@ export default interface MagicCardLike {
   current_price_delta: number; // Optional, used for price change indicators
 }
 
-export function newEmptyCard(): MagicCardLike {
+export function newEmptyCard(updates: Partial<MagicCardLike> = {}): MagicCardLike {
   return {
     id: 0,
     name: '?',
@@ -48,8 +48,9 @@ export function newEmptyCard(): MagicCardLike {
     avg_non_foil_price: 0,
     current_price_delta: 0,
     manacost_amount: 0,
-    art_crop_url: '',
+    art_crop_url: '/mtg-card-back.webp',
     cardmarket_url: '',
+    ...updates,
   }
 }
 

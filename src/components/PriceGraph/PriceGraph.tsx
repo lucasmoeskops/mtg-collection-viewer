@@ -4,6 +4,7 @@ import { Typography } from "@mui/material";
 import { Chart } from "chart.js";
 import { padStart } from "lodash";
 import { useEffect, useRef, useState } from "react";
+import styles from './PriceGraph.module.css';
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -19,16 +20,17 @@ function getTimeLabelForValue(value: string): string {
 }
 
 export function PriceGraph({ cardId }: { cardId: number }) {
-    const [data, setData] = useState<{ timestamp: string; price: number }[]>([]);
+    const [data, setData] = useState<{ timestamp: string; price: number }[] | null>(null);
     const chartRef =  useRef<HTMLCanvasElement>(null);
     const chartChartRef =  useRef<Chart | null>(null);
 
     useEffect(() => {
         registerChartJs();
+        if (!data) return;
         if (!chartRef.current) return;
         const ctx = chartRef.current.getContext('2d');
         if (!ctx) return;
-        chartChartRef.current =new Chart(ctx, {
+        chartChartRef.current = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: data.map(point => point.timestamp),
@@ -69,6 +71,7 @@ export function PriceGraph({ cardId }: { cardId: number }) {
                 },
                 responsive: true,
                 maintainAspectRatio: false,
+                resizeDelay: 100,
             }
             });
         return () => {
@@ -82,14 +85,22 @@ export function PriceGraph({ cardId }: { cardId: number }) {
         });
     }, [cardId]);
 
-    if (data.length === 0) {
-        return <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    if (!data) {
+        return <div className={styles.message}>
             <Typography variant="body1" color="textSecondary">
                 Loading...
             </Typography>
+        </div>;
+    }
+
+    if (data.length === 0) {
+        return <div className={styles.message}>
+            <Typography variant="body1" color="textSecondary">
+                No price history available. Price history will be synced mostly in the weekend.
+            </Typography>
         </div>
     }
-    
-    return <canvas ref={chartRef} id="chart" style={{ minWidth: '400px', minHeight: '300px', width: '100%', height: '100%' }}
-></canvas>
+
+    return <div className={styles.chartContainer}>
+        <canvas ref={chartRef} id="chart" className={styles.canvas} /></div>;
 }

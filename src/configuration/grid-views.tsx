@@ -38,7 +38,7 @@ export const Merchant: ViewMode = newViewMode({
         sortingMethod: CardSorting.AVG_PRICE,
     },
     setSortingMethod: SetSorting.NAME,
-    getCardInfo: (card) => <><Price label="Card price" priceEstimate={card.price_estimate} />{card.is_foil ? <>, Foil</> : null}, <PriceDelta label="Price change since july 2025" price={card.price_estimate} avgPrice={card.avg_price} history={{ cardId: card.id }} /></>,
+    getCardInfo: (card) => <><Price label="Card price" priceEstimate={card.price_estimate} />{card.is_foil ? <>, Foil</> : null}, <PriceDelta label="Price change since july 2025" price={card.price_estimate} avgPrice={card.avg_price} history={{ cardId: card.id, cardName: card.name }} /></>,
     statistics: (cards: MagicCardLike[], context: CardSelectionContext) => <>
         <div>Total cards selected: {cards.map(card => card.amount_owned).reduce((acc, n) => acc + n, 0)}</div>
         <div>Total card value: <Price label="Total card value" priceEstimate={getTotalCardValue(cards, context)} />, <PriceDelta label="Total card value change since july 2025" price={getTotalCardValue(cards, context)} avgPrice={getAverageTotalValue(cards, context)} /></div>

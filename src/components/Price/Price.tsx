@@ -1,4 +1,4 @@
-import { IconButton, Popover } from "@mui/material";
+import { IconButton, Popover, Typography } from "@mui/material";
 import { padStart } from "lodash"
 import TimelineIcon from '@mui/icons-material/Timeline';
 import { MouseEvent, useState } from "react";
@@ -6,6 +6,7 @@ import { PriceGraph } from "../PriceGraph/PriceGraph";
 
 export interface PriceHistoryProps {
     cardId: number,
+    cardName: string
 }
 
 export interface PriceProps {
@@ -61,8 +62,16 @@ function GraphPopover({ history }: { history: PriceHistoryProps }) {
                 vertical: 'top',
                 horizontal: 'left',
             }}
+            slotProps={{
+                paper: {
+                    style: {
+                        width: '100%',
+                    }
+                }
+            }}
         >
-            <div style={{ width: 'calc(100vw - 64px)', height: '300px' }}>
+            <Typography sx={{ p: 2, textAlign: 'center' }}>Price history for {history.cardName}</Typography>
+            <div style={{ width: '100%', height: '300px' }}>
                 <PriceGraph cardId={history.cardId} />
             </div>
         </Popover>

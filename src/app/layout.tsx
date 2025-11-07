@@ -10,6 +10,7 @@ import { Suspense } from "react";
 import AccountProvider from "@/context/AccountContextProvider";
 import Background from "@/components/Background/Background";
 import BackgroundContextProvider from "@/context/BackgroundContentProvider";
+import ScreenContextProvider from "@/context/ScreenContextProvider";
 
 const roboto = Roboto({
   weight: ['300', '400', '500', '700'],
@@ -37,9 +38,11 @@ export default async function RootLayout({
               <SetContextProvider>
                 <AccountProvider>
                   <AppRouterCacheProvider>
-                    <Container>
-                      {children}
-                    </Container>
+                    <ScreenContextProvider>
+                      <Container>
+                        {children}
+                      </Container>
+                    </ScreenContextProvider>
                   </AppRouterCacheProvider>
                 </AccountProvider>
               </SetContextProvider>

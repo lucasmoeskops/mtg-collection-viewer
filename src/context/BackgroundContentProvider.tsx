@@ -1,7 +1,7 @@
 'use client'
 
 
-import MagicCardLike, { getCard } from "@/interfaces/MagicCardLike"
+import MagicCardLike, { getCard, newEmptyCard } from "@/interfaces/MagicCardLike"
 import { getRandomCard } from "@/supabase/server";
 import { createContext, ReactNode, useCallback, useEffect, useRef, useState } from "react"
 
@@ -35,13 +35,17 @@ export const BackgroundContext = createContext<BackgroundContextProps>({
 })
 
 export default function BackgroundContextProvider({ children }: BackgroundContextProviderProps) {
-    const [card, setCard] = useState<MagicCardLike | null>(null);
+    const [card, setCard] = useState<MagicCardLike | null>(newEmptyCard());
     const [isRefreshing, setIsRefreshing] = useState<boolean>(true);
     const initialCardFetched = useRef<boolean>(false);
 
     const refreshBackgroundCard = useCallback(async () => {
         setIsRefreshing(true);
-        const card = await fetchBackground();
+        const [card] = await Promise.all([
+            fetchBackground(), 
+            // Don't change the background too quickly
+            new Promise(resolve => setTimeout(resolve, 1500))
+        ]);
         setCard(card);
         setIsRefreshing(false);
     }, []);

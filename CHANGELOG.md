@@ -1,6 +1,10 @@
 # MTG Collection Viewer
 ## Changelog
 
+### v2025.11.07
++ Better support for mobile.
++ Make background more stable in case of slow api's, and provide a default initial image.
+
 ### v2025.11.05
 + Background stays the same once you login. Changes every 15 seconds on the intro screen.
 + Add search option in editor set list.

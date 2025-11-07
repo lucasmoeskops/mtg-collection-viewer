@@ -1,10 +1,10 @@
-import { Price } from "../Price/Price";
+import { Price, PriceHistoryProps } from "../Price/Price";
 
 export interface PriceDeltaProps {
     price: number,
     avgPrice: number,
     label: string,
-    history?: { cardId: number },
+    history?: PriceHistoryProps,
 }
 
 export function PriceDelta(props: PriceDeltaProps) {

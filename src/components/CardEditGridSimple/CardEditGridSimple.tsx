@@ -1,7 +1,7 @@
 'use client';
 
 import { BoundMTGCard } from "@/types/BoundMTGCard";
-import { Table, TableBody, TableCell, TableHead, TableRow } from "@mui/material";
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import { AmountEditor } from "../AmountEditor/AmountEditor";
 import { useContext } from "react";
 import { CardEditorContext } from "@/context/CardEditorContextProvider";
@@ -47,8 +47,8 @@ function CardGridRow({ card }: CardGridRowProps) {
 
 export function CardEditGridSimple({ cards }: CardEditGridSimpleProps) {
     return (
-        <div>
-            <Table key={cards.length}>
+        <TableContainer key={cards.length}>
+            <Table>
                 <TableHead>
                     <TableRow>
                         <TableCell>Card Name</TableCell>
@@ -63,6 +63,6 @@ export function CardEditGridSimple({ cards }: CardEditGridSimpleProps) {
                     {cards.map(card => CardGridRow({ card }))}
                 </TableBody>
             </Table>
-        </div>
+        </TableContainer>
     );
 }
