@@ -4,6 +4,7 @@
     justify-content: center;
     min-height: 300px;
     padding: 0 10px;
+    height: 100%;
     
     @media (min-width: 601px) {
         min-width: 400px;
