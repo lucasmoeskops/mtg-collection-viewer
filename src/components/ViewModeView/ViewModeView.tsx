@@ -36,7 +36,8 @@ export function ViewModeView({ viewModeId }: { viewModeId: ViewModes }) {
                             slotProps={{
                                 root: {
                                     style: {
-                                        background: 'rgba(255, 255, 255, 0.9)'
+                                        background: 'rgba(255, 255, 255, 0.9)',
+                                        overflowY: 'auto',
                                     }
                                 },
                                 backdrop: { style: { background: 'transparent' } }
