@@ -42,6 +42,8 @@ export default function CardEditorContextProvider({ children }: CardEditorContex
     const [set, setSet] = useState<CardSet | null>(null);
     const [query, setQuery] = useState<string>('');
     const [cardChangeQueue, setCardChangeQueue] = useState<CardChange[]>([]);
+    const [loadingSets, setLoadingSets] = useState<Set<string>>(new Set());
+    const [loadedSets, setLoadedSets] = useState<Set<string>>(new Set());
 
     function addCardChange(change: CardChange) {
         setCardChangeQueue(prev => [...prev, change]);
@@ -99,7 +101,6 @@ export default function CardEditorContextProvider({ children }: CardEditorContex
         let relevant = true;
         setCards([]);
         setCardChangeQueue([]);
-        setOwnershipData({});
         setBoundCards([]);
 
         if (set && set.code) {
@@ -113,28 +114,41 @@ export default function CardEditorContextProvider({ children }: CardEditorContex
     }, [set, query]);
 
     useEffect(() => {
-        async function loadOwnershipData(setCode: string, name: string, key: string) {
-            try {
-                const cardsWithOwnership = await getOwnedCardsForSet(setCode, name, key);
-                const ownershipMap: {[cardId: string]: number} = {};
-                cardsWithOwnership.forEach(card => {
-                    ownershipMap[getCardOwnershipCardHash(card)] = card.amount;
-                });
-                setOwnershipData(ownershipMap);
-            } catch (error) {
-                setOwnershipData({});
-                console.error('Error fetching ownership data:', error);
+        async function loadOwnershipData(setCodes: string[], name: string, key: string) {
+            for (const setCode of setCodes) {
+                if (loadingSets.has(setCode)) {
+                    return;
+                }
+                try {
+                    const ownershipMap: {[cardId: string]: number} = {};
+                    const cardsWithOwnership = await getOwnedCardsForSet(setCode, name, key);
+                    cardsWithOwnership.forEach(card => {
+                        ownershipMap[getCardOwnershipCardHash(card)] = card.amount;
+                    });
+                    setOwnershipData(oldOwnershipMap => ({ ...oldOwnershipMap, ...ownershipMap }));
+                    setLoadedSets(prev => new Set(prev).add(setCode));
+                } catch (error) {
+                    console.error('Error fetching ownership data:', error);
+                }
             }
         }
-        setOwnershipData({});
 
-        if (set && set.code && isAuthenticated) {
-            loadOwnershipData(set.code, accountName, accountKey);
+        if (!isAuthenticated) {
+            return;
         }
-    }, [set, isAuthenticated, accountName, accountKey]);
+
+        const currentSets = new Set<string>();
+        for (const card of cards) {
+            currentSets.add(card.setId);
+        }
+        if (currentSets.difference(loadingSets).size > 0) {
+            loadOwnershipData(Array.from(currentSets), accountName, accountKey);
+            setLoadingSets(prev => new Set(prev).union(currentSets));
+        }
+    }, [cards, isAuthenticated, accountName, accountKey, loadingSets]);
 
     useEffect(() => {
-        const combined = cards.map(card => {
+        const combined = cards.filter(card => loadedSets.has(card.setId)).map(card => {
             const cardIdNonFoil = getCardHash(card, false);
             const cardIdFoil = getCardHash(card, true);
             return {
@@ -144,11 +158,10 @@ export default function CardEditorContextProvider({ children }: CardEditorContex
             };
         });
         setBoundCards(combined);
-    }, [cards, ownershipData]);
+    }, [cards, loadedSets, ownershipData]);
 
     useEffect(() => {
         if (cardChangeQueue.length > 0) {
-            console.log('Scheduling push of card changes', cardChangeQueue);
             debouncedPushCardChanges(cardChangeQueue);
         }
     }, [cardChangeQueue, debouncedPushCardChanges]);

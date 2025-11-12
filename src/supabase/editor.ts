@@ -7,6 +7,42 @@ import { CardOwnershipData } from "@/types/CardOwnershipData";
 import getMTGCardId from "./get-mtg-card-id";
 
 export async function getOwnedCardsForSet(setCode: string, accountName: string, accountKey: string): Promise<CardOwnershipData[]> {
+    console.log('Getting owned cards for set', setCode, 'and account', accountName);
+    try {
+        const userId = await getAuthenticatedAccountId(accountName, accountKey);
+        if (userId === 0) {
+            throw new Error('Authentication failed');
+        }
+        const supabaseClient = getClient();
+        if (!supabaseClient) {
+            throw new Error('Supabase client not initialized');
+        }
+        const { data: cards, error } = await supabaseClient
+            .from('mtg_account_card')
+            .select('amount, card!inner( series, cardnumber, is_foil )')
+            .eq('card.series', setCode)
+            .eq('account', userId)
+            .gt('amount', 0);
+        if (error) {
+            console.error('Error fetching cards:', error);
+            throw error;
+        }
+        if (!cards) {
+            throw new Error('Error fetching cards');
+        }
+        return cards.map(card => ({
+            setCode: 'series' in card.card ? card.card.series as string : '',
+            collectorNumber: 'cardnumber' in card.card ? card.card.cardnumber.toString() : '',
+            isFoil: 'is_foil' in card.card ? card.card.is_foil as boolean : false,
+            amount: 'amount' in card ? card.amount as number : 0,
+        }));
+    } catch (error) {
+        console.error('Error fetching cards:', error);
+        throw error;
+    }
+}
+
+export async function getOwnedCardsForIndividuals(cards: { setCode: string, collectorNumber: string}[], accountName: string, accountKey: string): Promise<CardOwnershipData[]> {
     // Always wait 1 second
     await new Promise(resolve => setTimeout(resolve, 1000));
     try {
@@ -21,7 +57,7 @@ export async function getOwnedCardsForSet(setCode: string, accountName: string, 
         const { data: cards, error } = await supabaseClient
             .from('mtg_account_card')
             .select('amount, card!inner( series, cardnumber, is_foil )')
-            .eq('card.series', setCode)
+            // .eq('card.series', setCode)
             .eq('account', userId)
             .gt('amount', 0);
         if (error) {
