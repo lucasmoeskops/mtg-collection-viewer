@@ -3,7 +3,7 @@
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react"
 import { CardSet } from "@/types/CardSet"
 import { BoundMTGCard } from "@/types/BoundMTGCard"
-import { getCardHash, getCardsForSet, MTGCard } from "@/types/MTGCard"
+import { getCardHash, getCardsByQuery, getCardsForSet, MTGCard } from "@/types/MTGCard"
 import { debounce } from "@mui/material"
 import { getOwnedCardsForSet, saveCardChanges } from "@/supabase/editor"
 import { initializeAmount } from "@/types/Amount"
@@ -15,8 +15,10 @@ import { AccountContext } from "./AccountContextProvider"
 export type CardEditorContextProps = {
     cards: BoundMTGCard[],
     set: CardSet | null,
+    query: string,
     addCardChange: (change: CardChange) => void,
     setSet: (set: CardSet | null) => void,
+    setQuery: (query: string) => void,
 }
 
 export type CardEditorContextProviderProps = {
@@ -26,8 +28,10 @@ export type CardEditorContextProviderProps = {
 export const CardEditorContext = createContext<CardEditorContextProps>({
     cards: [],
     set: null,
+    query: '',
     addCardChange: () => {},
     setSet: () => {},
+    setQuery: () => {},
 });
 
 export default function CardEditorContextProvider({ children }: CardEditorContextProviderProps) {
@@ -36,10 +40,10 @@ export default function CardEditorContextProvider({ children }: CardEditorContex
     const [ownershipData, setOwnershipData] = useState<{[cardId: string]: number}>({});
     const [boundCards, setBoundCards] = useState<BoundMTGCard[]>([]);
     const [set, setSet] = useState<CardSet | null>(null);
+    const [query, setQuery] = useState<string>('');
     const [cardChangeQueue, setCardChangeQueue] = useState<CardChange[]>([]);
 
     function addCardChange(change: CardChange) {
-        console.log('addCardChange', cardChangeQueue);
         setCardChangeQueue(prev => [...prev, change]);
     }
 
@@ -70,17 +74,29 @@ export default function CardEditorContextProvider({ children }: CardEditorContex
     const value = {
         cards: boundCards,
         set,
+        query,
         accountName,
         accountKey,
         addCardChange,
-        setSet
+        setSet,
+        setQuery,
     };
 
     useEffect(() => {
-        async function loadCards(setCode: string) {
-            const cards = await getCardsForSet(setCode);
-            setCards(cards);
+        async function loadCards(setCode: string | undefined) {
+            let allCards: MTGCard[] = [];
+            if (query.trim().length > 0) {
+                allCards = await getCardsByQuery(query, setCode);
+            } else if (setCode) {
+                allCards = await getCardsForSet(setCode);
+            } else {
+                allCards = [];
+            }
+            if (relevant) {
+                setCards(allCards);
+            }
         }
+        let relevant = true;
         setCards([]);
         setCardChangeQueue([]);
         setOwnershipData({});
@@ -88,8 +104,13 @@ export default function CardEditorContextProvider({ children }: CardEditorContex
 
         if (set && set.code) {
             loadCards(set.code);
+        } else if (query.trim().length > 0) {
+            loadCards(undefined);
         }
-    }, [set]);
+        return () => {
+            relevant = false;
+        };
+    }, [set, query]);
 
     useEffect(() => {
         async function loadOwnershipData(setCode: string, name: string, key: string) {

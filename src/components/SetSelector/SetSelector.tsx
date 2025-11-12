@@ -32,7 +32,7 @@ export function SetSelector({ onSetChange }: SetSelectorProps) {
     }, [sets]);
 
     return (
-        <FormControl sx={{ m: 3 }}>
+        <FormControl sx={{ m: 3, flexGrow: 1 }}>
             <FormLabel>Filter by set</FormLabel>
             <Autocomplete
                 options={setOptions}

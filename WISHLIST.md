@@ -8,7 +8,6 @@ MEDIUM
 + Create new account (/ invite (a) friend(s)?)
 + Create a fixed background / fixed set of backgrounds for your account.
 + Sort card editor grid by different fields.
-+ Search a card in the card editor over multiple sets.
 + Show the 3 biggest price increased cards and the 3 biggest price decreased cards on the homepage.
 + Import/Export functions?
 + Make a card preview in the editor
@@ -21,4 +20,5 @@ SMALL
 + Install a linter.
 + In the price graph, if there is no price data, show a message that price data is updated weekly. Historical price data will also be corrected then.
 + Fix price graph bug that loads twice.
++ Maybe make things a little less collossal on big screens (card sizes mainly).
 + Option to refresh the background for a random other background.

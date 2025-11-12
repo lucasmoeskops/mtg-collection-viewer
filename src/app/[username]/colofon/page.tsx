@@ -13,11 +13,25 @@ export default async function Home() {
         Hosted on <Link href="https://vercel.com/" target="blank">Vercel</Link> and uses <Link href="https://scryfall.com/docs/api" target="blank">Scryfall API</Link> and <Link href="https://supabase.com/" target="blank">Supabase</Link> as backend services.
       </Typography>
       <Typography variant="body1" gutterBottom>
-        Version 2025.11.7
+        Version 2025.11.12
       </Typography>
       <Typography variant="h5" gutterBottom sx={{ marginTop: '20px' }}>
         Change Log
       </Typography>
+      <Typography variant="body2" gutterBottom>
+        <strong>2025.11.12</strong>:
+      </Typography>
+      <List>
+        <ListItem>
+          Added support to search by query to the collection editor.
+        </ListItem>
+        <ListItem>
+          Fix calculation error for total cards in merchant mode.
+        </ListItem>
+        <ListItem>
+          Fix issue where cards of the previous user would remain visible after logging out and logging in as a different user.
+        </ListItem>
+      </List>
       <Typography variant="body2" gutterBottom>
         <strong>2025.11.7</strong>:
       </Typography>

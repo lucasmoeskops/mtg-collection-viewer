@@ -1,6 +1,11 @@
 # MTG Collection Viewer
 ## Changelog
 
+### v2025.11.12
++ Added support to search by query to the collection editor.
++ Fix calculation error for total cards in merchant mode.
++ Fix issue where cards of the previous user would remain visible after logging out and logging in as a different user.
+
 ### v2025.11.07
 + Better support for mobile.
 + Make background more stable in case of slow api's, and provide a default initial image.

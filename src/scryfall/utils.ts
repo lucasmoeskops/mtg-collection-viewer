@@ -51,12 +51,12 @@ export async function rateLimitedFetch(input: RequestInfo, init?: RequestInit): 
     return fetch(input, init);
 }
 
-export async function fetchDataPaginated<T>(endpoint: string, params: Record<string, string> = {}): Promise<T[]> {
+export async function fetchDataPaginated<T>(endpoint: string, params: Record<string, string> = {}, limit: number = 0): Promise<T[]> {
     const results: T[] = [];
     let fetchedAll = false;
     let currentEndpoint = endpoint;
 
-    while (!fetchedAll) {
+    while (!fetchedAll && (limit === 0 || results.length < limit)) {
         const url = new URL(currentEndpoint);
         Object.entries(params).forEach(([key, value]) => url.searchParams.append(key, value));
 
@@ -74,5 +74,5 @@ export async function fetchDataPaginated<T>(endpoint: string, params: Record<str
         currentEndpoint = jsonResponse.next_page;
     }
 
-    return results;
+    return limit > 0 && results.length > limit ? results.slice(0, limit) : results;
 }
