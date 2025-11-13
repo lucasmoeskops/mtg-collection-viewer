@@ -6,6 +6,7 @@ BIG
 MEDIUM
 + Dark mode + setting
 + Create new account (/ invite (a) friend(s)?)
++ Settings to enable/disable browse/merchant and collection mode for your account.
 + Create a fixed background / fixed set of backgrounds for your account.
 + Sort card editor grid by different fields.
 + Show the 3 biggest price increased cards and the 3 biggest price decreased cards on the homepage.

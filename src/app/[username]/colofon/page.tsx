@@ -26,7 +26,7 @@ export default async function Home() {
           Added support to search by query to the collection editor.
         </ListItem>
         <ListItem>
-          Fix calculation error for total cards in merchant mode.
+          Fix calculation error for total cards in merchant mode. (Thanks to Renske)
         </ListItem>
         <ListItem>
           Fix issue where cards of the previous user would remain visible after logging out and logging in as a different user.

@@ -7,15 +7,19 @@ import { useContext } from "react";
 import { CardEditorContext } from "@/context/CardEditorContextProvider";
 import { fromCard } from "@/types/CardChange";
 import { AccountContext } from "@/context/AccountContextProvider";
+import { SetContext } from "@/context/SetContextProvider";
+import Image from "next/image";
 
 type CardGridRowProps = {
     card: BoundMTGCard;
 };
 
 export default function CardGridRow({ card }: CardGridRowProps) {
+    const { allSets } = useContext(SetContext);
     const { addCardChange, set } = useContext(CardEditorContext);
     const { isAuthenticated } = useContext(AccountContext);
     const { card: { id, name, collectorNumber, color, rarity }, amount, amountFoil } = card;
+    const setInfo = !set ? allSets.find(s => s.code === card.card.setId) : undefined;
 
     function onAmountChange(newAmount: number) {
         addCardChange(fromCard(card.card, false, newAmount));
@@ -28,7 +32,12 @@ export default function CardGridRow({ card }: CardGridRowProps) {
     return (
         <TableRow key={id}>
             <TableCell>{name}</TableCell>
-            {!set && <TableCell>{card.card.series}</TableCell>}
+            {!set && (
+                <TableCell>
+                    {setInfo?.iconSvgUri ? <Image src={setInfo?.iconSvgUri} alt={'set icon'} height="16" width="16" style={{ height: '1em', verticalAlign: 'middle', marginRight: '0.5em' }} /> : null}
+                    {card.card.series}
+                </TableCell>
+            )}
             <TableCell>{collectorNumber}</TableCell>
             <TableCell>{color}</TableCell>
             <TableCell>{rarity}</TableCell>

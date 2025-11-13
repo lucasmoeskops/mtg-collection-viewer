@@ -5,7 +5,7 @@ import { CardSet } from "@/types/CardSet"
 import { BoundMTGCard } from "@/types/BoundMTGCard"
 import { getCardHash, getCardsByQuery, getCardsForSet, MTGCard } from "@/types/MTGCard"
 import { debounce } from "@mui/material"
-import { getOwnedCardsForSet, saveCardChanges } from "@/supabase/editor"
+import { getOwnedCardsForSets, saveCardChanges } from "@/supabase/editor"
 import { initializeAmount } from "@/types/Amount"
 import { getCardOwnershipCardHash } from "@/types/CardOwnershipData"
 import { CardChange, getCardChangeHash } from "@/types/CardChange"
@@ -115,22 +115,18 @@ export default function CardEditorContextProvider({ children }: CardEditorContex
 
     useEffect(() => {
         async function loadOwnershipData(setCodes: string[], name: string, key: string) {
-            for (const setCode of setCodes) {
-                if (loadingSets.has(setCode)) {
-                    return;
-                }
-                try {
-                    const ownershipMap: {[cardId: string]: number} = {};
-                    const cardsWithOwnership = await getOwnedCardsForSet(setCode, name, key);
-                    cardsWithOwnership.forEach(card => {
-                        ownershipMap[getCardOwnershipCardHash(card)] = card.amount;
-                    });
-                    setOwnershipData(oldOwnershipMap => ({ ...oldOwnershipMap, ...ownershipMap }));
-                    setLoadedSets(prev => new Set(prev).add(setCode));
-                } catch (error) {
-                    console.error('Error fetching ownership data:', error);
-                }
+            const ownershipMap: {[cardId: string]: number} = {};
+            try {
+                const cardsWithOwnership = await getOwnedCardsForSets(setCodes, name, key);
+                cardsWithOwnership.forEach(card => {
+                    ownershipMap[getCardOwnershipCardHash(card)] = card.amount;
+                });
+            } catch (error) {
+                console.error('Error fetching ownership data:', error);
+                return;
             }
+            setOwnershipData(oldOwnershipMap => ({ ...oldOwnershipMap, ...ownershipMap }));
+            setLoadedSets(prev => new Set(prev).union(new Set(setCodes)));
         }
 
         if (!isAuthenticated) {
@@ -142,7 +138,7 @@ export default function CardEditorContextProvider({ children }: CardEditorContex
             currentSets.add(card.setId);
         }
         if (currentSets.difference(loadingSets).size > 0) {
-            loadOwnershipData(Array.from(currentSets), accountName, accountKey);
+            loadOwnershipData(Array.from(currentSets.difference(loadingSets)), accountName, accountKey);
             setLoadingSets(prev => new Set(prev).union(currentSets));
         }
     }, [cards, isAuthenticated, accountName, accountKey, loadingSets]);

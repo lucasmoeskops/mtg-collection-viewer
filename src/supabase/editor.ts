@@ -6,8 +6,10 @@ import { getClient } from "./client";
 import { CardOwnershipData } from "@/types/CardOwnershipData";
 import getMTGCardId from "./get-mtg-card-id";
 
-export async function getOwnedCardsForSet(setCode: string, accountName: string, accountKey: string): Promise<CardOwnershipData[]> {
-    console.log('Getting owned cards for set', setCode, 'and account', accountName);
+export async function getOwnedCardsForSets(setCodes: string[], accountName: string, accountKey: string): Promise<CardOwnershipData[]> {
+    if (setCodes.length === 0) {
+        return [];
+    }
     try {
         const userId = await getAuthenticatedAccountId(accountName, accountKey);
         if (userId === 0) {
@@ -20,7 +22,7 @@ export async function getOwnedCardsForSet(setCode: string, accountName: string, 
         const { data: cards, error } = await supabaseClient
             .from('mtg_account_card')
             .select('amount, card!inner( series, cardnumber, is_foil )')
-            .eq('card.series', setCode)
+            .in('card.series', setCodes)
             .eq('account', userId)
             .gt('amount', 0);
         if (error) {

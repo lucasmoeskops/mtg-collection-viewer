@@ -139,6 +139,7 @@ export default function AccountProvider({ children }: AccountProviderProps) {
         authenticate: authenticator,
         logout: () => {
             setCards([]);
+            setCardDataValid(false);
             setIsAuthenticated(false);
             setAccountName('');
             setAccountKey('');
