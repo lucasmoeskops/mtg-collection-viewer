@@ -1,4 +1,4 @@
 export enum RenderEffect {
-    FOIL,
-    HIGHLIGHT,
+  FOIL,
+  HIGHLIGHT,
 }

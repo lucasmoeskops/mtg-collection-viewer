@@ -1,5 +1,5 @@
 export enum ViewModes {
-    BROWSE = "browse",
-    MERCHANT = "merchant",
-    COLLECTION = "collection",
+  BROWSE = "browse",
+  MERCHANT = "merchant",
+  COLLECTION = "collection",
 }

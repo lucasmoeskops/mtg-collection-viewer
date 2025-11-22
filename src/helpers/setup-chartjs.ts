@@ -9,8 +9,8 @@ import {
   PointElement,
   TimeScale,
   Title,
-  Tooltip
-} from 'chart.js';
+  Tooltip,
+} from "chart.js";
 
 let registered = false;
 
@@ -25,7 +25,7 @@ export function registerChartJs() {
       Title,
       Tooltip,
       Legend,
-      TimeScale
+      TimeScale,
     );
     registered = true;
   }

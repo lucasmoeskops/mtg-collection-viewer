@@ -1,15 +1,15 @@
-'use client'
+"use client";
 
-import { CardSelectionContextContext } from "@/context/CardContextProvider"
-import { Box } from "@mui/material"
-import { useContext } from "react"
+import { CardSelectionContextContext } from "@/context/CardContextProvider";
+import { Box } from "@mui/material";
+import { useContext } from "react";
 
 export default function InfoBox({}) {
-    const { generalInfo } = useContext(CardSelectionContextContext)
+  const { generalInfo } = useContext(CardSelectionContextContext);
 
-    if (!generalInfo) {
-        return null
-    }
+  if (!generalInfo) {
+    return null;
+  }
 
-    return <Box>{generalInfo}</Box>
+  return <Box>{generalInfo}</Box>;
 }

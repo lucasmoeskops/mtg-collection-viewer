@@ -1,17 +1,17 @@
-'use client';
-import { createTheme } from '@mui/material/styles';
+"use client";
+import { createTheme } from "@mui/material/styles";
 
 const theme = createTheme({
   typography: {
-    fontFamily: 'var(--font-roboto)',
+    fontFamily: "var(--font-roboto)",
   },
   palette: {
-    mode: 'light',
+    mode: "light",
     primary: {
-      main: '#ac3b61',
+      main: "#ac3b61",
     },
     secondary: {
-      main: '#28333b',
+      main: "#28333b",
     },
   },
 });

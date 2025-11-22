@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
     styledComponents: true,
   },
   images: {
-    remotePatterns: [{hostname: 'cards.scryfall.io'}],
+    remotePatterns: [{ hostname: "cards.scryfall.io" }],
   },
 };
 

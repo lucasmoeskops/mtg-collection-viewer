@@ -1,79 +1,98 @@
 import { IconButton, Popover, Typography } from "@mui/material";
-import { padStart } from "lodash"
-import TimelineIcon from '@mui/icons-material/Timeline';
+import { padStart } from "lodash";
+import TimelineIcon from "@mui/icons-material/Timeline";
 import { MouseEvent, useState } from "react";
 import { PriceGraph } from "../PriceGraph/PriceGraph";
 
 export interface PriceHistoryProps {
-    cardId: number,
-    cardName: string
+  cardId: number;
+  cardName: string;
 }
 
 export interface PriceProps {
-    priceEstimate: number,
-    label: string,
-    history?: PriceHistoryProps,
+  priceEstimate: number;
+  label: string;
+  history?: PriceHistoryProps;
 }
 
 export function Price(props: PriceProps) {
-    const {priceEstimate, label, history} = props
-    const absPriceEstimate = Math.abs(priceEstimate);
-    const historyComponent = history ? <GraphPopover history={history} /> : null;
+  const { priceEstimate, label, history } = props;
+  const absPriceEstimate = Math.abs(priceEstimate);
+  const historyComponent = history ? <GraphPopover history={history} /> : null;
 
-    if (absPriceEstimate < 100) {
-        return <>&euro;<sub>{padStart(absPriceEstimate.toString(), 2, '0')}</sub>{historyComponent}</>
-    }
-
-    const euroPrice = Math.floor(absPriceEstimate / 100)
-    const restPrice = (absPriceEstimate % 100).toString()
-
-    return <>
-        <span aria-label={label} title={label}>&euro;{euroPrice}<sub>{padStart(restPrice, 2, '0')}</sub></span>
+  if (absPriceEstimate < 100) {
+    return (
+      <>
+        &euro;<sub>{padStart(absPriceEstimate.toString(), 2, "0")}</sub>
         {historyComponent}
+      </>
+    );
+  }
+
+  const euroPrice = Math.floor(absPriceEstimate / 100);
+  const restPrice = (absPriceEstimate % 100).toString();
+
+  return (
+    <>
+      <span aria-label={label} title={label}>
+        &euro;{euroPrice}
+        <sub>{padStart(restPrice, 2, "0")}</sub>
+      </span>
+      {historyComponent}
     </>
+  );
 }
 
 function GraphPopover({ history }: { history: PriceHistoryProps }) {
-    const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
-    const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
+  const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
 
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
 
-    const open = Boolean(anchorEl);
-    const id = open ? 'simple-popover' : undefined;
+  const open = Boolean(anchorEl);
+  const id = open ? "simple-popover" : undefined;
 
-    return <>
-        <IconButton aria-describedby={id} onClick={handleClick}>
-            <TimelineIcon fontSize="small" style={{ verticalAlign: 'middle', marginLeft: 2 }}>info</TimelineIcon>
-        </IconButton>
-        <Popover
-            id={id}
-            open={open}
-            anchorEl={anchorEl}
-            onClose={handleClose}
-            anchorReference="anchorPosition"
-            anchorPosition={{ top: 20, left: 20 }}
-            anchorOrigin={{
-                vertical: 'top',
-                horizontal: 'left',
-            }}
-            slotProps={{
-                paper: {
-                    style: {
-                        width: '100%',
-                    }
-                }
-            }}
+  return (
+    <>
+      <IconButton aria-describedby={id} onClick={handleClick}>
+        <TimelineIcon
+          fontSize="small"
+          style={{ verticalAlign: "middle", marginLeft: 2 }}
         >
-            <Typography sx={{ p: 2, textAlign: 'center' }}>Price history for {history.cardName}</Typography>
-            <div style={{ width: '100%', height: '300px' }}>
-                <PriceGraph cardId={history.cardId} />
-            </div>
-        </Popover>
+          info
+        </TimelineIcon>
+      </IconButton>
+      <Popover
+        id={id}
+        open={open}
+        anchorEl={anchorEl}
+        onClose={handleClose}
+        anchorReference="anchorPosition"
+        anchorPosition={{ top: 20, left: 20 }}
+        anchorOrigin={{
+          vertical: "top",
+          horizontal: "left",
+        }}
+        slotProps={{
+          paper: {
+            style: {
+              width: "100%",
+            },
+          },
+        }}
+      >
+        <Typography sx={{ p: 2, textAlign: "center" }}>
+          Price history for {history.cardName}
+        </Typography>
+        <div style={{ width: "100%", height: "300px" }}>
+          <PriceGraph cardId={history.cardId} />
+        </div>
+      </Popover>
     </>
+  );
 }

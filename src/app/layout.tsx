@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Box, Container } from "@mui/material";
-import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
-import { Roboto } from 'next/font/google';
-import { ThemeProvider } from '@mui/material/styles';
-import theme from '../theme';
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
+import { Roboto } from "next/font/google";
+import { ThemeProvider } from "@mui/material/styles";
+import theme from "../theme";
 import { Suspense } from "react";
 import AccountProvider from "@/context/AccountContextProvider";
 import Background from "@/components/Background/Background";
@@ -12,10 +12,10 @@ import BackgroundContextProvider from "@/context/BackgroundContentProvider";
 import ScreenContextProvider from "@/context/ScreenContextProvider";
 
 const roboto = Roboto({
-  weight: ['300', '400', '500', '700'],
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-roboto',
+  weight: ["300", "400", "500", "700"],
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-roboto",
 });
 
 export const metadata: Metadata = {
@@ -33,13 +33,17 @@ export default async function RootLayout({
       <body>
         <BackgroundContextProvider>
           <ThemeProvider theme={theme}>
-            <Suspense fallback={<Background hasOverlay={false}><Box sx={{ p: 2 }}>Loading...</Box></Background>}>
+            <Suspense
+              fallback={
+                <Background hasOverlay={false}>
+                  <Box sx={{ p: 2 }}>Loading...</Box>
+                </Background>
+              }
+            >
               <AccountProvider>
                 <AppRouterCacheProvider>
                   <ScreenContextProvider>
-                    <Container>
-                      {children}
-                    </Container>
+                    <Container>{children}</Container>
                   </ScreenContextProvider>
                 </AppRouterCacheProvider>
               </AccountProvider>

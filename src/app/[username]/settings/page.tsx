@@ -1,7 +1,9 @@
+import Settings from "@/components/Settings/Settings";
 
-
-export default async function Home() {
+export default async function SettingsPage() {
   return (
-    <div></div>
+    <div>
+      <Settings />
+    </div>
   );
 }
