@@ -1,8 +1,9 @@
 'use server';
 
+import { AccountData } from "@/types/AccountData";
 import { getClient } from "./client";
 
-export default async function getAuthenticatedAccountId(name: string, key: string): Promise<number> {
+export default async function getAuthenticatedAccountData(name: string, key: string): Promise<AccountData | null> {
     const client = getClient();
 
     if (!client) {
@@ -12,7 +13,7 @@ export default async function getAuthenticatedAccountId(name: string, key: strin
 
     const { data, error } = await client
             .from('mtg_account')
-            .select('id')
+            .select('id', 'settings')
             .eq('username', name)
             .eq('dbkey', key)
             .limit(1)
@@ -23,5 +24,13 @@ export default async function getAuthenticatedAccountId(name: string, key: strin
         throw error;
     }
 
-    return data ? data.id : 0;
+    if (!data) {
+        return null;
+    }
+
+    return {
+        id: data.id,
+        username: name,
+        settings: data.settings,
+    };
 }

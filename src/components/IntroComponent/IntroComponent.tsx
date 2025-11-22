@@ -1,29 +1,36 @@
 
 'use client';
 
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AppBar, Box, Button, FormControl, FormLabel, Stack, Tab, Tabs, TextField } from "@mui/material";
-import Link from "next/link";
 import { AccountContext } from "@/context/AccountContextProvider";
 import { useRouter } from "next/navigation";
 import { BackgroundContext } from "@/context/BackgroundContentProvider";
 import styles from './IntroComponent.module.css';
+import { usePeriodical } from "@/hooks/usePeriodical";
 
 function EnterAccountNameAndRedirectComponent() {
-
   const [currentAccountName, setCurrentAccountName] = useState<string>("");
+  const router = useRouter();
+
+  function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    router.push(`/${currentAccountName}`);
+  }
 
   return <Box sx={{ p: 2 }}>
+    <form onSubmit={handleSubmit}>
       <FormControl sx={{ p: 3, width: '100%' }}>
-        <FormLabel>Account to view</FormLabel>
+        <FormLabel htmlFor="account-name">Account to view</FormLabel>
         <Stack direction="column" spacing={2} alignItems="right">
-          <TextField label="Account name" variant="outlined" value={currentAccountName} onChange={(e) => setCurrentAccountName(e.target.value)} />
-            <Button variant="contained" size="large" disabled={currentAccountName.length === 0} LinkComponent={Link} href={`/${currentAccountName}`}>
+          <TextField id="account-name" label="Account name" variant="outlined" value={currentAccountName} onChange={(e) => setCurrentAccountName(e.target.value)} />
+            <Button type="submit" variant="contained" size="large" disabled={currentAccountName.length === 0}>
               Go
             </Button>
         </Stack>
       </FormControl>
-    </Box>;
+    </form>
+  </Box>;
 }
 
 function LoginComponent() {
@@ -32,72 +39,42 @@ function LoginComponent() {
   const [accountKey, setAccountKey] = useState<string>("");
   const router = useRouter();
 
-  function handleLogin() {
+  function handleLogin(event: React.FormEvent) {
+    event.preventDefault();
     authenticate(accountName, accountKey);
   }
-
+  
   useEffect(() => {
     if (isAuthenticated) {
       // Redirect to user home page
       router.push(getSubpageUrl(''));
     }
   }, [isAuthenticated, router, getSubpageUrl]);
-
-  if (authenticationInProgress) {
-    return <Box sx={{ p: 2 }}>
-      <div>Authenticating...</div>
-    </Box>;
-  }
-
-  if (isAuthenticated) {
-    // Redirect to user home page
-    return <Box sx={{ p: 2 }}>
-      <div>Successfully authenticated!</div>
-    </Box>;
-  }
-
+  
   return <Box sx={{ p: 2 }}>
-      <FormControl sx={{ p: 3, width: '100%' }}>
-        <FormLabel>Login</FormLabel>
-        <Stack direction="column" spacing={2} alignItems="right">
-          {authenticationError && <div style={{ color: 'red' }}>{authenticationError}</div>}
-          <TextField label="Account name" variant="outlined" value={accountName} onChange={(e) => setAccountName(e.target.value)} />
-          <TextField label="Account key" variant="outlined" type="password" value={accountKey} onChange={(e) => setAccountKey(e.target.value)} />
-          <Button variant="contained" size="large" onClick={handleLogin}>Login</Button>
-        </Stack>
-      </FormControl>
+    <form onSubmit={handleLogin}>
+        <FormControl sx={{ p: 3, width: '100%' }} error={authenticationError.length > 0} disabled={authenticationInProgress || isAuthenticated}>
+          <FormLabel htmlFor="account-name">Login</FormLabel>
+          <Stack direction="column" spacing={2} alignItems="right">
+            {authenticationError && <div style={{ color: 'red' }}>{authenticationError}</div>}
+            <TextField id="account-name" label="Account name" variant="outlined" value={accountName} onChange={(e) => setAccountName(e.target.value)} />
+            <TextField id="account-key" label="Account key" variant="outlined" type="password" value={accountKey} onChange={(e) => setAccountKey(e.target.value)} />
+            <Button loading={authenticationInProgress} type="submit" variant="contained" size="large">Login</Button>
+          </Stack>
+        </FormControl>
+      </form>
     </Box>;
 }
 
 
 export default function IntroComponent() {
-  const { logout } = useContext(AccountContext);
-  const { refreshBackgroundCard } = useContext(BackgroundContext);
-  const [currentTab, setCurrentTab] = useState<string>("view");
-  const logoutCalled = useRef(false);
+  const { isRefreshing, refreshBackgroundCard } = useContext(BackgroundContext);
+  const [ currentTab, setCurrentTab ] = useState<string>("view");
+  usePeriodical(refreshBackgroundCard, 15 * 1000, isRefreshing);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
     setCurrentTab(newValue);
   };
-
-  useEffect(() => {
-    if (!logoutCalled.current) {
-      logoutCalled.current = true;
-      logout();
-    }
-  }, [logout]);
-
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-
-    const refreshBackground = async () => {
-      await refreshBackgroundCard();
-      timeoutId = setTimeout(refreshBackground, 15 * 1000);
-    };
-
-    timeoutId = setTimeout(refreshBackground, 15 * 1000);
-    return () => clearTimeout(timeoutId);
-  }, [refreshBackgroundCard]);
 
   return (
     <main className={styles.main}>

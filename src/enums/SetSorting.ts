@@ -8,7 +8,7 @@ export enum SetSorting {
     COMPLETION_BACK,
 }
 
-export function apply(sorting: SetSorting, sets: CardSet[]) {
+export function applySorting(sorting: SetSorting, sets: CardSet[]) {
     if (sorting === SetSorting.CHRONOLOGICAL)
         return sets.sort(sortChronological)
     if (sorting === SetSorting.CHRONOLOGICAL_BACK)

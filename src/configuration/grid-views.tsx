@@ -1,6 +1,6 @@
 import { CardSorting } from "@/enums/CardSorting"
 import { Price } from "@/components/Price/Price"
-import { newViewMode, ViewMode } from "@/types/ViewMode"
+import { ViewMode, newViewMode } from "@/types/ViewMode"
 import { SetSorting } from "@/enums/SetSorting"
 import { Typography } from "@mui/material"
 import { PriceDelta } from "@/components/PriceDelta/PriceDelta"

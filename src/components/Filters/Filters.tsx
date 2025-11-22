@@ -7,13 +7,13 @@ import { Autocomplete, Checkbox, FormControl, FormControlLabel, FormGroup, FormL
 import { CardSelectionContext } from "@/types/CardSelectionContext";
 import { ViewModeContext } from "@/context/ViewModeContextProvider";
 import { debounce } from "lodash";
-import { apply, SetSorting } from "@/enums/SetSorting";
+import { SetSorting, applySorting } from "@/enums/SetSorting";
 import { CardSortingLabels, sortingMethodFromKey, sortingMethodToKey } from "@/enums/CardSorting";
 
 export default function Filters({}): ReactNode {
     const { viewMode: { showColorFilter, showDateFilter, showLegendaryFilter, showRarityFilter, showSetCompletions, showTokenFilter, sortModes } } = useContext(ViewModeContext)
     const { sets, colors, rarities, context: { set, colors: activeColors, rarities: activeRarities, isFoil, isLegendary, isToken, nameQuery, textQuery, typeQuery, artistQuery, releasedAfter, releasedBefore, sortingMethod }, setContext } = useContext(CardSelectionContextContext)
-    const setsNewToOld = useMemo(() => apply(SetSorting.CHRONOLOGICAL_BACK, [...sets]), [sets])
+    const setsNewToOld = useMemo(() => applySorting(SetSorting.CHRONOLOGICAL_BACK, [...sets]), [sets])
     const [currentNameQuery, setCurrentNameQuery] = useState(nameQuery);
     const [currentTypeQuery, setCurrentTypeQuery] = useState(typeQuery);
     const [currentTextQuery, setCurrentTextQuery] = useState(textQuery);

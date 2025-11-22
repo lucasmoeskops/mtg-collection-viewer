@@ -1,4 +1,4 @@
-import { cardsSearchEndpoint, fetchDataPaginated, ScryFallCard } from "@/scryfall/utils";
+import { ScryFallCard, cardsSearchEndpoint, fetchDataPaginated } from "@/scryfall/utils";
 import { SupabaseBoundMagicCardLike } from "@/supabase/utils";
 
 export default interface MagicCardLike {

@@ -4,7 +4,7 @@ import { getClient } from './client';
 import { Database } from '../../database.types';
 import { PostgrestError } from '@supabase/supabase-js';
 import { newSupabaseMagicCardLike } from './utils';
-import getAuthenticatedAccountId from './authenticate';
+import getAuthenticatedAccountData from './authenticate';
 
 export type EntityRecordWithRpc = Database["public"]["Tables"]["mtg_data"]["Row"];
 
@@ -12,8 +12,8 @@ export async function authenticate(name: string, key: string): Promise<boolean> 
     // Always wait 1 second
     await new Promise(resolve => setTimeout(resolve, 1000));
     try {
-        const userId = await getAuthenticatedAccountId(name, key);
-        return userId !== 0;
+        const accountData = await getAuthenticatedAccountData(name, key);
+        return accountData ? accountData.username === name : false;
     } catch (error) {
         console.error('Authentication error:', error);
         throw error;

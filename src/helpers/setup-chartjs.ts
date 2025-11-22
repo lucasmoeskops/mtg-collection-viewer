@@ -1,15 +1,15 @@
 // chartjs-setup.ts
 import {
+  CategoryScale,
   Chart,
+  Legend,
   LineController,
   LineElement,
-  PointElement,
   LinearScale,
-  CategoryScale,
+  PointElement,
   TimeScale,
   Title,
-  Tooltip,
-  Legend
+  Tooltip
 } from 'chart.js';
 
 let registered = false;

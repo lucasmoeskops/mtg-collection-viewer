@@ -1,10 +1,10 @@
 'use client'
 
 
-import MagicCardLike, { getCard, newEmptyCard } from "@/interfaces/MagicCardLike"
+import { useAsync } from "@/hooks/useAsync";
+import MagicCardLike, { getCard } from "@/interfaces/MagicCardLike"
 import { getRandomCard } from "@/supabase/server";
-import { createContext, ReactNode, useCallback, useEffect, useRef, useState } from "react"
-
+import { ReactNode, createContext, useState } from "react"
 
 async function fetchBackground(): Promise<MagicCardLike | null> {
     const card = await getRandomCard();
@@ -15,13 +15,15 @@ async function fetchBackground(): Promise<MagicCardLike | null> {
     if (!cardFromScryfall || !cardFromScryfall.art_crop_url) {
         return null;
     }
+    cardFromScryfall.id = card.id;
     return cardFromScryfall;
 }
+
 
 export type BackgroundContextProps = {
     backgroundCard: MagicCardLike | null,
     isRefreshing: boolean,
-    refreshBackgroundCard: () => Promise<void>,
+    refreshBackgroundCard: () => void,
 }
 
 export type BackgroundContextProviderProps = {
@@ -31,36 +33,20 @@ export type BackgroundContextProviderProps = {
 export const BackgroundContext = createContext<BackgroundContextProps>({
     backgroundCard: null,
     isRefreshing: false,
-    refreshBackgroundCard: async () => {},
+    refreshBackgroundCard: () => {},
 })
 
 export default function BackgroundContextProvider({ children }: BackgroundContextProviderProps) {
-    const [card, setCard] = useState<MagicCardLike | null>(newEmptyCard());
-    const [isRefreshing, setIsRefreshing] = useState<boolean>(true);
-    const initialCardFetched = useRef<boolean>(false);
+    const [ counter, setCounter ] = useState<number>(0);
+    const { data: card, isLoading } = useAsync<MagicCardLike | null>(fetchBackground, counter);
 
-    const refreshBackgroundCard = useCallback(async () => {
-        setIsRefreshing(true);
-        const [card] = await Promise.all([
-            fetchBackground(), 
-            // Don't change the background too quickly
-            new Promise(resolve => setTimeout(resolve, 1500))
-        ]);
-        setCard(card);
-        setIsRefreshing(false);
-    }, []);
-
-    useEffect(() => {
-        if (initialCardFetched.current) {
-            return;
-        }
-        initialCardFetched.current = true;
-        refreshBackgroundCard();
-    }, [refreshBackgroundCard]);
+    const refreshBackgroundCard = () => {
+        setCounter((prev) => prev + 1);
+    };
 
     const value: BackgroundContextProps = {
         backgroundCard: card,
-        isRefreshing,
+        isRefreshing: isLoading,
         refreshBackgroundCard,
     };
 

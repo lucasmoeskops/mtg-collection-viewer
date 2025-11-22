@@ -1,6 +1,9 @@
 # MTG Collection Viewer
 ## Changelog
 
+### v2025.11.22
++ Added a linting configuration and adjusted a lot of code structure.
+
 ### v2025.11.12
 + Added support to search by query to the collection editor.
 + Fix calculation error for total cards in merchant mode.

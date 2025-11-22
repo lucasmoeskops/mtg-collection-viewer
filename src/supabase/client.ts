@@ -1,5 +1,5 @@
 import { fetchWithRevalidateBuilder } from '@/nextjs/utils'
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { SupabaseClient, createClient } from '@supabase/supabase-js'
 import { Database } from '../../database.types'
 
 let supabase: SupabaseClient | undefined

@@ -1,10 +1,11 @@
 'use client'
 
+import { useAsync } from "@/hooks/useAsync"
 import MagicCardLike from "@/interfaces/MagicCardLike"
 import { getAccountIdByUsername, getAllCards } from "@/supabase/helpers"
 import { authenticate } from "@/supabase/server"
 import { debounce } from "lodash"
-import { createContext, ReactNode, useCallback, useEffect, useMemo, useState } from "react"
+import { ReactNode, createContext, useCallback, useMemo, useState } from "react"
 
 export type AccountContextProps = {
     accountId: number,
@@ -48,8 +49,8 @@ export const AccountContext = createContext<AccountContextProps>({
 
 export default function AccountProvider({ children }: AccountProviderProps) {
     const [accountId, setAccountId] = useState<number>(-1)
-    const [cards, setCards] = useState<MagicCardLike[]>([])
     const [cardDataValid, setCardDataValid] = useState<boolean>(false);
+    const [loadedCards, setLoadedCards] = useState<MagicCardLike[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [errorCode, setErrorCode] = useState<number>(0);
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -88,8 +89,8 @@ export default function AccountProvider({ children }: AccountProviderProps) {
         }
         if (username !== accountName) {
             setAccountName(username);
-            setIsAuthenticated(false);
         }
+        setIsAuthenticated(false);
         setIsLoading(true)
         const newAccountId = await getAccountIdByUsername(username)
         if (newAccountId !== accountId) {
@@ -97,50 +98,45 @@ export default function AccountProvider({ children }: AccountProviderProps) {
         }
         if (!newAccountId) {
             setErrorCode(1)
-        } else if (errorCode === 1) {
-            setErrorCode(0)
         }
+        setErrorCode(0)
         setIsLoading(false)
-    }, [accountId, errorCode, accountName]);
+    }, [accountId, accountName]);
 
-    useEffect(() => {
-        let relevant = true;
-        if (cardDataNeeded && !cardDataValid && accountId !== -1) {
-            setIsLoading(true)
-            getAllCards(accountId).then((cards) => {
-                if (relevant) {
-                    setCards(cards)
-                    setCardDataValid(true);
-                    setIsLoading(false)
-                }
-            }).catch(() => {
-                if (relevant) {
-                    setIsLoading(false)
-                }
-            });
+    const fetchCards = useCallback(async () => {
+        console.log('Fetching cards for account ID:', accountId);
+        try {
+            const fetchedCards = accountId === -1 ? [] : await getAllCards(accountId);
+            setCardDataValid(true);
+            setCardDataNeeded(false);
+            setLoadedCards(fetchedCards);
+            return;
+        } catch (error) {
+            console.error('Error fetching cards:', error);
+            return;
         }
-        return () => {
-            relevant = false;
-        };
-    }, [accountId, cardDataValid, cardDataNeeded]);
+    }, [accountId]);
+
+    const { isLoading: cardsLoading } = useAsync<void>(fetchCards, !cardDataValid && cardDataNeeded && accountId !== -1);
 
     const value: AccountContextProps = {
         accountId,
-        cards,
+        cards: loadedCards,
         errorCode,
-        isLoading,
-        getSubpageUrl: (subpage: string) => subpage ? `/${accountName}/${subpage}` : `/${accountName}`,
-        setAccountIdByUsername,
+        isLoading: isLoading || cardsLoading,
         isAuthenticated,
         authenticationError,
         authenticationInProgress,
         accountName,
         accountKey,
         authenticate: authenticator,
+        getSubpageUrl: (subpage: string) => subpage ? `/${accountName}/${subpage}` : `/${accountName}`,
+        setAccountIdByUsername,
         logout: () => {
-            setCards([]);
+            setCardDataNeeded(false);
             setCardDataValid(false);
             setIsAuthenticated(false);
+            setLoadedCards([]);
             setAccountName('');
             setAccountKey('');
             setAuthenticationError('');

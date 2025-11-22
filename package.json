@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint .",
+    "fix": "eslint . --fix",
+    "update-types": "supabase gen types typescript --project-id ${SUPABASE_PROJECT_ID} > ./database.types.ts"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",
@@ -15,26 +17,29 @@
     "@fontsource/roboto": "^5.2.6",
     "@mui/icons-material": "^7.2.0",
     "@mui/material": "^7.2.0",
-    "@mui/material-nextjs": "^7.2.0",
+    "@mui/material-nextjs": "^7.3.5",
     "@supabase/supabase-js": "^2.50.2",
     "@types/chart.js": "^2.9.41",
     "chart.js": "^4.5.1",
     "chartjs": "^0.3.24",
     "lodash": "^4.17.21",
-    "next": "15.3.4",
-    "react": "^19.1.0",
-    "react-dom": "^19.0.0"
+    "next": "16.0.3",
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
     "@types/lodash": "^4.17.20",
     "@types/node": "^20",
-    "@types/react": "^19.1.8",
-    "@types/react-dom": "^19.1.6",
+    "@types/react": "19.2.5",
+    "@types/react-dom": "19.2.3",
     "@types/react-window": "^1.8.8",
-    "eslint": "^9",
-    "eslint-config-next": "15.3.4",
-    "supabase": "^2.26.9",
+    "eslint": "^9.39.1",
+    "eslint-config-next": "16.0.3",
+    "supabase": "^2.58.5",
     "typescript": "^5"
+  },
+  "overrides": {
+    "@types/react": "19.2.5",
+    "@types/react-dom": "19.2.3"
   }
 }

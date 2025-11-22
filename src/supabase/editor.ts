@@ -1,7 +1,7 @@
 'use server';
 
 import { CardChange } from "@/types/CardChange";
-import getAuthenticatedAccountId from "./authenticate";
+import getAuthenticatedAccountData from "./authenticate";
 import { getClient } from "./client";
 import { CardOwnershipData } from "@/types/CardOwnershipData";
 import getMTGCardId from "./get-mtg-card-id";
@@ -11,8 +11,8 @@ export async function getOwnedCardsForSets(setCodes: string[], accountName: stri
         return [];
     }
     try {
-        const userId = await getAuthenticatedAccountId(accountName, accountKey);
-        if (userId === 0) {
+        const accountData = await getAuthenticatedAccountData(accountName, accountKey);
+        if (!accountData) {
             throw new Error('Authentication failed');
         }
         const supabaseClient = getClient();
@@ -23,7 +23,7 @@ export async function getOwnedCardsForSets(setCodes: string[], accountName: stri
             .from('mtg_account_card')
             .select('amount, card!inner( series, cardnumber, is_foil )')
             .in('card.series', setCodes)
-            .eq('account', userId)
+            .eq('account', accountData.id)
             .gt('amount', 0);
         if (error) {
             console.error('Error fetching cards:', error);
@@ -48,7 +48,7 @@ export async function getOwnedCardsForIndividuals(cards: { setCode: string, coll
     // Always wait 1 second
     await new Promise(resolve => setTimeout(resolve, 1000));
     try {
-        const userId = await getAuthenticatedAccountId(accountName, accountKey);
+        const userId = await getAuthenticatedAccountData(accountName, accountKey);
         if (userId === 0) {
             throw new Error('Authentication failed');
         }
@@ -87,8 +87,8 @@ export async function saveCardChanges(accountName: string, accountKey: string, c
         return succesfulChanges;
     }
     try {
-        const userId = await getAuthenticatedAccountId(accountName, accountKey);
-        if (userId === 0) {
+        const accountData = await getAuthenticatedAccountData(accountName, accountKey);
+        if (!accountData) {
             throw new Error('Authentication failed');
         }
         const supabaseClient = getClient();
@@ -102,7 +102,6 @@ export async function saveCardChanges(accountName: string, accountKey: string, c
                 cardId,
             };
         }));
-        console.log('Saving card changes for user', userId, 'changes:', changesWithIds);
         for (const change of changesWithIds) {
             if (change.newAmount < 0) {
                 throw new Error(`Invalid amount for card ${change.setId} ${change.collectorNumber} (${change.isFoil ? 'foil' : 'nonfoil'}): ${change.newAmount}`);
@@ -110,7 +109,7 @@ export async function saveCardChanges(accountName: string, accountKey: string, c
             const { data:accountCardId, error:accountCardError } = await supabaseClient
                 .from('mtg_account_card')
                 .select('id')
-                .eq('account', userId)
+                .eq('account', accountData.id)
                 .eq('card', change.cardId)
                 .limit(1)
                 .maybeSingle();
@@ -125,11 +124,10 @@ export async function saveCardChanges(accountName: string, accountKey: string, c
             // 3. Existing entry, newAmount > 0: Update entry
             // 4. No existing entry, newAmount == 0: Do nothing
             if (!accountCardId && change.newAmount > 0) {
-                console.log('Inserting new account card for user', userId, 'card', change.cardId, 'amount', change.newAmount);
                 const { error:insertError } = await supabaseClient
                     .from('mtg_account_card')
                     .insert({
-                        account: userId,
+                        account: accountData.id,
                         card: change.cardId,
                         amount: change.newAmount,
                     });
@@ -138,7 +136,6 @@ export async function saveCardChanges(accountName: string, accountKey: string, c
                     continue
                 }
             } else if (accountCardId && change.newAmount === 0) {
-                console.log('Deleting account card for user', userId, 'card', change.cardId);
                 const { error:deleteError } = await supabaseClient
                     .from('mtg_account_card')
                     .delete()
@@ -148,7 +145,6 @@ export async function saveCardChanges(accountName: string, accountKey: string, c
                     continue;
                 }
             } else if (accountCardId && change.newAmount > 0) {
-                console.log('Updating account card for user', userId, 'card', change.cardId, 'to amount', change.newAmount);
                 const { error:updateError } = await supabaseClient
                     .from('mtg_account_card')
                     .update({

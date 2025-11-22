@@ -1,49 +1,47 @@
 'use client'
 
 import { getViewModeById, views } from "@/configuration/grid-views"
-import { createContext, ReactNode, useContext, useEffect } from "react"
+import { ReactNode, createContext, useContext, useEffect } from "react"
 import { ViewMode } from "@/types/ViewMode"
 import { SetContext } from "./SetContextProvider"
-import { apply } from "@/enums/SetSorting"
+import { applySorting } from "@/enums/SetSorting"
 import { CardSet } from "@/types/CardSet"
 import { ViewModes } from "@/types/ViewModes"
 import { AccountContext } from "./AccountContextProvider"
+import { useMemo } from "react"
 
 export type ViewModeContextProps = {
     viewMode: ViewMode,
+    sortedSets: CardSet[],
 }
 
 export type ViewModeProviderProps = {
     children: ReactNode | ReactNode[],
+    sortedSets: CardSet[],
     viewModeId: ViewModes,
 }
 
 export const ViewModeContext = createContext<ViewModeContextProps>({
     viewMode: views[0],
+    sortedSets: [],
 })
 
 export default function ViewModeProvider({ children, viewModeId }: ViewModeProviderProps) {
-    const { setSets } = useContext(SetContext);
+    const { sets } = useContext(SetContext);
     const { setCardDataNeeded } = useContext(AccountContext);
     const viewMode = getViewModeById(viewModeId);
+    const sortedSets = useMemo(() => {
+        return applySorting(viewMode.setSortingMethod, sets);
+    }, [sets, viewMode.setSortingMethod]);
 
     useEffect(() => {
         setCardDataNeeded(true);
     }, [setCardDataNeeded]);
-
+    
     const value: ViewModeContextProps = {
         viewMode,
+        sortedSets,
     }
-
-    useEffect(() => {
-        setSets((allSets: CardSet[]) => {
-            if (!allSets || allSets.length === 0) {
-                return allSets
-            }
-            
-            return [...apply(viewMode.setSortingMethod, allSets)]
-        })
-    }, [setSets, viewMode.setSortingMethod])
 
     return <ViewModeContext.Provider value={value}>
         {children}

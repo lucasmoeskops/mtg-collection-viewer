@@ -1,5 +1,5 @@
 import { getClient } from "./client";
-import { cardsSearchEndpoint, fetchDataPaginated, ScryFallCard } from "@/scryfall/utils";
+import { ScryFallCard, cardsSearchEndpoint, fetchDataPaginated } from "@/scryfall/utils";
 
 export default async function insertNewMtgCard(setId: string, collectorNumber: string, isFoil: boolean) {
     const client = getClient();

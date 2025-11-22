@@ -15,11 +15,12 @@ type CardGridRowProps = {
 };
 
 export default function CardGridRow({ card }: CardGridRowProps) {
-    const { allSets } = useContext(SetContext);
+    const { sets } = useContext(SetContext);
     const { addCardChange, set } = useContext(CardEditorContext);
     const { isAuthenticated } = useContext(AccountContext);
     const { card: { id, name, collectorNumber, color, rarity }, amount, amountFoil } = card;
-    const setInfo = !set ? allSets.find(s => s.code === card.card.setId) : undefined;
+    const setInfo = !set ? sets.find(s => s.code === card.card.setId) : undefined;
+    
 
     function onAmountChange(newAmount: number) {
         addCardChange(fromCard(card.card, false, newAmount));

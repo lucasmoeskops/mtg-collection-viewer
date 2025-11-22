@@ -47,7 +47,7 @@ export default function MainTabs(): ReactNode {
                 {isAuthenticated && <Tab label="Editor" value="editor" component={Link} href={getSubpageUrl('editor')} {...a11yProps(2)} />}
                 <Tab label="Settings" value="settings" component={Link} href={getSubpageUrl('settings')} {...a11yProps(3)} />
                 <Tab label="Colofon" value="colofon" component={Link} href={getSubpageUrl('colofon')} {...a11yProps(3)} />
-                <Tab label="Logout" value="logout" component={Link} href={getSubpageUrl('logout')} {...a11yProps(4)} />
+                <Tab label="Logout" value="logout" component={Link} href="/logout" {...a11yProps(4)} />
             </Tabs>
         </Box>
     )

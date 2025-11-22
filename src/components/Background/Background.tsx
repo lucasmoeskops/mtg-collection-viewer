@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useState } from "react";
 import styles from './Background.module.css';
 import Link from "next/link";
 import { BackgroundContext } from "@/context/BackgroundContentProvider";
@@ -14,29 +14,25 @@ export type BackgroundProps = {
 
 
 export default function Background({ children, hasOverlay=true, fullBackground=false }: BackgroundProps) {
-    const { backgroundCard, isRefreshing } = useContext(BackgroundContext);
-    const [ oldImageUrl, setOldImageUrl ] = useState<string | null>(null);
-    const wasRefreshing = useRef<boolean>(false);
-    const usePrimary = useRef<boolean>(true);
-    const [ backgroundImage, setBackgroundImage ] = useState<string>(backgroundCard?.art_crop_url || '/mtg-card-back.webp');
+    const { backgroundCard } = useContext(BackgroundContext);
+    const [ previousBackgroundCardId, setPreviousBackgroundCardId ] = useState<number | null>(null);
+    const [ previousImageUrl, setPreviousImageUrl ] = useState<string | null>(null);
+    const [ usePrimary, setUsePrimary ] = useState<boolean>(true);
+    const [ imageUrl, setImageUrl ] = useState<string>(backgroundCard?.art_crop_url || '/mtg-card-back.webp');
 
-    useEffect(() => {
-        if (isRefreshing) {
-            setOldImageUrl(backgroundImage);
-            wasRefreshing.current = true;
-        } else if (wasRefreshing.current) {
-            wasRefreshing.current = false;
-            usePrimary.current = !usePrimary.current;
-            setBackgroundImage(backgroundCard?.art_crop_url || oldImageUrl || '/mtg-card-back.webp');
-        }
-    }, [isRefreshing, backgroundImage, backgroundCard, oldImageUrl]);
+    if (backgroundCard?.id && backgroundCard?.id !== previousBackgroundCardId) {
+        setPreviousBackgroundCardId(backgroundCard?.id);
+        setPreviousImageUrl(imageUrl);
+        setUsePrimary(!usePrimary);
+        setImageUrl(backgroundCard?.art_crop_url || '/mtg-card-back.webp');
+    }
 
     return (
         <div className={styles.background}>
-            <div className={`${styles.overlayBackground} ${usePrimary.current ? styles.fadeIn : styles.fadeOut}`}  style={{
-            backgroundImage: `url(${usePrimary.current ? backgroundImage : oldImageUrl})`}} />
-            <div className={`${styles.overlayBackground} ${usePrimary.current ? styles.fadeOut : styles.fadeIn}`}  style={{
-            backgroundImage: `url(${usePrimary.current ? oldImageUrl : backgroundImage})`}} />
+            <div className={`${styles.overlayBackground} ${usePrimary ? styles.fadeIn : styles.fadeOut}`}  style={{
+            backgroundImage: `url(${usePrimary ? imageUrl : previousImageUrl})`}} />
+            <div className={`${styles.overlayBackground} ${usePrimary ? styles.fadeOut : styles.fadeIn}`}  style={{
+            backgroundImage: `url(${usePrimary ? previousImageUrl : imageUrl})`}} />
             {hasOverlay ? <div className={`${styles.overlay} ${fullBackground ? styles.overlayFull : styles.overlayPartial}`}>
                 {children}
             </div> : children}

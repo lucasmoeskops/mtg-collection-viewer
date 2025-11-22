@@ -1,14 +1,13 @@
 'use client'
 
 
-import MagicCardLike from "@/interfaces/MagicCardLike"
-import { CardSet, fetchSets, getSets } from "@/types/CardSet"
-import { createContext, ReactNode, useEffect, useState } from "react"
+import { useAsync } from "@/hooks/useAsync"
+import { CardSet, fetchSets } from "@/types/CardSet"
+import { ReactNode, createContext } from "react"
 
 export type SetContextProps = {
-    getSets: (cards: MagicCardLike[]) => CardSet[],
-    setSets: (sets: CardSet[] | ((sets: CardSet[]) => CardSet[])) => void,
-    allSets: CardSet[],
+    sets: CardSet[],
+    isLoading: boolean,
 }
 
 export type SetContextProviderProps = {
@@ -16,28 +15,17 @@ export type SetContextProviderProps = {
 }
 
 export const SetContext = createContext<SetContextProps>({
-    getSets: () => [],
-    setSets: () => {},
-    allSets: [],
+    sets: [],
+    isLoading: false,
 })
 
 export default function SetContextProvider({ children }: SetContextProviderProps) {
-    const [sets, setSets] = useState<CardSet[]>([])
-
+    const { data: sets, isLoading } = useAsync<CardSet[]>(fetchSets);
+    
     const value: SetContextProps = {
-        getSets: (cards: MagicCardLike[]) => {
-            return getSets(sets || [], cards)
-        },
-        allSets: sets,
-        setSets,
+        sets: sets || [],
+        isLoading,
     }
-
-    useEffect(() => {
-        fetchSets().then(setSets).catch((e) => {
-            console.log('Error fetching sets', e)
-            setSets([])
-        })
-    }, [])
 
     return <SetContext.Provider value={value}>
         {children}

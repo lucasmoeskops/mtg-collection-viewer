@@ -1,4 +1,4 @@
-import { cardsSearchEndpoint, fetchDataPaginated, ScryFallCard } from "@/scryfall/utils";
+import { ScryFallCard, cardsSearchEndpoint, fetchDataPaginated } from "@/scryfall/utils";
 
 export type MTGCard = {
     id: string,
@@ -34,13 +34,8 @@ export async function getCardsByQuery(query: string, setId: string | undefined):
         q: finalSetId ? `e:${finalSetId} ${query}` : query,
         unique: 'prints'
     };
-    try {
-        const scryfallCards = await fetchDataPaginated<ScryFallCard>(cardsSearchEndpoint, params, 500);
-        return scryfallCards.map(fromScryfallCard);
-    } catch (error) {
-        console.error('Error fetching cards by query:', error);
-        return [];
-    }
+    const scryfallCards = await fetchDataPaginated<ScryFallCard>(cardsSearchEndpoint, params, 500);
+    return scryfallCards.map(fromScryfallCard);
 }
 
 async function _getCardsForSet(setId: string): Promise<MTGCard[]> {

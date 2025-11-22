@@ -4,18 +4,17 @@ import MagicCardLike from "@/interfaces/MagicCardLike"
 import RenderableMagicCardLike from "@/interfaces/RenderableMagicCardLike"
 import { allCardSelector } from "@/procedures/card-selectors"
 import { CardSelectionContext, cardSelectionContextToHumanReadableString, newCardSelectionContext } from "@/types/CardSelectionContext"
-import { createContext, Dispatch, ReactNode, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from "react"
-import { SetContext } from "./SetContextProvider"
+import { Dispatch, ReactNode, SetStateAction, createContext, useCallback, useContext, useMemo, useState } from "react"
 import { CardColor, getColors } from "@/types/CardColor"
 import { CardRarity, getRarities } from "@/types/CardRarity"
-import { calculateSetCompletions, CardSetWithCompletion } from "@/types/SetCompletion"
+import { CardSetWithCompletion, calculateSetCompletions } from "@/types/SetCompletion"
 import { ViewModeContext } from "./ViewModeContextProvider"
 import { useRouter, useSearchParams } from "next/navigation"
 import { sortingMethodToKey } from "@/enums/CardSorting"
 import { updateQueryParams } from "@/helpers/router"
 import { AccountContext } from "./AccountContextProvider"
-import { apply } from "@/enums/SetSorting"
 import { Box, Typography } from "@mui/material"
+import { getSets } from "@/types/CardSet"
 
 
 function partialContextToQueryParameters(context: Partial<CardSelectionContext>): Record<string, string> {
@@ -96,15 +95,10 @@ export const CardSelectionContextContext = createContext<CardSelectionContextCon
 
 export default function CardSelectionContextProvider({ extraContext, children }: CardSelectionContextProviderProps) {
     const { cards } = useContext(AccountContext)
-    const { getSets } = useContext(SetContext)
-    const {viewMode} = useContext(ViewModeContext)
-    const [context, setContext] = useState<CardSelectionContext>({...newCardSelectionContext(), ...viewMode.baseContext, ...extraContext})
-    const [sets, setSets] = useState<CardSetWithCompletion[]>([])
+    const { sortedSets, viewMode } = useContext(ViewModeContext)
+    const [ context, setContext ] = useState<CardSelectionContext>({...newCardSelectionContext(), ...viewMode.baseContext, ...extraContext})
     const colors: CardColor[] = useMemo(() => getColors(cards), [cards])
     const rarities: CardRarity[] = useMemo(() => getRarities(cards), [cards])
-    const [selectedCards, setSelectedCards] = useState<RenderableMagicCardLike[]>([])
-    const statistics = viewMode.statistics ? viewMode.statistics(selectedCards, context) : undefined
-    const showSetCompletions = viewMode.showSetCompletions
     const searchParams = useSearchParams()
     const router = useRouter()
 
@@ -112,15 +106,16 @@ export default function CardSelectionContextProvider({ extraContext, children }:
         updateQueryParams(router, searchParams, partialContextToQueryParameters(typeof newContext === 'function' ? newContext(context) : newContext))
     }, [router, searchParams])
 
-    useEffect(() => {
-        const withCompletions = calculateSetCompletions(getSets(cards), cards)
-        apply(viewMode.setSortingMethod, withCompletions)
-        setSets(withCompletions)
-    }, [cards, getSets, viewMode.setSortingMethod])
+    const sets = useMemo(() => {
+        const sets = getSets(sortedSets, cards)
+        return calculateSetCompletions(sets, cards)
+    }, [cards, sortedSets])
 
-    useEffect(() => {
-        allCardSelector(cards, context).then(setSelectedCards)
-    }, [cards, context])
+    const selectedCards = useMemo<RenderableMagicCardLike[]>(() => {
+        return allCardSelector(cards, sets, context);
+    }, [cards, sets, context])
+
+    const statistics = viewMode.statistics ? viewMode.statistics(selectedCards, context) : undefined
 
     const value: CardSelectionContextContextProps = {
         context,
@@ -128,7 +123,7 @@ export default function CardSelectionContextProvider({ extraContext, children }:
         sets,
         colors,
         rarities,
-        showSetCompletions,
+        showSetCompletions: viewMode.showSetCompletions,
         getCardInfo: viewMode.getCardInfo,
         generalInfo: <Box sx={{p: 2}}><Typography>{cardSelectionContextToHumanReadableString(context)}</Typography>{statistics}</Box>,
         setContext: (newContext: SetStateAction<CardSelectionContext>) => {

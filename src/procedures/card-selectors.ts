@@ -2,12 +2,12 @@ import { CardSelectionContext } from "@/types/CardSelectionContext";
 import RenderableMagicCardLike, { makeRenderable } from "@/interfaces/RenderableMagicCardLike";
 import MagicCardLike, { newEmptyCard } from "@/interfaces/MagicCardLike";
 import { flatMap, times } from "lodash"
-import { artistSort, CardSorting, sortAvgNonFoilPrice, sortAvgPrice, sortByPriceDelta, sortCardType, sortChronological, sortChronologicalBack, sortManaCost, sortName, sortPriceBack } from "@/enums/CardSorting";
-import { getSetByCode } from "@/types/CardSet";
+import { CardSorting, artistSort, sortAvgNonFoilPrice, sortAvgPrice, sortByPriceDelta, sortCardType, sortChronological, sortChronologicalBack, sortManaCost, sortName, sortPriceBack } from "@/enums/CardSorting";
+import { CardSet } from "@/types/CardSet";
 import { RenderMode } from "@/enums/RenderMode";
 import { RenderEffect } from "@/enums/RenderEffect";
 
-export async function allCardSelector(cards: MagicCardLike[], context: CardSelectionContext): Promise<RenderableMagicCardLike[]> {
+export function allCardSelector(cards: MagicCardLike[], sets: CardSet[], context: CardSelectionContext): RenderableMagicCardLike[] {
     let selectedCards = Array.from(cards)
 
     if (context.set !== '') {
@@ -108,7 +108,7 @@ export async function allCardSelector(cards: MagicCardLike[], context: CardSelec
     }
 
     if (context.set && context.sortingMethod === CardSorting.CHRONOLOGICAL) {
-        const cardSet = await getSetByCode(context.set)
+        const cardSet = sets.find(set => set.code === context.set)
         if (cardSet) {
             const outcards: MagicCardLike[] = []
             const emptyCard: MagicCardLike = newEmptyCard()

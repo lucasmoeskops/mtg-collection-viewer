@@ -1,21 +1,23 @@
 'use client'
 
-import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react"
+import { ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
 import { CardSet } from "@/types/CardSet"
 import { BoundMTGCard } from "@/types/BoundMTGCard"
-import { getCardHash, getCardsByQuery, getCardsForSet, MTGCard } from "@/types/MTGCard"
+import { MTGCard, getCardHash, getCardsByQuery, getCardsForSet } from "@/types/MTGCard"
 import { debounce } from "@mui/material"
 import { getOwnedCardsForSets, saveCardChanges } from "@/supabase/editor"
 import { initializeAmount } from "@/types/Amount"
 import { getCardOwnershipCardHash } from "@/types/CardOwnershipData"
 import { CardChange, getCardChangeHash } from "@/types/CardChange"
 import { AccountContext } from "./AccountContextProvider"
+import { useAsync } from "@/hooks/useAsync"
 
 
 export type CardEditorContextProps = {
     cards: BoundMTGCard[],
     set: CardSet | null,
     query: string,
+    isLoading: boolean,
     addCardChange: (change: CardChange) => void,
     setSet: (set: CardSet | null) => void,
     setQuery: (query: string) => void,
@@ -29,16 +31,27 @@ export const CardEditorContext = createContext<CardEditorContextProps>({
     cards: [],
     set: null,
     query: '',
+    isLoading: false,
     addCardChange: () => {},
     setSet: () => {},
     setQuery: () => {},
 });
 
+async function updateCards (query: string, setCode: string | false) {
+    let allCards: MTGCard[] = [];
+    if (query.trim().length > 0) {
+        allCards = await getCardsByQuery(query, setCode || undefined);
+    } else if (setCode) {
+        allCards = await getCardsForSet(setCode);
+    } else {
+        allCards = [];
+    }
+    return allCards;
+}
+
 export default function CardEditorContextProvider({ children }: CardEditorContextProviderProps) {
     const { accountName, accountKey, isAuthenticated, invalidateCardData } = useContext(AccountContext);
-    const [cards, setCards] = useState<MTGCard[]>([]);
     const [ownershipData, setOwnershipData] = useState<{[cardId: string]: number}>({});
-    const [boundCards, setBoundCards] = useState<BoundMTGCard[]>([]);
     const [set, setSet] = useState<CardSet | null>(null);
     const [query, setQuery] = useState<string>('');
     const [cardChangeQueue, setCardChangeQueue] = useState<CardChange[]>([]);
@@ -73,49 +86,40 @@ export default function CardEditorContextProvider({ children }: CardEditorContex
         invalidateCardData();
     }, 300), [accountName, accountKey, setCardChangeQueue, invalidateCardData]);
 
+    const setCode = useMemo(() => set?.code || false, [set]);
+    const updateCardsCallback = useCallback(() => updateCards(query, setCode), [query, setCode]);
+
+    const { data: cards, isLoading } = useAsync<MTGCard[]>(updateCardsCallback);
+
+    const boundCards = useMemo(() => {
+        return cards?.filter(card => loadedSets.has(card.setId)).map(card => {
+            const cardIdNonFoil = getCardHash(card, false);
+            const cardIdFoil = getCardHash(card, true);
+            return {
+                card,
+                amount: initializeAmount(ownershipData[cardIdNonFoil] || 0),
+                amountFoil: initializeAmount(ownershipData[cardIdFoil] || 0),
+            };
+        });
+    }, [cards, loadedSets, ownershipData]);
+
+
     const value = {
-        cards: boundCards,
+        cards: boundCards || [],
         set,
         query,
         accountName,
         accountKey,
+        isLoading: isLoading || loadedSets.size < loadingSets.size,
         addCardChange,
         setSet,
         setQuery,
     };
 
     useEffect(() => {
-        async function loadCards(setCode: string | undefined) {
-            let allCards: MTGCard[] = [];
-            if (query.trim().length > 0) {
-                allCards = await getCardsByQuery(query, setCode);
-            } else if (setCode) {
-                allCards = await getCardsForSet(setCode);
-            } else {
-                allCards = [];
-            }
-            if (relevant) {
-                setCards(allCards);
-            }
-        }
-        let relevant = true;
-        setCards([]);
-        setCardChangeQueue([]);
-        setBoundCards([]);
-
-        if (set && set.code) {
-            loadCards(set.code);
-        } else if (query.trim().length > 0) {
-            loadCards(undefined);
-        }
-        return () => {
-            relevant = false;
-        };
-    }, [set, query]);
-
-    useEffect(() => {
         async function loadOwnershipData(setCodes: string[], name: string, key: string) {
             const ownershipMap: {[cardId: string]: number} = {};
+            setLoadingSets(prev => new Set(prev).union(currentSets));
             try {
                 const cardsWithOwnership = await getOwnedCardsForSets(setCodes, name, key);
                 cardsWithOwnership.forEach(card => {
@@ -134,33 +138,17 @@ export default function CardEditorContextProvider({ children }: CardEditorContex
         }
 
         const currentSets = new Set<string>();
-        for (const card of cards) {
+        for (const card of (cards || [])) {
             currentSets.add(card.setId);
         }
         if (currentSets.difference(loadingSets).size > 0) {
             loadOwnershipData(Array.from(currentSets.difference(loadingSets)), accountName, accountKey);
-            setLoadingSets(prev => new Set(prev).union(currentSets));
         }
     }, [cards, isAuthenticated, accountName, accountKey, loadingSets]);
 
-    useEffect(() => {
-        const combined = cards.filter(card => loadedSets.has(card.setId)).map(card => {
-            const cardIdNonFoil = getCardHash(card, false);
-            const cardIdFoil = getCardHash(card, true);
-            return {
-                card,
-                amount: initializeAmount(ownershipData[cardIdNonFoil] || 0),
-                amountFoil: initializeAmount(ownershipData[cardIdFoil] || 0),
-            };
-        });
-        setBoundCards(combined);
-    }, [cards, loadedSets, ownershipData]);
-
-    useEffect(() => {
-        if (cardChangeQueue.length > 0) {
-            debouncedPushCardChanges(cardChangeQueue);
-        }
-    }, [cardChangeQueue, debouncedPushCardChanges]);
+    if (cardChangeQueue.length > 0) {
+        debouncedPushCardChanges(cardChangeQueue);
+    }
 
     return <CardEditorContext.Provider value={value}>
         {children}

@@ -12,7 +12,11 @@ export type CardEditGridSimpleProps = {
 
 
 export function CardEditGridSimple({ cards }: CardEditGridSimpleProps) {
-    const { set } = useContext(CardEditorContext);
+    const { isLoading, set } = useContext(CardEditorContext);
+
+    if (isLoading) {
+        return <div>Loading...</div>;
+    }
 
     return (
         <TableContainer key={cards.length}>
