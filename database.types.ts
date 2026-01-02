@@ -172,7 +172,7 @@ export type Database = {
           artist: string;
           card_type: string;
           cardmarket_url: string | null;
-          cardnumber: number;
+          cardnumber: string;
           colors: string[];
           created_at: string;
           id: number;
@@ -184,6 +184,7 @@ export type Database = {
           price_estimate: number;
           rarity: string;
           release_date: string;
+          scryfall_id: string | null;
           series: string;
           text: string;
         };
@@ -192,7 +193,7 @@ export type Database = {
           artist: string;
           card_type?: string;
           cardmarket_url?: string | null;
-          cardnumber: number;
+          cardnumber: string;
           colors: string[];
           created_at?: string;
           id?: number;
@@ -204,6 +205,7 @@ export type Database = {
           price_estimate?: number;
           rarity?: string;
           release_date: string;
+          scryfall_id?: string | null;
           series: string;
           text: string;
         };
@@ -212,7 +214,7 @@ export type Database = {
           artist?: string;
           card_type?: string;
           cardmarket_url?: string | null;
-          cardnumber?: number;
+          cardnumber?: string;
           colors?: string[];
           created_at?: string;
           id?: number;
@@ -224,6 +226,7 @@ export type Database = {
           price_estimate?: number;
           rarity?: string;
           release_date?: string;
+          scryfall_id?: string | null;
           series?: string;
           text?: string;
         };
@@ -347,7 +350,7 @@ export type Database = {
           artist: string;
           card_type: string;
           cardmarket_url: string | null;
-          cardnumber: number;
+          cardnumber: string;
           colors: string[];
           created_at: string;
           id: number;
@@ -359,6 +362,7 @@ export type Database = {
           price_estimate: number;
           rarity: string;
           release_date: string;
+          scryfall_id: string | null;
           series: string;
           text: string;
         }[];

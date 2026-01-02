@@ -32,6 +32,7 @@ export async function getAllCards(accountId: number): Promise<MagicCardLike[]> {
                     rarity,
                     manacost,
                     artist,
+                    scryfall_id,
                     text
                 ),
                 amount

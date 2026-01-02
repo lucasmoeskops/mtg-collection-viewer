@@ -42,7 +42,7 @@ export function MainComponent({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className={styles.page}>
+    <div className={styles.page} key={username as string}>
       <main className={styles.main}>
         <MainTabs />
         {children}

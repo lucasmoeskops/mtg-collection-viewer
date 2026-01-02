@@ -17,7 +17,7 @@ export default async function getMTGCardId(
     .from("mtg_data")
     .select("id")
     .eq("series", setId)
-    .eq("cardnumber", parseInt(collectorNumber))
+    .eq("cardnumber", collectorNumber)
     .eq("is_foil", isFoil)
     .limit(1)
     .maybeSingle();

@@ -146,12 +146,12 @@ export function allCardSelector(
       const emptyCard: MagicCardLike = newEmptyCard();
       let lastPosition = 0;
       for (let i = 0; i < selectedCards.length; i++) {
-        const expectedLast = selectedCards[i].cardnumber - 1;
+        const expectedLast = selectedCards[i].cardnumber_int - 1;
         while (lastPosition < expectedLast) {
           outcards.push(emptyCard);
           lastPosition += 1;
         }
-        if (lastPosition < selectedCards[i].cardnumber) {
+        if (lastPosition < selectedCards[i].cardnumber_int) {
           outcards.push(selectedCards[i]);
           lastPosition += 1;
         }

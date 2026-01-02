@@ -34,7 +34,7 @@ export default async function insertNewMtgCard(
       artist: card.artist || "",
       card_type: card.type_line,
       cardmarket_url: "", // deprecated
-      cardnumber: parseInt(card.collector_number),
+      cardnumber: card.collector_number,
       colors: card.color_identity ?? [],
       image_url:
         card.image_uris?.normal ||
@@ -55,6 +55,7 @@ export default async function insertNewMtgCard(
       release_date: card.released_at || "",
       series: card.set,
       text: card.oracle_text || "",
+      scryfall_id: card.id,
     })
     .select("id")
     .limit(1)

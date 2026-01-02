@@ -63,7 +63,7 @@ export function sortChronological(a: MagicCardLike, b: MagicCardLike): number {
     return a.series > b.series ? 1 : -1;
   }
 
-  return a.cardnumber - b.cardnumber;
+  return a.cardnumber_int - b.cardnumber_int;
 }
 
 export function sortChronologicalBack(
@@ -78,7 +78,7 @@ export function sortChronologicalBack(
     return a.series > b.series ? 1 : -1;
   }
 
-  return a.cardnumber - b.cardnumber;
+  return a.cardnumber_int - b.cardnumber_int;
 }
 
 export function sortName(a: MagicCardLike, b: MagicCardLike): number {

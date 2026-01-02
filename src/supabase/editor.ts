@@ -60,7 +60,10 @@ export async function getOwnedCardsForIndividuals(
   // Always wait 1 second
   await new Promise((resolve) => setTimeout(resolve, 1000));
   try {
-    const accountData = await getAuthenticatedAccountData(accountName, accountKey);
+    const accountData = await getAuthenticatedAccountData(
+      accountName,
+      accountKey,
+    );
     if (!accountData) {
       throw new Error("Authentication failed");
     }

@@ -7,11 +7,13 @@ import { SupabaseBoundMagicCardLike } from "@/supabase/utils";
 
 export default interface MagicCardLike {
   id: number;
+  scryfall_id?: string;
   name: string;
   series: string;
   colors: string[];
   rarity: string;
-  cardnumber: number;
+  cardnumber: string;
+  cardnumber_int: number;
   card_type: string;
   image_url: string;
   art_crop_url: string;
@@ -35,11 +37,13 @@ export function newEmptyCard(
 ): MagicCardLike {
   return {
     id: 0,
+    scryfall_id: undefined,
     name: "?",
     series: "?",
     colors: [],
     rarity: "unknown",
-    cardnumber: 0,
+    cardnumber: '',
+    cardnumber_int: 0,
     card_type: "",
     image_url: "/mtg-card-back.webp",
     amount_owned: 0,
@@ -85,7 +89,7 @@ export async function getCard(
   cardNumber: string,
 ): Promise<MagicCardLike | null> {
   const hash = getCardHash(
-    { series: setId, cardnumber: parseInt(cardNumber) } as MagicCardLike,
+    { series: setId, cardnumber: cardNumber } as MagicCardLike,
     false,
   );
   const cached = cache.byHash.get(hash);
@@ -132,7 +136,7 @@ async function _getCard(
     cardmarket_url: firstCard.purchase_uris?.cardmarket || "",
   };
   const hash = getCardHash(
-    { series: setId, cardnumber: parseInt(cardNumber) } as MagicCardLike,
+    { series: setId, cardnumber: cardNumber } as MagicCardLike,
     false,
   );
   cache.byHash.set(hash, card);
@@ -145,8 +149,10 @@ export function fromSupabaseCard(
   const cardData = card.card;
   return {
     id: cardData.id,
+    scryfall_id: cardData.scryfall_id || undefined,
     series: cardData.series,
     cardnumber: cardData.cardnumber,
+    cardnumber_int: parseInt(cardData.cardnumber),
     card_type: cardData.card_type,
     name: cardData.name,
     image_url: cardData.image_url || "",

@@ -1,10 +1,11 @@
 export type SupabaseMagicCardLike = {
   id: number;
+  scryfall_id: string | null;
   name: string;
   series: string;
   colors: string[];
   rarity: string;
-  cardnumber: number;
+  cardnumber: string;
   card_type: string;
   image_url: string | null;
   is_foil: boolean;
@@ -31,11 +32,12 @@ export function newSupabaseMagicCardLike(): SupabaseBoundMagicCardLike {
   return {
     card: {
       id: 0,
+      scryfall_id: null,
       name: "",
       series: "",
       colors: [],
       rarity: "",
-      cardnumber: 0,
+      cardnumber: '0',
       card_type: "",
       image_url: null,
       is_foil: false,

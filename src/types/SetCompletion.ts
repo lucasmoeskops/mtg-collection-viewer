@@ -24,10 +24,10 @@ export function calculateSetCompletions(
   for (const card of cards) {
     let s = lookup.get(card.series);
     if (s) {
-      s.add(card.cardnumber);
+      s.add(card.cardnumber_int);
     } else {
       s = new Set<number>();
-      s.add(card.cardnumber);
+      s.add(card.cardnumber_int);
       lookup.set(card.series, s);
     }
   }

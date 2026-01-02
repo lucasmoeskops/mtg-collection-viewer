@@ -2,6 +2,10 @@
 
 ## Changelog
 
+### v2026.1.2
+
+- Card numbers are now stored as strings instead of numbers.
+
 ### v2025.11.22
 
 - Added support for account settings and some settings.
