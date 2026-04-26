@@ -15,7 +15,7 @@ export default async function insertNewMtgCard(
     cardsSearchEndpoint,
     {
       order: "set",
-      q: `e:${setId} cn:${collectorNumber}`,
+      q: `e:${setId} cn:"${collectorNumber}"`,
       unique: "prints",
     },
   ).then((cards) => cards.find((c) => c.collector_number === collectorNumber));
