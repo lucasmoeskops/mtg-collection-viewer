@@ -2,7 +2,7 @@
 
 import { useAsync } from "@/hooks/useAsync";
 import MagicCardLike, { getCard } from "@/interfaces/MagicCardLike";
-import { getRandomCard } from "@/supabase/server";
+import { getRandomCard } from "@/db/server";
 import { ReactNode, createContext, useState } from "react";
 
 async function fetchBackground(): Promise<MagicCardLike | null> {

@@ -1,5 +1,5 @@
 import { registerChartJs } from "@/helpers/setup-chartjs";
-import { getPriceHistoryForCard } from "@/supabase/server";
+import { getPriceHistoryForCard } from "@/db/server";
 import { Typography } from "@mui/material";
 import { Chart } from "chart.js";
 import { padStart } from "lodash";
@@ -39,15 +39,23 @@ export function PriceGraph({ cardId }: { cardId: number }) {
     { timestamp: string; price: number }[] | null
   >(null);
   const chartRef = useRef<HTMLCanvasElement>(null);
-  const chartChartRef = useRef<Chart | null>(null);
 
   useEffect(() => {
     registerChartJs();
-    if (!data) return;
-    if (!chartRef.current) return;
-    const ctx = chartRef.current.getContext("2d");
-    if (!ctx) return;
-    chartChartRef.current = new Chart(ctx, {
+    if (!data?.length) return;
+
+    // Defer to the next animation frame so the MUI Popover Portal has fully
+    // committed to the DOM. Chart.js calls getComputedStyle on the canvas
+    // parent during construction; if the Portal node isn't attached yet the
+    // ownerDocument lookup returns null and the constructor throws.
+    let chart: Chart | null = null;
+    const frameId = requestAnimationFrame(() => {
+      const canvas = chartRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      Chart.getChart(canvas)?.destroy();
+      chart = new Chart(ctx, {
       type: "line",
       data: {
         labels: data.map((point) => point.timestamp),
@@ -95,10 +103,13 @@ export function PriceGraph({ cardId }: { cardId: number }) {
         resizeDelay: 100,
       },
     });
+    });
+
     return () => {
-      chartChartRef.current?.destroy();
+      cancelAnimationFrame(frameId);
+      chart?.destroy();
     };
-  }, [chartRef, data]);
+  }, [data]);
 
   useEffect(() => {
     getPriceHistoryForCard(cardId).then((fetchedData) => {

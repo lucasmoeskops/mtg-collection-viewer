@@ -4,8 +4,8 @@ import { useAsync } from "@/hooks/useAsync";
 import MagicCardLike from "@/interfaces/MagicCardLike";
 import getAuthenticatedAccountData, {
   updateAccountSettings,
-} from "@/supabase/authenticate";
-import { getAccountByUsername, getAllCards } from "@/supabase/helpers";
+} from "@/db/authenticate";
+import { getAccountByUsername, getAllCards } from "@/db/helpers";
 import {
   AccountSettings,
   defaultAccountSettings,

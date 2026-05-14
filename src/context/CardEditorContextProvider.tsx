@@ -18,7 +18,7 @@ import {
   getCardsForSet,
 } from "@/types/MTGCard";
 import { debounce } from "@mui/material";
-import { getOwnedCardsForSets, saveCardChanges } from "@/supabase/editor";
+import { getOwnedCardsForSets, saveCardChanges } from "@/db/editor";
 import { initializeAmount } from "@/types/Amount";
 import { getCardOwnershipCardHash } from "@/types/CardOwnershipData";
 import { CardChange, getCardChangeHash } from "@/types/CardChange";
