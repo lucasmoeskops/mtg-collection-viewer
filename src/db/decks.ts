@@ -145,7 +145,7 @@ export async function updateDeck(
 export async function addCardToDeck(
   deckId: number,
   cardId: number,
-  role: "commander" | "mainboard",
+  role: "commander" | "mainboard" | "sideboard",
 ): Promise<void> {
   const sql = getClient();
   if (!sql) throw new Error("Database client not initialized");
