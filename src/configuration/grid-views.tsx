@@ -11,6 +11,7 @@ import {
 import MagicCardLike from "@/interfaces/MagicCardLike";
 import { CardSelectionContext } from "@/types/CardSelectionContext";
 import { ViewModes } from "@/types/ViewModes";
+import { AddToDeckButton } from "@/components/Decks/AddToDeckButton";
 
 export const Browse: ViewMode = newViewMode({
   id: ViewModes.BROWSE,
@@ -35,6 +36,7 @@ export const Browse: ViewMode = newViewMode({
       {card.amount_owned > 1 ? `${card.amount_owned} copies` : ""}
       {card.amount_owned > 1 && card.is_foil && ", "}
       {card.is_foil ? <>Foil</> : null}
+      <AddToDeckButton card={card} />
     </>
   ),
   statistics: (cards) => (

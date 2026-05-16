@@ -33,6 +33,7 @@ export default function MainTabs(): ReactNode {
       "logout",
     ].filter((item) => item !== undefined);
     if (isAuthenticated) {
+      base.push("decks");
       base.push("settings");
       base.push("editor");
     }
@@ -92,11 +93,20 @@ export default function MainTabs(): ReactNode {
         )}
         {isAuthenticated && (
           <Tab
+            label="Decks"
+            value="decks"
+            component={Link}
+            href={getSubpageUrl("decks")}
+            {...a11yProps(3)}
+          />
+        )}
+        {isAuthenticated && (
+          <Tab
             label="Editor"
             value="editor"
             component={Link}
             href={getSubpageUrl("editor")}
-            {...a11yProps(3)}
+            {...a11yProps(4)}
           />
         )}
         {isAuthenticated && (
