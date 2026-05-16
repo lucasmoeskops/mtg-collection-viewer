@@ -5,6 +5,7 @@ import { createDeck, deleteDeck, getDeckList } from "@/db/decks";
 import { CardDeckPreview } from "@/types/CardDeckPreview";
 import { Add } from "@mui/icons-material";
 import {
+  Alert,
   Box,
   Button,
   Dialog,
@@ -63,6 +64,16 @@ export default function DeckList() {
           New Deck
         </Button>
       </Box>
+
+      <Alert variant="outlined" severity="info" sx={{ mb: 3 }}>
+        <strong>Commander rules recap</strong>
+        <ul style={{ margin: "4px 0 0", paddingLeft: 20 }}>
+          <li>100-card deck — each card appears exactly once (basic lands are the exception)</li>
+          <li>One <strong>Commander</strong>: a legendary Creature, Spacecraft, or Vehicle that starts in the Command Zone</li>
+          <li>Every card must be within your Commander&apos;s <strong>color identity</strong> — the colors of all mana symbols on the card</li>
+          <li>The Commander can be cast from the Command Zone; each subsequent cast costs {"{2}"} more</li>
+        </ul>
+      </Alert>
 
       {decks.length === 0 ? (
         <Typography color="textSecondary">
