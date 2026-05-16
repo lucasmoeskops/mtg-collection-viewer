@@ -6,6 +6,7 @@ export type CardDeck = {
   description: string;
   cover_image_url?: string;
   cards: CardDeckCard[];
+  basicLands: Record<string, number>;
 };
 
 export type CardDeckCard = {

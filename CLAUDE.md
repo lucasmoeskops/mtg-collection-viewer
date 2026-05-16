@@ -13,7 +13,7 @@ npm run fix        # Prettier format + ESLint auto-fix
 
 ## Architecture
 
-**Next.js 16 App Router** application for managing a personal Magic: The Gathering card collection, backed by Supabase.
+**Next.js 16 App Router** application for managing a personal Magic: The Gathering card collection, backed by PostgreSQL.
 
 ### Layer separation
 
@@ -26,7 +26,7 @@ npm run fix        # Prettier format + ESLint auto-fix
 
 ### Authentication
 
-Custom username + API key auth (not OAuth). `getAuthenticatedAccountData(username, key)` in `src/supabase/authenticate.ts` checks the `mtg_account` table. Credentials are stored in a `dbkey` column with a 1-second artificial delay to limit brute-force attempts. There is no session token — the key is held in the `AccountContextProvider`.
+Custom username + API key auth (not OAuth). `getAuthenticatedAccountData(username, key)` in `src/db/authenticate.ts` checks the `mtg_account` table. Credentials are stored in a `dbkey` column with a 1-second artificial delay to limit brute-force attempts. There is no session token — the key is held in the `AccountContextProvider`.
 
 ### State management
 
@@ -39,7 +39,7 @@ All global state lives in React Contexts in `src/context/`. Key ones:
 
 Card filter state (`CardSelectionContext`) is persisted in URL query parameters so filters survive navigation.
 
-### Data model (Supabase tables)
+### Data model
 
 | Table | Purpose |
 |---|---|
@@ -47,12 +47,25 @@ Card filter state (`CardSelectionContext`) is persisted in URL query parameters 
 | `mtg_data` | Card catalogue (name, series, cardnumber, colors, rarity, prices…) |
 | `mtg_account_card` | Card ownership (account_id, card_id, amount, foil variants) |
 | `mtg_deck` | Decks (id, account_id, name, description) |
-| `mtg_deck_card` | Deck contents (deck_id, card_id, role) |
+| `mtg_deck_card` | Deck contents (deck_id, card_id, role) where role is `commander`, `mainboard`, or `sideboard` |
+| `mtg_deck_basic_land` | Basic land quantities per deck (deck, land_type, quantity) — PRIMARY KEY (deck, land_type) |
 | `mtg_price` | Price history (card_id, timestamp, price_cents) |
+
+### Commander deck management
+
+URL structure: `/[username]/decks` (list) and `/[username]/decks/[deckId]` (editor). The Decks tab only appears when authenticated.
+
+Server actions live in `src/db/decks.ts`: `getDeckList`, `getDeck`, `createDeck`, `deleteDeck`, `updateDeck`, `addCardToDeck`, `removeCardFromDeck`, `setBasicLandCount`.
+
+Key design decisions in `DeckDetail`:
+- Basic lands are managed separately via `mtg_deck_basic_land` (not as card rows) because they need quantity tracking and aren't singleton. Only land types within the commander's color identity count toward the 100-card total and appear in the UI — stored counts for other types are preserved but ignored.
+- Cards are validated client-side: color identity violations (mainboard cards with colors outside the commander's identity) and tokens are flagged with a red row tint and warning icon.
+- Valid commanders must be Legendary and either a Creature, Spacecraft, or Vehicle (checked via `card_type` string).
+- Statistics (type distribution, mana curve, mana symbol counts) and sideboard are computed entirely client-side from the loaded deck.
 
 ### Card save logic
 
-`saveCardChanges()` in `src/supabase/editor.ts` implements three cases:
+`saveCardChanges()` in `src/db/editor.ts` implements three cases:
 1. No existing row + amount > 0 → INSERT
 2. Existing row + amount = 0 → DELETE
 3. Existing row + amount > 0 → UPDATE
