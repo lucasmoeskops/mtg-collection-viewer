@@ -1,4 +1,4 @@
-export type SupabaseMagicCardLike = {
+export type DbMagicCardLike = {
   id: number;
   scryfall_id: string | null;
   name: string;
@@ -17,18 +17,14 @@ export type SupabaseMagicCardLike = {
   price_estimate: number;
 };
 
-export type SupabaseBoundMagicCardLike = {
-  card: SupabaseMagicCardLike;
+export type DbBoundMagicCardLike = {
+  card: DbMagicCardLike;
   amount: number;
   avg_price?: number;
   avg_non_foil_price?: number;
-  // mtg_price: {
-  //     avg_price: number;
-  //     avg_non_foil_price: number;
-  // }[];
 };
 
-export function newSupabaseMagicCardLike(): SupabaseBoundMagicCardLike {
+export function newDbBoundMagicCardLike(): DbBoundMagicCardLike {
   return {
     card: {
       id: 0,
@@ -37,7 +33,7 @@ export function newSupabaseMagicCardLike(): SupabaseBoundMagicCardLike {
       series: "",
       colors: [],
       rarity: "",
-      cardnumber: '0',
+      cardnumber: "0",
       card_type: "",
       image_url: null,
       is_foil: false,

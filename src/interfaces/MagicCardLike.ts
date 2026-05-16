@@ -3,7 +3,7 @@ import {
   cardsSearchEndpoint,
   fetchDataPaginated,
 } from "@/scryfall/utils";
-import { SupabaseBoundMagicCardLike } from "@/supabase/utils";
+import { DbBoundMagicCardLike } from "@/db/types";
 
 export default interface MagicCardLike {
   id: number;
@@ -143,8 +143,8 @@ async function _getCard(
   return card;
 }
 
-export function fromSupabaseCard(
-  card: SupabaseBoundMagicCardLike,
+export function fromDbCard(
+  card: DbBoundMagicCardLike,
 ): MagicCardLike {
   const cardData = card.card;
   return {
