@@ -13,7 +13,7 @@ npm run fix        # Prettier format + ESLint auto-fix
 
 ## Architecture
 
-**Next.js 16 App Router** application for managing a personal Magic: The Gathering card collection, backed by Supabase.
+**Next.js 16 App Router** application for managing a personal Magic: The Gathering card collection, backed by PostgreSQL.
 
 ### Layer separation
 
@@ -26,7 +26,7 @@ npm run fix        # Prettier format + ESLint auto-fix
 
 ### Authentication
 
-Custom username + API key auth (not OAuth). `getAuthenticatedAccountData(username, key)` in `src/supabase/authenticate.ts` checks the `mtg_account` table. Credentials are stored in a `dbkey` column with a 1-second artificial delay to limit brute-force attempts. There is no session token — the key is held in the `AccountContextProvider`.
+Custom username + API key auth (not OAuth). `getAuthenticatedAccountData(username, key)` in `src/db/authenticate.ts` checks the `mtg_account` table. Credentials are stored in a `dbkey` column with a 1-second artificial delay to limit brute-force attempts. There is no session token — the key is held in the `AccountContextProvider`.
 
 ### State management
 
@@ -39,7 +39,7 @@ All global state lives in React Contexts in `src/context/`. Key ones:
 
 Card filter state (`CardSelectionContext`) is persisted in URL query parameters so filters survive navigation.
 
-### Data model (Supabase tables)
+### Data model
 
 | Table | Purpose |
 |---|---|
@@ -52,7 +52,7 @@ Card filter state (`CardSelectionContext`) is persisted in URL query parameters 
 
 ### Card save logic
 
-`saveCardChanges()` in `src/supabase/editor.ts` implements three cases:
+`saveCardChanges()` in `src/db/editor.ts` implements three cases:
 1. No existing row + amount > 0 → INSERT
 2. Existing row + amount = 0 → DELETE
 3. Existing row + amount > 0 → UPDATE
