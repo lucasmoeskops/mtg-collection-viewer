@@ -49,19 +49,22 @@ Card filter state (`CardSelectionContext`) is persisted in URL query parameters 
 | `mtg_deck` | Decks (id, account_id, name, description) |
 | `mtg_deck_card` | Deck contents (deck_id, card_id, role) where role is `commander`, `mainboard`, or `sideboard` |
 | `mtg_deck_basic_land` | Basic land quantities per deck (deck, land_type, quantity) — PRIMARY KEY (deck, land_type) |
+| `mtg_deck_package` | Named strategy packages per deck (id, deck, name, description, target) |
+| `mtg_deck_package_card` | Cards assigned to packages (package, card) — PRIMARY KEY (package, card) |
 | `mtg_price` | Price history (card_id, timestamp, price_cents) |
 
 ### Commander deck management
 
 URL structure: `/[username]/decks` (list) and `/[username]/decks/[deckId]` (editor). The Decks tab only appears when authenticated.
 
-Server actions live in `src/db/decks.ts`: `getDeckList`, `getDeck`, `createDeck`, `deleteDeck`, `updateDeck`, `addCardToDeck`, `removeCardFromDeck`, `setBasicLandCount`.
+Server actions live in `src/db/decks.ts`: `getDeckList`, `getDeck`, `createDeck`, `deleteDeck`, `updateDeck`, `addCardToDeck`, `removeCardFromDeck`, `setBasicLandCount`. Package actions live in `src/db/packages.ts`: `createPackage`, `updatePackage`, `deletePackage`, `addCardToPackage`, `removeCardFromPackage`.
 
 Key design decisions in `DeckDetail`:
 - Basic lands are managed separately via `mtg_deck_basic_land` (not as card rows) because they need quantity tracking and aren't singleton. Only land types within the commander's color identity count toward the 100-card total and appear in the UI — stored counts for other types are preserved but ignored.
 - Cards are validated client-side: color identity violations (mainboard cards with colors outside the commander's identity) and tokens are flagged with a red row tint and warning icon.
 - Valid commanders must be Legendary and either a Creature, Spacecraft, or Vehicle (checked via `card_type` string).
 - Statistics (type distribution, mana curve, mana symbol counts) and sideboard are computed entirely client-side from the loaded deck.
+- Packages are named strategy containers (e.g. "Sacrifice Package") that cross-reference mainboard cards. A package has an optional target count; the UI shows current vs. target with a colored badge. Each deck card row shows small colored avatar chips for its packages. Package color and initials are derived from the package id via `src/components/Decks/packageColors.ts`.
 
 ### Card save logic
 
@@ -89,3 +92,5 @@ DATABASE_URL=postgresql://user:password@host:5432/dbname
 ```
 
 The database client (`src/db/client.ts`) uses [`postgres`](https://github.com/porsager/postgres) (postgres.js) with a connection pool of 10. All queries use tagged template literals — no query building is done by string concatenation.
+
+**Type coercion gotcha**: postgres.js returns `bigint`/`bigserial` columns as strings at runtime regardless of TypeScript types. Always wrap with `Number()` when the declared type is `number` (e.g. `id: Number(row.id)`).
