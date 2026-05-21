@@ -1,6 +1,7 @@
-export const timeBetweenConsecutiveCalls = 250; // milliseconds
+export const timeBetweenConsecutiveCalls = 500; // milliseconds (Scryfall allows max 2 card fetches/second)
 export const setsEndpoint = "https://api.scryfall.com/sets";
 export const cardsSearchEndpoint = "https://api.scryfall.com/cards/search";
+export const cardsCollectionEndpoint = "https://api.scryfall.com/cards/collection";
 let lastCallTime = 0;
 
 export type ScryFallCard = {
@@ -56,6 +57,11 @@ export async function rateLimitedFetch(
   return fetch(input, init);
 }
 
+export type CollectionIdentifier = {
+  set: string;
+  collector_number: string;
+};
+
 export async function fetchDataPaginated<T>(
   endpoint: string,
   params: Record<string, string> = {},
@@ -74,6 +80,10 @@ export async function fetchDataPaginated<T>(
     );
 
     const response = await rateLimitedFetch(url.toString());
+
+    if (response.status === 404) {
+      return results;
+    }
 
     if (response.status === 429 && retriesForCurrentPage < maxRetries) {
       retriesForCurrentPage++;
@@ -100,4 +110,45 @@ export async function fetchDataPaginated<T>(
   return limit > 0 && results.length > limit
     ? results.slice(0, limit)
     : results;
+}
+
+export async function fetchCardsCollection(
+  identifiers: CollectionIdentifier[],
+): Promise<{ found: ScryFallCard[]; notFound: CollectionIdentifier[] }> {
+  const found: ScryFallCard[] = [];
+  const notFound: CollectionIdentifier[] = [];
+  const batchSize = 75;
+
+  for (let i = 0; i < identifiers.length; i += batchSize) {
+    const batch = identifiers.slice(i, i + batchSize);
+    let retries = 0;
+
+    while (true) {
+      const response = await rateLimitedFetch(cardsCollectionEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifiers: batch }),
+      });
+
+      if (response.status === 429 && retries < 3) {
+        retries++;
+        const delay = parseInt(response.headers.get("Retry-After") || "5", 10) * 1000;
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+
+      if (!response.ok) {
+        throw new Error(`Error fetching card collection: ${response.statusText}`);
+      }
+
+      const json = await response.json();
+      found.push(...json.data);
+      if (json.not_found?.length) {
+        notFound.push(...json.not_found);
+      }
+      break;
+    }
+  }
+
+  return { found, notFound };
 }

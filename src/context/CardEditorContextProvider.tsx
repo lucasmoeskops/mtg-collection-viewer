@@ -93,7 +93,7 @@ export default function CardEditorContextProvider({
         }
         // Clear the queue
         setCardChangeQueue((prev) => prev.slice(changes.length));
-        const succesfullChanges = await saveCardChanges(
+        const { successful: succesfullChanges } = await saveCardChanges(
           accountName,
           accountKey,
           combinedChanges,

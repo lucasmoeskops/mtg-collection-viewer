@@ -58,8 +58,16 @@ type PreviewRow = {
   newAmount: number;
 };
 
+type SkippedCard = {
+  title: string;
+  setId: string;
+  collectorNumber: string;
+  isFoil: boolean;
+};
+
 type ImportResult = {
   ownershipCount: number;
+  skippedCards: SkippedCard[];
   deckAdded: number | null;
   deckFailed: boolean;
   failed: boolean;
@@ -67,7 +75,6 @@ type ImportResult = {
 
 const DEFAULT_TEMPLATE_REGEX = /^(\d+)\s+(.+?)\s+\(([A-Za-z0-9]+)\)\s+(\S+?)(\s+\*F\*)?\s*$/;
 const MAX_IMPORT = 200;
-const CHUNK_SIZE = 5;
 
 function parseLines(lines: string[]): { parsed: ParsedLine[]; invalid: InvalidLine[] } {
   const parsed: ParsedLine[] = [];
@@ -143,7 +150,6 @@ export default function ImportTab(): ReactNode {
     overLimit: boolean;
   } | null>(null);
   const [importing, setImporting] = useState(false);
-  const [importProgress, setImportProgress] = useState<{ done: number; total: number } | null>(null);
   const [addingToDeck, setAddingToDeck] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
 
@@ -195,37 +201,28 @@ export default function ImportTab(): ReactNode {
         newAmount: row.newAmount,
       }));
 
-    const chunks: CardChange[][] = [];
-    for (let i = 0; i < changes.length; i += CHUNK_SIZE) {
-      chunks.push(changes.slice(i, i + CHUNK_SIZE));
-    }
-
-    if (chunks.length > 0) {
-      setImportProgress({ done: 0, total: changes.length });
-    }
-
-    let totalSaved = 0;
     let deckAdded: number | null = null;
     let deckFailed = false;
 
     try {
-      for (const chunk of chunks) {
-        const saved = await saveCardChanges(accountName, accountKey, chunk);
-        totalSaved += saved.length;
-        setImportProgress({ done: totalSaved, total: changes.length });
-      }
+      const { successful, failed: allFailed } = await saveCardChanges(accountName, accountKey, changes);
+      const totalSaved = successful.length;
+
+      const skippedCards: SkippedCard[] = allFailed.map((f) => {
+        const row = preview.rows.find(
+          (r) => r.setId === f.setId && r.collectorNumber === f.collectorNumber && r.isFoil === f.isFoil,
+        );
+        return { title: row?.title ?? `${f.setId} ${f.collectorNumber}`, ...f };
+      });
 
       if (selectedDeckId !== "none") {
-        setImportProgress(null);
         setAddingToDeck(true);
+        const skippedKeys = new Set(allFailed.map((f) => `${f.setId}-${f.collectorNumber}-${f.isFoil}`));
+        const deckCards = preview.rows
+          .filter((row) => !skippedKeys.has(`${row.setId}-${row.collectorNumber}-${row.isFoil}`))
+          .map((row) => ({ setId: row.setId, collectorNumber: row.collectorNumber, isFoil: row.isFoil }));
         try {
-          deckAdded = await addImportedCardsToDeck(
-            accountName,
-            accountKey,
-            selectedDeckId,
-            deckRole,
-            preview.rows.map((row) => ({ setId: row.setId, collectorNumber: row.collectorNumber, isFoil: row.isFoil })),
-          );
+          deckAdded = await addImportedCardsToDeck(accountName, accountKey, selectedDeckId, deckRole, deckCards);
         } catch {
           deckFailed = true;
         }
@@ -233,14 +230,13 @@ export default function ImportTab(): ReactNode {
 
       invalidateCardData();
       setCardDataNeeded(true);
-      setImportResult({ ownershipCount: totalSaved, deckAdded, deckFailed, failed: false });
+      setImportResult({ ownershipCount: totalSaved, skippedCards, deckAdded, deckFailed, failed: false });
       setPreview(null);
       setInputText("");
     } catch {
-      setImportResult({ ownershipCount: totalSaved, deckAdded: null, deckFailed: false, failed: true });
+      setImportResult({ ownershipCount: 0, skippedCards: [], deckAdded: null, deckFailed: false, failed: true });
     } finally {
       setImporting(false);
-      setImportProgress(null);
       setAddingToDeck(false);
     }
   }
@@ -401,16 +397,12 @@ export default function ImportTab(): ReactNode {
                 </TableBody>
               </Table>
 
-              {importProgress ? (
+              {importing ? (
                 <Box sx={{ mb: 1 }}>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                    Importing {importProgress.done} / {importProgress.total} cards…
+                    Importing {changedRows.length} card{changedRows.length !== 1 ? "s" : ""}…
                   </Typography>
-                  <LinearProgress
-                    variant="determinate"
-                    value={(importProgress.done / importProgress.total) * 100}
-                    sx={{ height: 8, borderRadius: 1 }}
-                  />
+                  <LinearProgress variant="indeterminate" sx={{ height: 8, borderRadius: 1 }} />
                 </Box>
               ) : addingToDeck ? (
                 <Box sx={{ mb: 1 }}>
@@ -429,7 +421,7 @@ export default function ImportTab(): ReactNode {
                   >
                     {changedRows.length > 0
                       ? `Import ${changedRows.length} change(s)${deckIsSelected ? ` and add to ${selectedDeckName}` : ""}`
-                      : `Add ${preview.rows.length} cards to ${selectedDeckName}`}
+                      : `Add ${preview.rows.length} cards${deckIsSelected ? ` to ${selectedDeckName}` : ""}`}
                   </Button>
 
                   {!importing && changedRows.length === 0 && !deckIsSelected && (
@@ -449,18 +441,30 @@ export default function ImportTab(): ReactNode {
       )}
 
       {importResult && (
-        <Alert
-          severity={importResult.failed ? "error" : importResult.deckFailed ? "warning" : "success"}
-          sx={{ mt: 2 }}
-        >
-          {importResult.failed
-            ? `Import stopped after ${importResult.ownershipCount} card(s) due to an error. Please try again.`
-            : importResult.deckFailed
-              ? `Imported ${importResult.ownershipCount} card(s), but could not add cards to the deck.`
-              : importResult.deckAdded !== null
-                ? `Successfully imported ${importResult.ownershipCount} card(s) and added ${importResult.deckAdded} to "${selectedDeckName}".`
-                : `Successfully imported ${importResult.ownershipCount} card(s).`}
-        </Alert>
+        <Box sx={{ mt: 2 }}>
+          <Alert severity={importResult.failed ? "error" : importResult.deckFailed ? "warning" : "success"}>
+            {importResult.failed
+              ? `Import stopped after ${importResult.ownershipCount} card(s) due to an error. Please try again.`
+              : importResult.deckFailed
+                ? `Imported ${importResult.ownershipCount} card(s), but could not add cards to the deck.`
+                : importResult.deckAdded !== null
+                  ? `Successfully imported ${importResult.ownershipCount} card(s) and added ${importResult.deckAdded} to "${selectedDeckName}".`
+                  : `Successfully imported ${importResult.ownershipCount} card(s).`}
+          </Alert>
+          {importResult.skippedCards.length > 0 && (
+            <Alert severity="warning" sx={{ mt: 1 }}>
+              {importResult.skippedCards.length} card(s) were skipped because they could not be found in Scryfall:
+              <ul style={{ margin: "4px 0 0", paddingLeft: 20 }}>
+                {importResult.skippedCards.map((c) => (
+                  <li key={`${c.setId}-${c.collectorNumber}-${c.isFoil}`}>
+                    <strong>{c.title}</strong> ({c.setId} {c.collectorNumber}
+                    {c.isFoil ? ", foil" : ""})
+                  </li>
+                ))}
+              </ul>
+            </Alert>
+          )}
+        </Box>
       )}
     </Box>
   );

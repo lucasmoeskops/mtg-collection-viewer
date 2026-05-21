@@ -5,31 +5,9 @@ import {
 } from "@/scryfall/utils";
 import { getClient } from "./client";
 
-export default async function insertNewMtgCard(
-  setId: string,
-  collectorNumber: string,
-  isFoil: boolean,
-): Promise<number> {
+export async function insertMtgCardFromScryfall(card: ScryFallCard, isFoil: boolean): Promise<number> {
   const sql = getClient();
-
-  if (!sql) {
-    console.error("Database client not initialized");
-    throw new Error("Database client not initialized");
-  }
-
-  const card: ScryFallCard | undefined = await fetchDataPaginated<ScryFallCard>(
-    cardsSearchEndpoint,
-    {
-      order: "set",
-      q: `e:${setId} cn:"${collectorNumber}"`,
-      unique: "prints",
-    },
-  ).then((cards) => cards.find((c) => c.collector_number === collectorNumber));
-
-  if (!card) {
-    console.error("Card not found");
-    throw new Error("Card not found");
-  }
+  if (!sql) throw new Error("Database client not initialized");
 
   const rows = await sql`
     INSERT INTO mtg_data (
@@ -73,4 +51,26 @@ export default async function insertNewMtgCard(
   `;
 
   return rows[0]?.id ?? 0;
+}
+
+export default async function insertNewMtgCard(
+  setId: string,
+  collectorNumber: string,
+  isFoil: boolean,
+): Promise<number> {
+  const card: ScryFallCard | undefined = await fetchDataPaginated<ScryFallCard>(
+    cardsSearchEndpoint,
+    {
+      order: "set",
+      q: `e:${setId} cn:"${collectorNumber}"`,
+      unique: "prints",
+    },
+  ).then((cards) => cards.find((c) => c.collector_number === collectorNumber));
+
+  if (!card) {
+    console.error("Card not found");
+    throw new Error("Card not found");
+  }
+
+  return insertMtgCardFromScryfall(card, isFoil);
 }
