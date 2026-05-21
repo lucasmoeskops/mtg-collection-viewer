@@ -34,6 +34,7 @@ export default function MainTabs(): ReactNode {
     ].filter((item) => item !== undefined);
     if (isAuthenticated) {
       base.push("decks");
+      base.push("import");
       base.push("settings");
       base.push("editor");
     }
@@ -98,6 +99,15 @@ export default function MainTabs(): ReactNode {
             component={Link}
             href={getSubpageUrl("decks")}
             {...a11yProps(3)}
+          />
+        )}
+        {isAuthenticated && (
+          <Tab
+            label="Import"
+            value="import"
+            component={Link}
+            href={getSubpageUrl("import")}
+            {...a11yProps(4)}
           />
         )}
         {isAuthenticated && (

@@ -2,6 +2,14 @@
 
 ## Changelog
 
+### v2026.5.21
+
+- Basic card import feature
+
+### v2026.5.16
+
+- Deck mode to create Commander decks
+
 ### v2026.1.2
 
 - Card numbers are now stored as strings instead of numbers.

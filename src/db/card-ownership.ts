@@ -91,12 +91,13 @@ export async function saveCardChanges(
     const sql = getClient();
     if (!sql) throw new Error("Database client not initialized");
 
-    const changesWithIds = await Promise.all(
-      changes.map(async (change) => ({
+    const changesWithIds: (CardChange & { cardId: number })[] = [];
+    for (const change of changes) {
+      changesWithIds.push({
         ...change,
         cardId: await getMTGCardId(change.setId, change.collectorNumber, change.isFoil),
-      })),
-    );
+      });
+    }
 
     for (const change of changesWithIds) {
       if (change.newAmount < 0) {

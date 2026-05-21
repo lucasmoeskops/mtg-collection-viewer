@@ -64,6 +64,8 @@ export async function fetchDataPaginated<T>(
   const results: T[] = [];
   let fetchedAll = false;
   let currentEndpoint = endpoint;
+  let retriesForCurrentPage = 0;
+  const maxRetries = 3;
 
   while (!fetchedAll && (limit === 0 || results.length < limit)) {
     const url = new URL(currentEndpoint);
@@ -72,9 +74,19 @@ export async function fetchDataPaginated<T>(
     );
 
     const response = await rateLimitedFetch(url.toString());
+
+    if (response.status === 429 && retriesForCurrentPage < maxRetries) {
+      retriesForCurrentPage++;
+      const retryAfterSeconds = parseInt(response.headers.get("Retry-After") || "5", 10);
+      await new Promise((resolve) => setTimeout(resolve, retryAfterSeconds * 1000));
+      continue;
+    }
+
     if (!response.ok) {
       throw new Error(`Error fetching data: ${response.statusText}`);
     }
+
+    retriesForCurrentPage = 0;
     const jsonResponse = await response.json();
 
     if (!jsonResponse.has_more) {
