@@ -64,7 +64,7 @@ export async function getDeck(account_id: number, deck_id: number): Promise<Card
   const cards = cardRows.map((row) => ({
     card: fromDbCard({
       card: {
-        id: row.id,
+        id: Number(row.id),
         scryfall_id: row.scryfall_id,
         name: row.name,
         series: row.series,
@@ -94,12 +94,32 @@ export async function getDeck(account_id: number, deck_id: number): Promise<Card
     basicLands[row.land_type] = Number(row.quantity);
   }
 
+  const packageRows = await sql`
+    SELECT
+      p.id, p.name, p.description, p.target,
+      COALESCE(array_agg(pc.card ORDER BY pc.card) FILTER (WHERE pc.card IS NOT NULL), '{}') AS card_ids
+    FROM mtg_deck_package p
+    LEFT JOIN mtg_deck_package_card pc ON p.id = pc.package
+    WHERE p.deck = ${deck_id}
+    GROUP BY p.id
+    ORDER BY p.id
+  `;
+
+  const packages = packageRows.map((row) => ({
+    id: Number(row.id),
+    name: row.name as string,
+    description: (row.description ?? "") as string,
+    target: row.target != null ? Number(row.target) : undefined,
+    cardIds: (row.card_ids as unknown[]).map(Number),
+  }));
+
   return {
     id: deck.id,
     name: deck.name,
     description: deck.description,
     cards,
     basicLands,
+    packages,
   } as CardDeck;
 }
 

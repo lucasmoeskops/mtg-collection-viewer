@@ -17,6 +17,7 @@ import {
   Warning,
 } from "@mui/icons-material";
 import {
+  Avatar,
   Box,
   Chip,
   Dialog,
@@ -38,7 +39,11 @@ import {
 import Link from "next/link";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import DeckStats, { STAT_TYPE_KEYS } from "./DeckStats";
+import DeckPackages from "./DeckPackages";
 import HandDialog, { HandCard } from "./HandDialog";
+import { CardPackageButton } from "./CardPackageButton";
+import { getPackageColor, getPackageInitials } from "./packageColors";
+import { DeckPackage } from "@/types/CardDeckData";
 
 function isValidCommander(cardType: string): boolean {
   const t = cardType.toLowerCase();
@@ -198,6 +203,17 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
   }, [deck, commander]);
 
   const deckCardIds = useMemo(() => new Set((deck?.cards ?? []).map((c) => c.card.id)), [deck]);
+
+  const cardPackageMap = useMemo(() => {
+    const map = new Map<number, DeckPackage[]>();
+    for (const pkg of (deck?.packages ?? [])) {
+      for (const cardId of pkg.cardIds) {
+        if (!map.has(cardId)) map.set(cardId, []);
+        map.get(cardId)!.push(pkg);
+      }
+    }
+    return map;
+  }, [deck]);
 
   const filteredOwned = useMemo(() => {
     const q = search.toLowerCase();
@@ -424,6 +440,13 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
                             <Warning fontSize="small" sx={{ color: "warning.main", flexShrink: 0 }} />
                           </Tooltip>
                         )}
+                        {(cardPackageMap.get(card.id) ?? []).map((pkg) => (
+                          <Tooltip key={pkg.id} title={pkg.name}>
+                            <Avatar sx={{ width: 22, height: 22, fontSize: 10, bgcolor: getPackageColor(pkg.id), flexShrink: 0 }}>
+                              {getPackageInitials(pkg.name)}
+                            </Avatar>
+                          </Tooltip>
+                        ))}
                       </Box>
                     </TableCell>
                     <TableCell>
@@ -441,6 +464,7 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
                     </TableCell>
                     <TableCell>
                       <Box display="flex">
+                        <CardPackageButton card={card} packages={deck.packages} onChanged={loadDeck} />
                         {role !== "commander" && isValidCommander(card.card_type) && (
                           <Tooltip title="Set as commander">
                             <IconButton size="small" onClick={() => handleAddCard(card.id, "commander")}>
@@ -630,6 +654,13 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
           </Paper>
         </Box>
       </Box>
+
+      <DeckPackages
+        deckId={deckId}
+        packages={deck.packages}
+        deckCards={deck.cards.filter((c) => !isBasicLand(c.card.card_type))}
+        onChanged={loadDeck}
+      />
 
       <HandDialog
         handCards={handCards}
