@@ -123,9 +123,11 @@ export async function deleteDeck(accountId: number, deckId: number): Promise<voi
   const sql = getClient();
   if (!sql) throw new Error("Database client not initialized");
 
-  await sql`DELETE FROM mtg_deck_card WHERE deck = ${deckId}`;
-  await sql`DELETE FROM mtg_deck_basic_land WHERE deck = ${deckId}`;
-  await sql`DELETE FROM mtg_deck WHERE id = ${deckId} AND account = ${accountId}`;
+  await sql.begin(async (tx) => {
+    await tx`DELETE FROM mtg_deck_card WHERE deck = ${deckId}`;
+    await tx`DELETE FROM mtg_deck_basic_land WHERE deck = ${deckId}`;
+    await tx`DELETE FROM mtg_deck WHERE id = ${deckId} AND account = ${accountId}`;
+  });
 }
 
 export async function updateDeck(

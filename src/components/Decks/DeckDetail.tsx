@@ -18,12 +18,8 @@ import {
 } from "@mui/icons-material";
 import {
   Box,
-  Button,
   Chip,
   Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   IconButton,
   List,
   ListItem,
@@ -41,6 +37,8 @@ import {
 } from "@mui/material";
 import Link from "next/link";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import DeckStats, { STAT_TYPE_KEYS } from "./DeckStats";
+import HandDialog, { HandCard } from "./HandDialog";
 
 function isValidCommander(cardType: string): boolean {
   const t = cardType.toLowerCase();
@@ -77,9 +75,6 @@ function typePriority(cardType: string): number {
   return 5;
 }
 
-const STAT_TYPE_KEYS = ["Planeswalkers", "Creatures", "Sorceries", "Instants", "Enchantments", "Lands", "Other"] as const;
-const STAT_SYMBOL_KEYS = ["W", "U", "B", "R", "G", "C", "X", "Generic"] as const;
-
 function getCardTypeBucket(cardType: string): string {
   const t = cardType.toLowerCase();
   if (t.includes("planeswalker")) return "Planeswalkers";
@@ -91,16 +86,15 @@ function getCardTypeBucket(cardType: string): string {
   return "Other";
 }
 
-type HandCard = { type: "card"; card: MagicCardLike } | { type: "land"; landType: string };
-
-const LAND_CARD_STYLE: Record<string, { bg: string; color: string }> = {
-  Plains:   { bg: "#fafaf0", color: "#555" },
-  Island:   { bg: "#ddeeff", color: "#336" },
-  Swamp:    { bg: "#2a2a2a", color: "#ccc" },
-  Mountain: { bg: "#7a2a00", color: "#fdd" },
-  Forest:   { bg: "#1a5c1a", color: "#dfd" },
-  Wastes:   { bg: "#888", color: "#eee" },
-};
+function sortCards(a: { card: MagicCardLike }, b: { card: MagicCardLike }): number {
+  const color = colorPriority(a.card.colors) - colorPriority(b.card.colors);
+  if (color !== 0) return color;
+  const type = typePriority(a.card.card_type) - typePriority(b.card.card_type);
+  if (type !== 0) return type;
+  const mana = a.card.manacost_amount - b.card.manacost_amount;
+  if (mana !== 0) return mana;
+  return a.card.name.localeCompare(b.card.name);
+}
 
 export default function DeckDetail({ deckId }: { deckId: number }) {
   const { accountId, cards: ownedCards, getSubpageUrl } = useContext(AccountContext);
@@ -113,6 +107,7 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
   const [saving, setSaving] = useState(false);
   const [previewCard, setPreviewCard] = useState<{ name: string; image_url: string } | null>(null);
   const [basicLandCounts, setBasicLandCounts] = useState<Record<string, number>>({});
+  const [handCards, setHandCards] = useState<HandCard[] | null>(null);
 
   const loadDeck = useCallback(async () => {
     const result = await getDeck(accountId, deckId);
@@ -126,27 +121,22 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
   }, [loadDeck]);
 
   const commander = deck?.cards.find((c) => c.role === "commander");
-  const sortCards = (a: { card: MagicCardLike }, b: { card: MagicCardLike }) => {
-    const color = colorPriority(a.card.colors) - colorPriority(b.card.colors);
-    if (color !== 0) return color;
-    const type = typePriority(a.card.card_type) - typePriority(b.card.card_type);
-    if (type !== 0) return type;
-    const mana = a.card.manacost_amount - b.card.manacost_amount;
-    if (mana !== 0) return mana;
-    return a.card.name.localeCompare(b.card.name);
-  };
 
-  const mainboardCards = useMemo(() =>
-    (deck?.cards ?? [])
-      .filter((c) => !isBasicLand(c.card.card_type) && c.role !== "sideboard")
-      .sort(sortCards),
-  [deck]);
+  const mainboardCards = useMemo(
+    () =>
+      (deck?.cards ?? [])
+        .filter((c) => !isBasicLand(c.card.card_type) && c.role !== "sideboard")
+        .sort(sortCards),
+    [deck],
+  );
 
-  const sideboardCards = useMemo(() =>
-    (deck?.cards ?? [])
-      .filter((c) => !isBasicLand(c.card.card_type) && c.role === "sideboard")
-      .sort(sortCards),
-  [deck]);
+  const sideboardCards = useMemo(
+    () =>
+      (deck?.cards ?? [])
+        .filter((c) => !isBasicLand(c.card.card_type) && c.role === "sideboard")
+        .sort(sortCards),
+    [deck],
+  );
 
   const commanderLandTypes = useMemo(() => {
     if (!commander) return [];
@@ -187,12 +177,6 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
     return { typeCounts, manaCurve, maxCurveCount, symbolCounts };
   }, [mainboardCards, basicLandsTotal]);
 
-  const handleSetBasicLandCount = async (landType: string, quantity: number) => {
-    const clamped = Math.max(0, quantity);
-    setBasicLandCounts((prev) => ({ ...prev, [landType]: clamped }));
-    await setBasicLandCount(deckId, landType, clamped);
-  };
-
   const violations = useMemo(() => {
     const map = new Map<number, string>();
     if (!deck) return map;
@@ -202,7 +186,8 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
       if (c.card.is_token) {
         map.set(c.card.id, "Token — cannot be added to a deck");
       } else if (
-        commanderColors && commanderColors.size > 0 &&
+        commanderColors &&
+        commanderColors.size > 0 &&
         c.card.colors.length > 0 &&
         c.card.colors.some((color) => !commanderColors.has(color))
       ) {
@@ -212,10 +197,7 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
     return map;
   }, [deck, commander]);
 
-  const deckCardIds = useMemo(
-    () => new Set((deck?.cards ?? []).map((c) => c.card.id)),
-    [deck],
-  );
+  const deckCardIds = useMemo(() => new Set((deck?.cards ?? []).map((c) => c.card.id)), [deck]);
 
   const filteredOwned = useMemo(() => {
     const q = search.toLowerCase();
@@ -224,13 +206,8 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
     );
   }, [ownedCards, deckCardIds, search]);
 
-  const handleAdd = async (card: MagicCardLike, role: "commander" | "mainboard") => {
-    await addCardToDeck(deckId, card.id, role);
-    await loadDeck();
-  };
-
-  const handleSetCommander = async (cardId: number) => {
-    await addCardToDeck(deckId, cardId, "commander");
+  const handleAddCard = async (cardId: number, role: "commander" | "mainboard") => {
+    await addCardToDeck(deckId, cardId, role);
     await loadDeck();
   };
 
@@ -249,16 +226,18 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
     await loadDeck();
   };
 
-  const [handCards, setHandCards] = useState<HandCard[] | null>(null);
+  const handleSetBasicLandCount = async (landType: string, quantity: number) => {
+    const clamped = Math.max(0, quantity);
+    setBasicLandCounts((prev) => ({ ...prev, [landType]: clamped }));
+    await setBasicLandCount(deckId, landType, clamped);
+  };
 
   const drawHand = () => {
     const pool: HandCard[] = [
       ...mainboardCards.filter((c) => c.role !== "commander").map((c) => ({ type: "card" as const, card: c.card })),
       ...Object.entries(basicLandCounts)
         .filter(([landType]) => commanderLandTypes.includes(landType))
-        .flatMap(([landType, count]) =>
-          Array.from({ length: count }, () => ({ type: "land" as const, landType })),
-        ),
+        .flatMap(([landType, count]) => Array.from({ length: count }, () => ({ type: "land" as const, landType }))),
     ];
     for (let i = pool.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -301,12 +280,7 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
         {editingMeta ? (
           <Box display="flex" flexDirection="column" gap={1} flex={1}>
             <Box display="flex" alignItems="center" gap={1}>
-              <TextField
-                size="small"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                label="Name"
-              />
+              <TextField size="small" value={editName} onChange={(e) => setEditName(e.target.value)} label="Name" />
               <IconButton onClick={handleSaveMeta} disabled={saving || !editName.trim()} color="primary">
                 <Check />
               </IconButton>
@@ -343,17 +317,19 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
 
       {/* Validation chips */}
       <Box display="flex" gap={1} flexWrap="wrap" alignItems="center" mb={3}>
-        <Chip
-          label={`${cardCount} / 100 cards`}
-          color={cardCount === 100 ? "success" : "default"}
-        />
+        <Chip label={`${cardCount} / 100 cards`} color={cardCount === 100 ? "success" : "default"} />
         <Chip
           label={commander ? `Commander: ${commander.card.name}` : "No commander set"}
           color={commander ? "success" : "warning"}
           icon={commander ? <Check /> : <Warning />}
         />
         {violations.size > 0 && (
-          <Tooltip title={(deck.cards.filter((c) => violations.has(c.card.id)).map((c) => `${c.card.name}: ${violations.get(c.card.id)}`).join(", "))}>
+          <Tooltip
+            title={deck.cards
+              .filter((c) => violations.has(c.card.id))
+              .map((c) => `${c.card.name}: ${violations.get(c.card.id)}`)
+              .join(", ")}
+          >
             <Chip
               label={`${violations.size} violation${violations.size !== 1 ? "s" : ""}`}
               color="warning"
@@ -381,78 +357,21 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
             />
           )}
           <Box>
-            <Typography variant="overline" color="textSecondary">Commander</Typography>
+            <Typography variant="overline" color="textSecondary">
+              Commander
+            </Typography>
             <Typography variant="h6">{commander.card.name}</Typography>
             <Typography variant="body2" color="textSecondary">
               {commander.card.card_type}
             </Typography>
             <Typography variant="body2">
-              Colors:{" "}
-              {commander.card.colors.length > 0
-                ? commander.card.colors.join(", ")
-                : "Colorless"}
+              Colors: {commander.card.colors.length > 0 ? commander.card.colors.join(", ") : "Colorless"}
             </Typography>
           </Box>
         </Box>
       )}
 
-      {/* Statistics */}
-      <Box mb={3} display="flex" gap={2} flexWrap="wrap">
-        <Paper variant="outlined" sx={{ p: 1.5 }}>
-          <Typography variant="caption" color="textSecondary" display="block" gutterBottom fontWeight="bold">
-            Card types
-          </Typography>
-          {STAT_TYPE_KEYS.map((type) => (
-            <Box key={type} display="flex" justifyContent="space-between" gap={3}>
-              <Typography variant="body2" color={deckStats.typeCounts[type] === 0 ? "text.disabled" : "text.primary"}>
-                {type}
-              </Typography>
-              <Typography variant="body2" color={deckStats.typeCounts[type] === 0 ? "text.disabled" : "text.primary"}>
-                {deckStats.typeCounts[type]}
-              </Typography>
-            </Box>
-          ))}
-        </Paper>
-
-        <Paper variant="outlined" sx={{ p: 1.5 }}>
-          <Typography variant="caption" color="textSecondary" display="block" gutterBottom fontWeight="bold">
-            Mana curve
-          </Typography>
-          {[0, 1, 2, 3, 4, 5, 6, 7].map((cmc) => {
-            const count = deckStats.manaCurve[cmc] ?? 0;
-            return (
-              <Box key={cmc} display="flex" alignItems="center" gap={1} mb={0.25}>
-                <Typography variant="body2" sx={{ minWidth: 20, textAlign: "right", color: count === 0 ? "text.disabled" : "text.primary" }}>
-                  {cmc === 7 ? "7+" : cmc}
-                </Typography>
-                <Box sx={{ width: 96, height: 10, bgcolor: "grey.100", borderRadius: 0.5 }}>
-                  {count > 0 && (
-                    <Box sx={{ height: "100%", width: `${(count / deckStats.maxCurveCount) * 100}%`, bgcolor: "primary.main", borderRadius: 0.5, opacity: 0.75 }} />
-                  )}
-                </Box>
-                <Typography variant="body2" sx={{ minWidth: 16, color: count === 0 ? "text.disabled" : "text.primary" }}>
-                  {count || ""}
-                </Typography>
-              </Box>
-            );
-          })}
-        </Paper>
-
-        <Paper variant="outlined" sx={{ p: 1.5 }}>
-          <Typography variant="caption" color="textSecondary" display="block" gutterBottom fontWeight="bold">
-            Mana symbols
-          </Typography>
-          {STAT_SYMBOL_KEYS.filter((sym) => (deckStats.symbolCounts[sym] ?? 0) > 0).map((sym) => (
-            <Box key={sym} display="flex" justifyContent="space-between" gap={3}>
-              <Typography variant="body2">{sym === "Generic" ? "Generic" : `{${sym}}`}</Typography>
-              <Typography variant="body2">{deckStats.symbolCounts[sym]}</Typography>
-            </Box>
-          ))}
-          {STAT_SYMBOL_KEYS.every((sym) => !deckStats.symbolCounts[sym]) && (
-            <Typography variant="body2" color="text.disabled">No mana costs</Typography>
-          )}
-        </Paper>
-      </Box>
+      <DeckStats stats={deckStats} />
 
       {/* Main two-column layout */}
       <Box display="flex" gap={3} alignItems="flex-start" flexWrap="wrap">
@@ -483,7 +402,11 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
                   </TableRow>
                 )}
                 {mainboardCards.map(({ card, role }) => (
-                  <TableRow key={card.id} hover sx={violations.has(card.id) ? { bgcolor: "rgba(244,67,54,0.07)" } : undefined}>
+                  <TableRow
+                    key={card.id}
+                    hover
+                    sx={violations.has(card.id) ? { bgcolor: "rgba(244,67,54,0.07)" } : undefined}
+                  >
                     <TableCell>
                       <Box display="flex" alignItems="center" gap={1}>
                         {card.image_url && (
@@ -514,17 +437,13 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Chip
-                        label={role}
-                        size="small"
-                        color={role === "commander" ? "primary" : "default"}
-                      />
+                      <Chip label={role} size="small" color={role === "commander" ? "primary" : "default"} />
                     </TableCell>
                     <TableCell>
                       <Box display="flex">
                         {role !== "commander" && isValidCommander(card.card_type) && (
                           <Tooltip title="Set as commander">
-                            <IconButton size="small" onClick={() => handleSetCommander(card.id)}>
+                            <IconButton size="small" onClick={() => handleAddCard(card.id, "commander")}>
                               <Star fontSize="small" />
                             </IconButton>
                           </Tooltip>
@@ -565,7 +484,9 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
                       type="number"
                       size="small"
                       value={basicLandCounts[landType] ?? 0}
-                      onChange={(e) => setBasicLandCounts((prev) => ({ ...prev, [landType]: Math.max(0, Number(e.target.value)) }))}
+                      onChange={(e) =>
+                        setBasicLandCounts((prev) => ({ ...prev, [landType]: Math.max(0, Number(e.target.value)) }))
+                      }
                       onBlur={(e) => handleSetBasicLandCount(landType, Number(e.target.value))}
                       slotProps={{ htmlInput: { min: 0, max: 99, step: 1, style: { width: 52, textAlign: "center" } } }}
                     />
@@ -574,6 +495,7 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
               </Paper>
             </Box>
           )}
+
           {/* Sideboard */}
           <Box mt={3}>
             <Typography variant="subtitle1" gutterBottom>
@@ -616,10 +538,14 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
                         </Box>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2" color="textSecondary">{card.card_type}</Typography>
+                        <Typography variant="body2" color="textSecondary">
+                          {card.card_type}
+                        </Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2" color="textSecondary">{card.manacost}</Typography>
+                        <Typography variant="body2" color="textSecondary">
+                          {card.manacost}
+                        </Typography>
                       </TableCell>
                       <TableCell>
                         <Box display="flex">
@@ -674,10 +600,7 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
                     isValidCommander(card.card_type) ? (
                       <Tooltip title="Add as commander">
                         <span>
-                          <IconButton
-                            size="small"
-                            onClick={() => handleAdd(card, "commander")}
-                          >
+                          <IconButton size="small" onClick={() => handleAddCard(card.id, "commander")}>
                             <Star fontSize="small" />
                           </IconButton>
                         </span>
@@ -685,7 +608,7 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
                     ) : undefined
                   }
                 >
-                  <ListItemButton onClick={() => handleAdd(card, "mainboard")}>
+                  <ListItemButton onClick={() => handleAddCard(card.id, "mainboard")}>
                     <ListItemText
                       primary={card.name}
                       secondary={card.card_type}
@@ -708,53 +631,12 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
         </Box>
       </Box>
 
-      <Dialog open={!!handCards} onClose={() => setHandCards(null)} maxWidth="md" fullWidth>
-        <DialogTitle>Opening Hand</DialogTitle>
-        <DialogContent>
-          <Box display="flex" gap={1.5} flexWrap="wrap" justifyContent="center" pt={1}>
-            {handCards?.map((hc, i) =>
-              hc.type === "card" ? (
-                hc.card.image_url ? (
-                  <Box
-                    key={i}
-                    component="img"
-                    src={hc.card.image_url}
-                    alt={hc.card.name}
-                    onClick={() => setPreviewCard(hc.card)}
-                    sx={{ width: 110, borderRadius: 1.5, boxShadow: 3, cursor: "pointer" }}
-                  />
-                ) : (
-                  <Box key={i} sx={{ width: 110, height: 154, borderRadius: 1.5, border: "1px solid", borderColor: "divider", display: "flex", alignItems: "center", justifyContent: "center", p: 1 }}>
-                    <Typography variant="caption" align="center">{hc.card.name}</Typography>
-                  </Box>
-                )
-              ) : (
-                <Box
-                  key={i}
-                  sx={{
-                    width: 110,
-                    height: 154,
-                    borderRadius: 1.5,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    bgcolor: LAND_CARD_STYLE[hc.landType]?.bg ?? "#ccc",
-                    boxShadow: 3,
-                  }}
-                >
-                  <Typography variant="body2" fontWeight="bold" align="center" sx={{ color: LAND_CARD_STYLE[hc.landType]?.color ?? "#333" }}>
-                    {hc.landType}
-                  </Typography>
-                </Box>
-              )
-            )}
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button startIcon={<Casino />} onClick={drawHand}>Draw again</Button>
-          <Button onClick={() => setHandCards(null)}>Close</Button>
-        </DialogActions>
-      </Dialog>
+      <HandDialog
+        handCards={handCards}
+        onClose={() => setHandCards(null)}
+        onDrawAgain={drawHand}
+        onCardClick={setPreviewCard}
+      />
 
       <Dialog open={!!previewCard} onClose={() => setPreviewCard(null)} maxWidth="xs">
         {previewCard && (
