@@ -3,7 +3,9 @@
 import { fromDbCard } from "@/interfaces/MagicCardLike";
 import { CardDeck } from "@/types/CardDeckData";
 import { CardDeckPreview } from "@/types/CardDeckPreview";
+import getAuthenticatedAccountData from "./authenticate";
 import { getClient } from "./client";
+import getMTGCardId from "./get-mtg-card-id";
 import { DbMagicCardLike } from "./types";
 
 export async function getDeckList(account_id: number): Promise<CardDeckPreview[]> {
@@ -195,4 +197,32 @@ export async function removeCardFromDeck(deckId: number, cardId: number): Promis
   if (!sql) throw new Error("Database client not initialized");
 
   await sql`DELETE FROM mtg_deck_card WHERE deck = ${deckId} AND card = ${cardId}`;
+}
+
+export async function addImportedCardsToDeck(
+  accountName: string,
+  accountKey: string,
+  deckId: number,
+  role: "mainboard" | "sideboard",
+  cards: { setId: string; collectorNumber: string; isFoil: boolean }[],
+): Promise<number> {
+  const accountData = await getAuthenticatedAccountData(accountName, accountKey);
+  if (!accountData) throw new Error("Authentication failed");
+
+  const sql = getClient();
+  if (!sql) throw new Error("Database client not initialized");
+
+  const deckRows = await sql`
+    SELECT id FROM mtg_deck WHERE id = ${deckId} AND account = ${accountData.id} LIMIT 1
+  `;
+  if (!deckRows.length) throw new Error("Deck not found");
+
+  let added = 0;
+  for (const card of cards) {
+    const cardId = await getMTGCardId(card.setId, card.collectorNumber, card.isFoil);
+    await addCardToDeck(deckId, cardId, role);
+    added++;
+  }
+
+  return added;
 }

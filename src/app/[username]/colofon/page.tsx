@@ -13,20 +13,30 @@ export default async function Colofon() {
           Lucas Moeskops
         </Link>
         .<br />
-        Hosted on{" "}
-        <Link href="https://vercel.com/" target="blank">
-          Vercel
-        </Link>{" "}
-        and uses{" "}
+        Uses{" "}
         <Link href="https://scryfall.com/docs/api" target="blank">
           Scryfall API
         </Link>{" "}
-        and{" "}
-        <Link href="https://supabase.com/" target="blank">
-          Supabase
-        </Link>{" "}
-        as backend services.
+        as backend service.
       </Typography>
+      <Typography variant="body1" gutterBottom>
+        Version 2026.5.21
+      </Typography>
+      <Typography variant="h5" gutterBottom sx={{ marginTop: "20px" }}>
+        Change Log
+      </Typography>
+      <List>
+        <ListItem>Added a card import mode.</ListItem>
+      </List>
+      <Typography variant="body1" gutterBottom>
+        Version 2026.5.16
+      </Typography>
+      <Typography variant="h5" gutterBottom sx={{ marginTop: "20px" }}>
+        Change Log
+      </Typography>
+      <List>
+        <ListItem>Added a deck creation mode that allows to create Commander decks.</ListItem>
+      </List>
       <Typography variant="body1" gutterBottom>
         Version 2026.1.2
       </Typography>
