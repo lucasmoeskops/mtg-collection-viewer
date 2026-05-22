@@ -45,7 +45,10 @@ export async function deletePackage(packageId: number): Promise<void> {
   });
 }
 
-export async function addCardToPackage(packageId: number, cardId: number): Promise<void> {
+export async function addCardToPackage(
+  packageId: number,
+  cardId: number,
+): Promise<void> {
   const sql = getClient();
   if (!sql) throw new Error("Database client not initialized");
 
@@ -56,7 +59,10 @@ export async function addCardToPackage(packageId: number, cardId: number): Promi
   `;
 }
 
-export async function removeCardFromPackage(packageId: number, cardId: number): Promise<void> {
+export async function removeCardFromPackage(
+  packageId: number,
+  cardId: number,
+): Promise<void> {
   const sql = getClient();
   if (!sql) throw new Error("Database client not initialized");
 

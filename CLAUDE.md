@@ -28,6 +28,8 @@ npm run fix        # Prettier format + ESLint auto-fix
 
 Custom username + API key auth (not OAuth). `getAuthenticatedAccountData(username, key)` in `src/db/authenticate.ts` checks the `mtg_account` table. Credentials are stored in a `dbkey` column with a 1-second artificial delay to limit brute-force attempts. There is no session token — the key is held in the `AccountContextProvider`.
 
+`authenticate()` sets both `isAuthenticated` and `accountId` on success. This is load-bearing: `setAccountIdByUsername` has an early-return guard (`username === accountName && accountId !== -1`) that preserves auth state after a login redirect. If `accountId` were not set by `authenticate()`, the guard would not fire and `isAuthenticated` would be silently reset to `false` by the viewer load path.
+
 ### State management
 
 All global state lives in React Contexts in `src/context/`. Key ones:
@@ -41,17 +43,17 @@ Card filter state (`CardSelectionContext`) is persisted in URL query parameters 
 
 ### Data model
 
-| Table | Purpose |
-|---|---|
-| `mtg_account` | Users (id, username, dbkey, settings JSON) |
-| `mtg_data` | Card catalogue (name, series, cardnumber, colors, rarity, prices…) |
-| `mtg_account_card` | Card ownership (account_id, card_id, amount, foil variants) |
-| `mtg_deck` | Decks (id, account_id, name, description) |
-| `mtg_deck_card` | Deck contents (deck_id, card_id, role) where role is `commander`, `mainboard`, or `sideboard` |
-| `mtg_deck_basic_land` | Basic land quantities per deck (deck, land_type, quantity) — PRIMARY KEY (deck, land_type) |
-| `mtg_deck_package` | Named strategy packages per deck (id, deck, name, description, target) |
-| `mtg_deck_package_card` | Cards assigned to packages (package, card) — PRIMARY KEY (package, card) |
-| `mtg_price` | Price history (card_id, timestamp, price_cents) |
+| Table                   | Purpose                                                                                       |
+| ----------------------- | --------------------------------------------------------------------------------------------- |
+| `mtg_account`           | Users (id, username, dbkey, settings JSON)                                                    |
+| `mtg_data`              | Card catalogue (name, series, cardnumber, colors, rarity, prices…)                            |
+| `mtg_account_card`      | Card ownership (account_id, card_id, amount, foil variants)                                   |
+| `mtg_deck`              | Decks (id, account_id, name, description)                                                     |
+| `mtg_deck_card`         | Deck contents (deck_id, card_id, role) where role is `commander`, `mainboard`, or `sideboard` |
+| `mtg_deck_basic_land`   | Basic land quantities per deck (deck, land_type, quantity) — PRIMARY KEY (deck, land_type)    |
+| `mtg_deck_package`      | Named strategy packages per deck (id, deck, name, description, target)                        |
+| `mtg_deck_package_card` | Cards assigned to packages (package, card) — PRIMARY KEY (package, card)                      |
+| `mtg_price`             | Price history (card_id, timestamp, price_cents)                                               |
 
 ### Commander deck management
 
@@ -60,6 +62,7 @@ URL structure: `/[username]/decks` (list) and `/[username]/decks/[deckId]` (edit
 Server actions live in `src/db/decks.ts`: `getDeckList`, `getDeck`, `createDeck`, `deleteDeck`, `updateDeck`, `addCardToDeck`, `removeCardFromDeck`, `setBasicLandCount`. Package actions live in `src/db/packages.ts`: `createPackage`, `updatePackage`, `deletePackage`, `addCardToPackage`, `removeCardFromPackage`.
 
 Key design decisions in `DeckDetail`:
+
 - Basic lands are managed separately via `mtg_deck_basic_land` (not as card rows) because they need quantity tracking and aren't singleton. Only land types within the commander's color identity count toward the 100-card total and appear in the UI — stored counts for other types are preserved but ignored.
 - Cards are validated client-side: color identity violations (mainboard cards with colors outside the commander's identity) and tokens are flagged with a red row tint and warning icon.
 - Valid commanders must be Legendary and either a Creature, Spacecraft, or Vehicle (checked via `card_type` string).
@@ -69,6 +72,7 @@ Key design decisions in `DeckDetail`:
 ### Card save logic
 
 `saveCardChanges()` in `src/db/editor.ts` implements three cases:
+
 1. No existing row + amount > 0 → INSERT
 2. Existing row + amount = 0 → DELETE
 3. Existing row + amount > 0 → UPDATE
@@ -87,6 +91,7 @@ Key design decisions in `DeckDetail`:
 ## Environment variables
 
 Required in `.env`:
+
 ```
 DATABASE_URL=postgresql://user:password@host:5432/dbname
 ```

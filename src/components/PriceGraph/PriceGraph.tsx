@@ -56,53 +56,53 @@ export function PriceGraph({ cardId }: { cardId: number }) {
       if (!ctx) return;
       Chart.getChart(canvas)?.destroy();
       chart = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: data.map((point) => point.timestamp),
-        datasets: [
-          {
-            label: "Price",
-            data: data.map((point) => point.price),
-            borderColor: "blue",
-            fill: false,
-          },
-        ],
-      },
-      options: {
-        scales: {
-          y: {
-            beginAtZero: false,
-            ticks: {
-              callback: function (value) {
-                return getPriceLabelForValue(value as number);
-              },
+        type: "line",
+        data: {
+          labels: data.map((point) => point.timestamp),
+          datasets: [
+            {
+              label: "Price",
+              data: data.map((point) => point.price),
+              borderColor: "blue",
+              fill: false,
             },
-          },
-          x: {
-            display: true,
-            ticks: {
-              callback: function (value, index, ticks) {
-                if (index === 0 || index === ticks.length - 1) {
-                  const date = new Date(data[index].timestamp);
-                  return `${MONTH_NAMES[date.getMonth()]} ${date.getFullYear()}`;
-                }
-                const label = getTimeLabelForValue(data[index].timestamp);
-                const previousLabel = getTimeLabelForValue(
-                  data[index - 1].timestamp,
-                );
-                if (label !== previousLabel) {
-                  return label;
-                }
-                return "";
-              },
-            },
-          },
+          ],
         },
-        responsive: true,
-        maintainAspectRatio: false,
-        resizeDelay: 100,
-      },
-    });
+        options: {
+          scales: {
+            y: {
+              beginAtZero: false,
+              ticks: {
+                callback: function (value) {
+                  return getPriceLabelForValue(value as number);
+                },
+              },
+            },
+            x: {
+              display: true,
+              ticks: {
+                callback: function (value, index, ticks) {
+                  if (index === 0 || index === ticks.length - 1) {
+                    const date = new Date(data[index].timestamp);
+                    return `${MONTH_NAMES[date.getMonth()]} ${date.getFullYear()}`;
+                  }
+                  const label = getTimeLabelForValue(data[index].timestamp);
+                  const previousLabel = getTimeLabelForValue(
+                    data[index - 1].timestamp,
+                  );
+                  if (label !== previousLabel) {
+                    return label;
+                  }
+                  return "";
+                },
+              },
+            },
+          },
+          responsive: true,
+          maintainAspectRatio: false,
+          resizeDelay: 100,
+        },
+      });
     });
 
     return () => {

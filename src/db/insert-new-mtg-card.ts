@@ -5,7 +5,10 @@ import {
 } from "@/scryfall/utils";
 import { getClient } from "./client";
 
-export async function insertMtgCardFromScryfall(card: ScryFallCard, isFoil: boolean): Promise<number> {
+export async function insertMtgCardFromScryfall(
+  card: ScryFallCard,
+  isFoil: boolean,
+): Promise<number> {
   const sql = getClient();
   if (!sql) throw new Error("Database client not initialized");
 
@@ -26,9 +29,15 @@ export async function insertMtgCardFromScryfall(card: ScryFallCard, isFoil: bool
       ${card.type_line.toLowerCase().split(" ").includes("token")},
       ${card.mana_cost || ""},
       ${card.name},
-      ${isFoil
-        ? card.prices.eur_foil ? parseInt(card.prices.eur_foil.replace(".", "")) : 1
-        : card.prices.eur ? parseInt(card.prices.eur.replace(".", "")) : 1},
+      ${
+        isFoil
+          ? card.prices.eur_foil
+            ? parseInt(card.prices.eur_foil.replace(".", ""))
+            : 1
+          : card.prices.eur
+            ? parseInt(card.prices.eur.replace(".", ""))
+            : 1
+      },
       ${card.rarity},
       ${card.released_at || ""},
       ${card.set},

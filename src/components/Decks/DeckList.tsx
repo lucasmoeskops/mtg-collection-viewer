@@ -19,7 +19,8 @@ import { useCallback, useContext, useEffect, useState } from "react";
 import DeckCard from "./DeckCard";
 
 export default function DeckList() {
-  const { accountId, isAuthenticated, getSubpageUrl } = useContext(AccountContext);
+  const { accountId, isAuthenticated, getSubpageUrl } =
+    useContext(AccountContext);
   const [decks, setDecks] = useState<CardDeckPreview[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newName, setNewName] = useState("");
@@ -58,9 +59,18 @@ export default function DeckList() {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={3}
+      >
         <Typography variant="h5">Commander Decks</Typography>
-        <Button startIcon={<Add />} variant="contained" onClick={() => setDialogOpen(true)}>
+        <Button
+          startIcon={<Add />}
+          variant="contained"
+          onClick={() => setDialogOpen(true)}
+        >
           New Deck
         </Button>
       </Box>
@@ -68,10 +78,23 @@ export default function DeckList() {
       <Alert variant="outlined" severity="info" sx={{ mb: 3 }}>
         <strong>Commander rules recap</strong>
         <ul style={{ margin: "4px 0 0", paddingLeft: 20 }}>
-          <li>100-card deck — each card appears exactly once (basic lands are the exception)</li>
-          <li>One <strong>Commander</strong>: a legendary Creature, Spacecraft, or Vehicle that starts in the Command Zone</li>
-          <li>Every card must be within your Commander&apos;s <strong>color identity</strong> — the colors of all mana symbols on the card</li>
-          <li>The Commander can be cast from the Command Zone; each subsequent cast costs {"{2}"} more</li>
+          <li>
+            100-card deck — each card appears exactly once (basic lands are the
+            exception)
+          </li>
+          <li>
+            One <strong>Commander</strong>: a legendary Creature, Spacecraft, or
+            Vehicle that starts in the Command Zone
+          </li>
+          <li>
+            Every card must be within your Commander&apos;s{" "}
+            <strong>color identity</strong> — the colors of all mana symbols on
+            the card
+          </li>
+          <li>
+            The Commander can be cast from the Command Zone; each subsequent
+            cast costs {"{2}"} more
+          </li>
         </ul>
       </Alert>
 
@@ -84,15 +107,30 @@ export default function DeckList() {
           {decks.map((deck) => (
             <Box
               key={deck.id}
-              sx={{ width: { xs: "100%", sm: "calc(50% - 8px)", md: "calc(33.33% - 11px)" } }}
+              sx={{
+                width: {
+                  xs: "100%",
+                  sm: "calc(50% - 8px)",
+                  md: "calc(33.33% - 11px)",
+                },
+              }}
             >
-              <DeckCard deck={deck} onDelete={handleDelete} getSubpageUrl={getSubpageUrl} />
+              <DeckCard
+                deck={deck}
+                onDelete={handleDelete}
+                getSubpageUrl={getSubpageUrl}
+              />
             </Box>
           ))}
         </Box>
       )}
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>New Commander Deck</DialogTitle>
         <DialogContent>
           <TextField

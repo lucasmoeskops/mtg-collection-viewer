@@ -20,6 +20,17 @@ export default async function Colofon() {
         as backend service.
       </Typography>
       <Typography variant="body1" gutterBottom>
+        Version 2026.5.22
+      </Typography>
+      <List>
+        <ListItem>
+          Side board doesn&apos;t count towards packages anymore.
+        </ListItem>
+        <ListItem>
+          Fixed an issue where the user had to log in twice to log in successfully.
+        </ListItem>
+      </List>
+      <Typography variant="body1" gutterBottom>
         Version 2026.5.21
       </Typography>
       <Typography variant="h5" gutterBottom sx={{ marginTop: "20px" }}>
@@ -35,13 +46,17 @@ export default async function Colofon() {
         <strong>2026.5.16</strong>:
       </Typography>
       <List>
-        <ListItem>Added a deck creation mode that allows to create Commander decks.</ListItem>
+        <ListItem>
+          Added a deck creation mode that allows to create Commander decks.
+        </ListItem>
       </List>
       <Typography variant="body2" gutterBottom>
         <strong>2026.1.2</strong>:
       </Typography>
       <List>
-        <ListItem>Fix storage for special cards with numbers like 269a / 269b.</ListItem>
+        <ListItem>
+          Fix storage for special cards with numbers like 269a / 269b.
+        </ListItem>
       </List>
       <Typography variant="body2" gutterBottom>
         <strong>2025.11.22</strong>:

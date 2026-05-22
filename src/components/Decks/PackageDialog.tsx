@@ -1,6 +1,12 @@
 "use client";
 
-import { addCardToPackage, createPackage, deletePackage, removeCardFromPackage, updatePackage } from "@/db/packages";
+import {
+  addCardToPackage,
+  createPackage,
+  deletePackage,
+  removeCardFromPackage,
+  updatePackage,
+} from "@/db/packages";
 import { CardDeckCard, DeckPackage } from "@/types/CardDeckData";
 import { Add, Close } from "@mui/icons-material";
 import {
@@ -20,7 +26,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { getPackageColor, getPackageInitials } from "./packageColors";
 
 interface PackageDialogProps {
@@ -32,30 +38,38 @@ interface PackageDialogProps {
   onChanged: () => void;
 }
 
-export default function PackageDialog({ open, onClose, deckId, pkg, deckCards, onChanged }: PackageDialogProps) {
-  const [editName, setEditName] = useState("");
-  const [editDescription, setEditDescription] = useState("");
-  const [editTarget, setEditTarget] = useState("");
+export default function PackageDialog({
+  open,
+  onClose,
+  deckId,
+  pkg,
+  deckCards,
+  onChanged,
+}: PackageDialogProps) {
+  const [editName, setEditName] = useState(pkg?.name ?? "");
+  const [editDescription, setEditDescription] = useState(pkg?.description ?? "");
+  const [editTarget, setEditTarget] = useState(pkg?.target?.toString() ?? "");
   const [saving, setSaving] = useState(false);
   const [addSearch, setAddSearch] = useState("");
-
-  useEffect(() => {
-    if (open) {
-      setEditName(pkg?.name ?? "");
-      setEditDescription(pkg?.description ?? "");
-      setEditTarget(pkg?.target?.toString() ?? "");
-      setAddSearch("");
-    }
-  }, [open, pkg?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSave = async () => {
     if (!editName.trim()) return;
     setSaving(true);
     const target = editTarget.trim() ? Number(editTarget) : undefined;
     if (pkg) {
-      await updatePackage(pkg.id, editName.trim(), editDescription.trim(), target);
+      await updatePackage(
+        pkg.id,
+        editName.trim(),
+        editDescription.trim(),
+        target,
+      );
     } else {
-      await createPackage(deckId, editName.trim(), editDescription.trim(), target);
+      await createPackage(
+        deckId,
+        editName.trim(),
+        editDescription.trim(),
+        target,
+      );
     }
     setSaving(false);
     onChanged();
@@ -82,7 +96,9 @@ export default function PackageDialog({ open, onClose, deckId, pkg, deckCards, o
   };
 
   const color = pkg ? getPackageColor(pkg.id) : getPackageColor(0);
-  const cardsInPackage = deckCards.filter((c) => pkg?.cardIds.includes(c.card.id));
+  const cardsInPackage = deckCards.filter((c) =>
+    pkg?.cardIds.includes(c.card.id),
+  );
   const cardsNotInPackage = deckCards.filter(
     (c) =>
       !pkg?.cardIds.includes(c.card.id) &&
@@ -94,7 +110,9 @@ export default function PackageDialog({ open, onClose, deckId, pkg, deckCards, o
       <DialogTitle>
         <Box display="flex" alignItems="center" gap={1.5}>
           {pkg && (
-            <Avatar sx={{ width: 28, height: 28, fontSize: 11, bgcolor: color }}>
+            <Avatar
+              sx={{ width: 28, height: 28, fontSize: 11, bgcolor: color }}
+            >
               {getPackageInitials(pkg.name)}
             </Avatar>
           )}
@@ -154,7 +172,10 @@ export default function PackageDialog({ open, onClose, deckId, pkg, deckCards, o
                     disableGutters
                     secondaryAction={
                       <Tooltip title="Remove from package">
-                        <IconButton size="small" onClick={() => handleRemoveCard(card.id)}>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleRemoveCard(card.id)}
+                        >
                           <Close fontSize="small" />
                         </IconButton>
                       </Tooltip>
@@ -183,12 +204,23 @@ export default function PackageDialog({ open, onClose, deckId, pkg, deckCards, o
               onChange={(e) => setAddSearch(e.target.value)}
               sx={{ mb: 1 }}
             />
-            <List dense disablePadding sx={{ maxHeight: 200, overflow: "auto" }}>
+            <List
+              dense
+              disablePadding
+              sx={{ maxHeight: 200, overflow: "auto" }}
+            >
               {cardsNotInPackage.length === 0 ? (
                 <ListItem disableGutters>
                   <ListItemText
-                    primary={addSearch ? "No matching cards" : "All deck cards are in this package"}
-                    primaryTypographyProps={{ variant: "body2", color: "textSecondary" }}
+                    primary={
+                      addSearch
+                        ? "No matching cards"
+                        : "All deck cards are in this package"
+                    }
+                    primaryTypographyProps={{
+                      variant: "body2",
+                      color: "textSecondary",
+                    }}
                   />
                 </ListItem>
               ) : (
@@ -198,7 +230,10 @@ export default function PackageDialog({ open, onClose, deckId, pkg, deckCards, o
                     disableGutters
                     secondaryAction={
                       <Tooltip title="Add to package">
-                        <IconButton size="small" onClick={() => handleAddCard(card.id)}>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleAddCard(card.id)}
+                        >
                           <Add fontSize="small" />
                         </IconButton>
                       </Tooltip>
@@ -224,7 +259,11 @@ export default function PackageDialog({ open, onClose, deckId, pkg, deckCards, o
           </Button>
         )}
         <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" onClick={handleSave} disabled={!editName.trim() || saving}>
+        <Button
+          variant="contained"
+          onClick={handleSave}
+          disabled={!editName.trim() || saving}
+        >
           {pkg ? "Save" : "Create"}
         </Button>
       </DialogActions>

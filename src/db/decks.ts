@@ -8,7 +8,9 @@ import { getClient } from "./client";
 import getMTGCardId from "./get-mtg-card-id";
 import { DbMagicCardLike } from "./types";
 
-export async function getDeckList(account_id: number): Promise<CardDeckPreview[]> {
+export async function getDeckList(
+  account_id: number,
+): Promise<CardDeckPreview[]> {
   const sql = getClient();
   if (!sql) return [];
 
@@ -33,7 +35,10 @@ export async function getDeckList(account_id: number): Promise<CardDeckPreview[]
   }));
 }
 
-export async function getDeck(account_id: number, deck_id: number): Promise<CardDeck | null> {
+export async function getDeck(
+  account_id: number,
+  deck_id: number,
+): Promise<CardDeck | null> {
   const sql = getClient();
   if (!sql) return null;
 
@@ -139,7 +144,10 @@ export async function createDeck(
   return Number(rows[0].id);
 }
 
-export async function deleteDeck(accountId: number, deckId: number): Promise<void> {
+export async function deleteDeck(
+  accountId: number,
+  deckId: number,
+): Promise<void> {
   const sql = getClient();
   if (!sql) throw new Error("Database client not initialized");
 
@@ -199,7 +207,11 @@ export async function addCardToDeck(
   }
 }
 
-export async function setBasicLandCount(deckId: number, landType: string, quantity: number): Promise<void> {
+export async function setBasicLandCount(
+  deckId: number,
+  landType: string,
+  quantity: number,
+): Promise<void> {
   const sql = getClient();
   if (!sql) throw new Error("Database client not initialized");
 
@@ -214,7 +226,10 @@ export async function setBasicLandCount(deckId: number, landType: string, quanti
   }
 }
 
-export async function removeCardFromDeck(deckId: number, cardId: number): Promise<void> {
+export async function removeCardFromDeck(
+  deckId: number,
+  cardId: number,
+): Promise<void> {
   const sql = getClient();
   if (!sql) throw new Error("Database client not initialized");
 
@@ -228,7 +243,10 @@ export async function addImportedCardsToDeck(
   role: "mainboard" | "sideboard",
   cards: { setId: string; collectorNumber: string; isFoil: boolean }[],
 ): Promise<number> {
-  const accountData = await getAuthenticatedAccountData(accountName, accountKey);
+  const accountData = await getAuthenticatedAccountData(
+    accountName,
+    accountKey,
+  );
   if (!accountData) throw new Error("Authentication failed");
 
   const sql = getClient();
@@ -241,7 +259,11 @@ export async function addImportedCardsToDeck(
 
   let added = 0;
   for (const card of cards) {
-    const cardId = await getMTGCardId(card.setId, card.collectorNumber, card.isFoil);
+    const cardId = await getMTGCardId(
+      card.setId,
+      card.collectorNumber,
+      card.isFoil,
+    );
     await addCardToDeck(deckId, cardId, role);
     added++;
   }
