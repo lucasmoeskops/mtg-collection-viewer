@@ -42,7 +42,7 @@ export function newEmptyCard(
     series: "?",
     colors: [],
     rarity: "unknown",
-    cardnumber: '',
+    cardnumber: "",
     cardnumber_int: 0,
     card_type: "",
     image_url: "/mtg-card-back.webp",
@@ -143,9 +143,7 @@ async function _getCard(
   return card;
 }
 
-export function fromDbCard(
-  card: DbBoundMagicCardLike,
-): MagicCardLike {
+export function fromDbCard(card: DbBoundMagicCardLike): MagicCardLike {
   const cardData = card.card;
   return {
     id: cardData.id,

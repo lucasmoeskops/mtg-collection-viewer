@@ -35,7 +35,10 @@ export async function getAllCards(accountId: number): Promise<MagicCardLike[]> {
     `,
   ]);
 
-  const priceMap = new Map<number, { avg_price: number; avg_non_foil_price: number }>();
+  const priceMap = new Map<
+    number,
+    { avg_price: number; avg_non_foil_price: number }
+  >();
   for (const row of priceRows) {
     priceMap.set(Number(row.mtg_data_id), {
       avg_price: row.avg_price ?? 0,
@@ -66,7 +69,8 @@ export async function getAllCards(accountId: number): Promise<MagicCardLike[]> {
       },
       amount: row.amount,
       avg_price: prices?.avg_price ?? row.price_estimate,
-      avg_non_foil_price: prices?.avg_non_foil_price ?? (row.is_foil ? 0 : row.price_estimate),
+      avg_non_foil_price:
+        prices?.avg_non_foil_price ?? (row.is_foil ? 0 : row.price_estimate),
     };
     return fromDbCard(bound);
   });

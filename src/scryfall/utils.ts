@@ -1,7 +1,8 @@
 export const timeBetweenConsecutiveCalls = 500; // milliseconds (Scryfall allows max 2 card fetches/second)
 export const setsEndpoint = "https://api.scryfall.com/sets";
 export const cardsSearchEndpoint = "https://api.scryfall.com/cards/search";
-export const cardsCollectionEndpoint = "https://api.scryfall.com/cards/collection";
+export const cardsCollectionEndpoint =
+  "https://api.scryfall.com/cards/collection";
 let lastCallTime = 0;
 
 export type ScryFallCard = {
@@ -87,8 +88,13 @@ export async function fetchDataPaginated<T>(
 
     if (response.status === 429 && retriesForCurrentPage < maxRetries) {
       retriesForCurrentPage++;
-      const retryAfterSeconds = parseInt(response.headers.get("Retry-After") || "5", 10);
-      await new Promise((resolve) => setTimeout(resolve, retryAfterSeconds * 1000));
+      const retryAfterSeconds = parseInt(
+        response.headers.get("Retry-After") || "5",
+        10,
+      );
+      await new Promise((resolve) =>
+        setTimeout(resolve, retryAfterSeconds * 1000),
+      );
       continue;
     }
 
@@ -132,13 +138,16 @@ export async function fetchCardsCollection(
 
       if (response.status === 429 && retries < 3) {
         retries++;
-        const delay = parseInt(response.headers.get("Retry-After") || "5", 10) * 1000;
+        const delay =
+          parseInt(response.headers.get("Retry-After") || "5", 10) * 1000;
         await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
       }
 
       if (!response.ok) {
-        throw new Error(`Error fetching card collection: ${response.statusText}`);
+        throw new Error(
+          `Error fetching card collection: ${response.statusText}`,
+        );
       }
 
       const json = await response.json();

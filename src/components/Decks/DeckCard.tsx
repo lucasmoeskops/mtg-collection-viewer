@@ -21,7 +21,11 @@ interface DeckCardProps {
   getSubpageUrl: (subpage: string) => string;
 }
 
-export default function DeckCard({ deck, onDelete, getSubpageUrl }: DeckCardProps) {
+export default function DeckCard({
+  deck,
+  onDelete,
+  getSubpageUrl,
+}: DeckCardProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -47,19 +51,32 @@ export default function DeckCard({ deck, onDelete, getSubpageUrl }: DeckCardProp
           />
         )}
         <CardContent>
-          <Typography variant="h6" noWrap>{deck.name}</Typography>
+          <Typography variant="h6" noWrap>
+            {deck.name}
+          </Typography>
           <Typography variant="body2" color="textSecondary">
-            {deck.commander_name ? `Commander: ${deck.commander_name}` : "No commander set"}
+            {deck.commander_name
+              ? `Commander: ${deck.commander_name}`
+              : "No commander set"}
           </Typography>
           {deck.description && (
-            <Typography variant="body2" color="textSecondary" noWrap sx={{ mt: 0.5 }}>
+            <Typography
+              variant="body2"
+              color="textSecondary"
+              noWrap
+              sx={{ mt: 0.5 }}
+            >
               {deck.description}
             </Typography>
           )}
         </CardContent>
       </CardActionArea>
       <Box sx={{ position: "absolute", top: 4, right: 4 }}>
-        <Tooltip title={confirmDelete ? "Click again to confirm deletion" : "Delete deck"}>
+        <Tooltip
+          title={
+            confirmDelete ? "Click again to confirm deletion" : "Delete deck"
+          }
+        >
           <IconButton
             size="small"
             color={confirmDelete ? "error" : "default"}

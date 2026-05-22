@@ -20,7 +20,11 @@ import {
 import { MouseEvent, useContext, useState } from "react";
 
 export function AddToDeckButton({ card }: { card: MagicCardLike }) {
-  const { accountId, isAuthenticated, cards: ownedCards } = useContext(AccountContext);
+  const {
+    accountId,
+    isAuthenticated,
+    cards: ownedCards,
+  } = useContext(AccountContext);
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [decks, setDecks] = useState<CardDeckPreview[]>([]);
   const [selectedDeckId, setSelectedDeckId] = useState<number | "">("");
@@ -28,7 +32,8 @@ export function AddToDeckButton({ card }: { card: MagicCardLike }) {
   const [added, setAdded] = useState(false);
 
   const open = Boolean(anchorEl);
-  const amountOwned = ownedCards.find((c) => c.id === card.id)?.amount_owned ?? 0;
+  const amountOwned =
+    ownedCards.find((c) => c.id === card.id)?.amount_owned ?? 0;
 
   const handleOpen = async (event: MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -49,7 +54,9 @@ export function AddToDeckButton({ card }: { card: MagicCardLike }) {
 
   return (
     <>
-      <Tooltip title={amountOwned === 0 ? "You don't own this card" : "Add to a deck"}>
+      <Tooltip
+        title={amountOwned === 0 ? "You don't own this card" : "Add to a deck"}
+      >
         <span>
           <IconButton
             size="small"
@@ -84,9 +91,7 @@ export function AddToDeckButton({ card }: { card: MagicCardLike }) {
                 setAdded(false);
               }}
             >
-              {decks.length === 0 && (
-                <MenuItem disabled>No decks yet</MenuItem>
-              )}
+              {decks.length === 0 && <MenuItem disabled>No decks yet</MenuItem>}
               {decks.map((deck) => (
                 <MenuItem key={deck.id} value={deck.id}>
                   {deck.name}
@@ -95,9 +100,20 @@ export function AddToDeckButton({ card }: { card: MagicCardLike }) {
               ))}
             </Select>
           </FormControl>
-          <Box mt={2} display="flex" justifyContent="flex-end" alignItems="center">
+          <Box
+            mt={2}
+            display="flex"
+            justifyContent="flex-end"
+            alignItems="center"
+          >
             {added ? (
-              <Typography variant="body2" color="success.main" display="flex" alignItems="center" gap={0.5}>
+              <Typography
+                variant="body2"
+                color="success.main"
+                display="flex"
+                alignItems="center"
+                gap={0.5}
+              >
                 <Check fontSize="small" /> Added to deck
               </Typography>
             ) : (

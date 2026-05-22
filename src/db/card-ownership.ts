@@ -15,7 +15,10 @@ export async function getOwnedCardsForSets(
   if (setCodes.length === 0) return [];
 
   try {
-    const accountData = await getAuthenticatedAccountData(accountName, accountKey);
+    const accountData = await getAuthenticatedAccountData(
+      accountName,
+      accountKey,
+    );
     if (!accountData) throw new Error("Authentication failed");
 
     const sql = getClient();
@@ -51,7 +54,10 @@ export async function getOwnedCardsForIndividuals(
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   try {
-    const accountData = await getAuthenticatedAccountData(accountName, accountKey);
+    const accountData = await getAuthenticatedAccountData(
+      accountName,
+      accountKey,
+    );
     if (!accountData) throw new Error("Authentication failed");
 
     const sql = getClient();
@@ -89,10 +95,14 @@ export async function saveCardChanges(
 ): Promise<SaveCardChangesResult> {
   const successfulChanges: CardOwnershipData[] = [];
   const failedChanges: SaveCardChangesResult["failed"] = [];
-  if (changes.length === 0) return { successful: successfulChanges, failed: failedChanges };
+  if (changes.length === 0)
+    return { successful: successfulChanges, failed: failedChanges };
 
   try {
-    const accountData = await getAuthenticatedAccountData(accountName, accountKey);
+    const accountData = await getAuthenticatedAccountData(
+      accountName,
+      accountKey,
+    );
     if (!accountData) throw new Error("Authentication failed");
 
     const sql = getClient();
@@ -104,9 +114,15 @@ export async function saveCardChanges(
       `${setId.toLowerCase()}-${collectorNumber}-${isFoil}`;
 
     // Step 1: Bulk DB lookup — find cards already in mtg_data
-    const uniqueSetCodes = [...new Set(changes.map((c) => c.setId.toLowerCase()))];
-    const uniqueCollectorNumbers = [...new Set(changes.map((c) => c.collectorNumber))];
-    const neededKeys = new Set(changes.map((c) => cardKey(c.setId, c.collectorNumber, c.isFoil)));
+    const uniqueSetCodes = [
+      ...new Set(changes.map((c) => c.setId.toLowerCase())),
+    ];
+    const uniqueCollectorNumbers = [
+      ...new Set(changes.map((c) => c.collectorNumber)),
+    ];
+    const neededKeys = new Set(
+      changes.map((c) => cardKey(c.setId, c.collectorNumber, c.isFoil)),
+    );
 
     const existingRows = await sql`
       SELECT id, series, cardnumber, is_foil
@@ -124,14 +140,22 @@ export async function saveCardChanges(
     }
 
     // Step 2: Fetch cards not in DB from Scryfall /cards/collection (up to 75 per request)
-    const missingCards = changes.filter((c) => !cardIdMap.has(cardKey(c.setId, c.collectorNumber, c.isFoil)));
+    const missingCards = changes.filter(
+      (c) => !cardIdMap.has(cardKey(c.setId, c.collectorNumber, c.isFoil)),
+    );
 
     if (missingCards.length > 0) {
-      const uniqueScryfallIdentifiers = new Map<string, { setId: string; collectorNumber: string }>();
+      const uniqueScryfallIdentifiers = new Map<
+        string,
+        { setId: string; collectorNumber: string }
+      >();
       for (const card of missingCards) {
         const key = `${card.setId.toLowerCase()}-${card.collectorNumber}`;
         if (!uniqueScryfallIdentifiers.has(key)) {
-          uniqueScryfallIdentifiers.set(key, { setId: card.setId, collectorNumber: card.collectorNumber });
+          uniqueScryfallIdentifiers.set(key, {
+            setId: card.setId,
+            collectorNumber: card.collectorNumber,
+          });
         }
       }
 
@@ -142,10 +166,15 @@ export async function saveCardChanges(
         })),
       );
 
-      const scryfallNotFoundKeys = new Set(notFound.map((nf) => `${nf.set.toLowerCase()}-${nf.collector_number}`));
+      const scryfallNotFoundKeys = new Set(
+        notFound.map((nf) => `${nf.set.toLowerCase()}-${nf.collector_number}`),
+      );
       const scryfallCardMap = new Map<string, ScryFallCard>();
       for (const card of found) {
-        scryfallCardMap.set(`${card.set.toLowerCase()}-${card.collector_number}`, card);
+        scryfallCardMap.set(
+          `${card.set.toLowerCase()}-${card.collector_number}`,
+          card,
+        );
       }
 
       // Step 3: Insert fetched cards into DB (once per foil/non-foil combination needed)
@@ -153,28 +182,52 @@ export async function saveCardChanges(
         const scryfallKey = `${missingCard.setId.toLowerCase()}-${missingCard.collectorNumber}`;
 
         if (scryfallNotFoundKeys.has(scryfallKey)) {
-          failedChanges.push({ setId: missingCard.setId, collectorNumber: missingCard.collectorNumber, isFoil: missingCard.isFoil });
+          failedChanges.push({
+            setId: missingCard.setId,
+            collectorNumber: missingCard.collectorNumber,
+            isFoil: missingCard.isFoil,
+          });
           continue;
         }
 
         const scryfallCard = scryfallCardMap.get(scryfallKey);
         if (!scryfallCard) {
-          failedChanges.push({ setId: missingCard.setId, collectorNumber: missingCard.collectorNumber, isFoil: missingCard.isFoil });
+          failedChanges.push({
+            setId: missingCard.setId,
+            collectorNumber: missingCard.collectorNumber,
+            isFoil: missingCard.isFoil,
+          });
           continue;
         }
 
         try {
-          const newId = await insertMtgCardFromScryfall(scryfallCard, missingCard.isFoil);
-          cardIdMap.set(cardKey(missingCard.setId, missingCard.collectorNumber, missingCard.isFoil), newId);
+          const newId = await insertMtgCardFromScryfall(
+            scryfallCard,
+            missingCard.isFoil,
+          );
+          cardIdMap.set(
+            cardKey(
+              missingCard.setId,
+              missingCard.collectorNumber,
+              missingCard.isFoil,
+            ),
+            newId,
+          );
         } catch (err) {
           console.error("Error inserting card:", err);
-          failedChanges.push({ setId: missingCard.setId, collectorNumber: missingCard.collectorNumber, isFoil: missingCard.isFoil });
+          failedChanges.push({
+            setId: missingCard.setId,
+            collectorNumber: missingCard.collectorNumber,
+            isFoil: missingCard.isFoil,
+          });
         }
       }
     }
 
     // Step 4: Process ownership changes for all successfully resolved cards
-    const failedKeys = new Set(failedChanges.map((f) => cardKey(f.setId, f.collectorNumber, f.isFoil)));
+    const failedKeys = new Set(
+      failedChanges.map((f) => cardKey(f.setId, f.collectorNumber, f.isFoil)),
+    );
 
     for (const change of changes) {
       const key = cardKey(change.setId, change.collectorNumber, change.isFoil);
@@ -182,7 +235,11 @@ export async function saveCardChanges(
 
       const cardId = cardIdMap.get(key);
       if (!cardId) {
-        failedChanges.push({ setId: change.setId, collectorNumber: change.collectorNumber, isFoil: change.isFoil });
+        failedChanges.push({
+          setId: change.setId,
+          collectorNumber: change.collectorNumber,
+          isFoil: change.isFoil,
+        });
         continue;
       }
 

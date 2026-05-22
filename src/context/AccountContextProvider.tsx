@@ -11,14 +11,7 @@ import {
   defaultAccountSettings,
   validateAccountSettings,
 } from "@/types/AccountSettings";
-import { debounce } from "lodash";
-import {
-  ReactNode,
-  createContext,
-  useCallback,
-  useMemo,
-  useState,
-} from "react";
+import { ReactNode, createContext, useCallback, useState } from "react";
 
 export type AccountContextProps = {
   accountId: number;
@@ -80,45 +73,44 @@ export default function AccountProvider({ children }: AccountProviderProps) {
   const [cardDataNeeded, setCardDataNeeded] = useState<boolean>(false);
   const [settings, setSettings] = useState<AccountSettings | null>(null);
 
-  // Debounced authentication to avoid too many requests while typing
-  const authenticator = useMemo(
-    () =>
-      debounce(async (name: string, key: string) => {
-        if (name && key) {
-          setAccountName(name);
-          setAccountKey(key);
-          setAuthenticationInProgress(true);
-          try {
-            const accountData = await getAuthenticatedAccountData(name, key);
-            setIsAuthenticated(accountData !== null);
-            setAuthenticationError(accountData ? "" : "Authentication failed.");
-            if (accountData) {
-              setSettings(validateAccountSettings(accountData.settings));
-            }
-          } catch (error) {
-            setIsAuthenticated(false);
-            setAuthenticationError("Authentication problem.");
-            console.error("Authentication error:", error);
-          } finally {
-            setAuthenticationInProgress(false);
-          }
-        } else {
-          setIsAuthenticated(false);
-          setAuthenticationError("");
+  const authenticator = useCallback(async (name: string, key: string) => {
+    if (name && key) {
+      setAccountName(name);
+      setAccountKey(key);
+      setAuthenticationInProgress(true);
+      try {
+        const accountData = await getAuthenticatedAccountData(name, key);
+        setIsAuthenticated(accountData !== null);
+        setAuthenticationError(accountData ? "" : "Authentication failed.");
+        if (accountData) {
+          setAccountId(Number(accountData.id));
+          setSettings(validateAccountSettings(accountData.settings));
         }
-      }, 500),
-    [setIsAuthenticated, setAuthenticationError, setAuthenticationInProgress],
-  );
+      } catch (error) {
+        setIsAuthenticated(false);
+        setAuthenticationError("Authentication problem.");
+        console.error("Authentication error:", error);
+      } finally {
+        setAuthenticationInProgress(false);
+      }
+    } else {
+      setIsAuthenticated(false);
+      setAuthenticationError("");
+    }
+  }, []);
 
   const setAccountIdByUsername = useCallback(
     async (username: string) => {
       if (username === accountName && accountId !== -1) {
+        setIsLoading(false);
         return;
       }
-      if (username !== accountName) {
+      const switchingUser = username !== accountName;
+      if (switchingUser) {
         setAccountName(username);
+        setIsAuthenticated(false);
+        setAccountKey("");
       }
-      setIsAuthenticated(false);
       setIsLoading(true);
       const newAccountData = await getAccountByUsername(username);
       if (newAccountData?.id !== accountId) {

@@ -2,9 +2,19 @@
 
 import MagicCardLike from "@/interfaces/MagicCardLike";
 import { Casino } from "@mui/icons-material";
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Typography,
+} from "@mui/material";
 
-export type HandCard = { type: "card"; card: MagicCardLike } | { type: "land"; landType: string };
+export type HandCard =
+  | { type: "card"; card: MagicCardLike }
+  | { type: "land"; landType: string };
 
 const LAND_CARD_STYLE: Record<string, { bg: string; color: string }> = {
   Plains: { bg: "#fafaf0", color: "#555" },
@@ -22,12 +32,23 @@ interface HandDialogProps {
   onCardClick: (card: { name: string; image_url: string }) => void;
 }
 
-export default function HandDialog({ handCards, onClose, onDrawAgain, onCardClick }: HandDialogProps) {
+export default function HandDialog({
+  handCards,
+  onClose,
+  onDrawAgain,
+  onCardClick,
+}: HandDialogProps) {
   return (
     <Dialog open={!!handCards} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>Opening Hand</DialogTitle>
       <DialogContent>
-        <Box display="flex" gap={1.5} flexWrap="wrap" justifyContent="center" pt={1}>
+        <Box
+          display="flex"
+          gap={1.5}
+          flexWrap="wrap"
+          justifyContent="center"
+          pt={1}
+        >
           {handCards?.map((hc, i) =>
             hc.type === "card" ? (
               hc.card.image_url ? (
@@ -37,7 +58,12 @@ export default function HandDialog({ handCards, onClose, onDrawAgain, onCardClic
                   src={hc.card.image_url}
                   alt={hc.card.name}
                   onClick={() => onCardClick(hc.card)}
-                  sx={{ width: 110, borderRadius: 1.5, boxShadow: 3, cursor: "pointer" }}
+                  sx={{
+                    width: 110,
+                    borderRadius: 1.5,
+                    boxShadow: 3,
+                    cursor: "pointer",
+                  }}
                 />
               ) : (
                 <Box

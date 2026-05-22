@@ -73,10 +73,14 @@ type ImportResult = {
   failed: boolean;
 };
 
-const DEFAULT_TEMPLATE_REGEX = /^(\d+)\s+(.+?)\s+\(([A-Za-z0-9]+)\)\s+(\S+?)(\s+\*F\*)?\s*$/;
+const DEFAULT_TEMPLATE_REGEX =
+  /^(\d+)\s+(.+?)\s+\(([A-Za-z0-9]+)\)\s+(\S+?)(\s+\*F\*)?\s*$/;
 const MAX_IMPORT = 200;
 
-function parseLines(lines: string[]): { parsed: ParsedLine[]; invalid: InvalidLine[] } {
+function parseLines(lines: string[]): {
+  parsed: ParsedLine[];
+  invalid: InvalidLine[];
+} {
   const parsed: ParsedLine[] = [];
   const invalid: InvalidLine[] = [];
 
@@ -106,7 +110,10 @@ function parseLines(lines: string[]): { parsed: ParsedLine[]; invalid: InvalidLi
   return { parsed, invalid };
 }
 
-function deduplicateLines(parsed: ParsedLine[]): { deduped: ParsedLine[]; duplicates: DuplicateWarning[] } {
+function deduplicateLines(parsed: ParsedLine[]): {
+  deduped: ParsedLine[];
+  duplicates: DuplicateWarning[];
+} {
   const seen = new Map<string, ParsedLine>();
   const duplicates: DuplicateWarning[] = [];
 
@@ -114,7 +121,11 @@ function deduplicateLines(parsed: ParsedLine[]): { deduped: ParsedLine[]; duplic
     const key = `${line.setId}-${line.collectorNumber}-${line.isFoil}`;
     const existing = seen.get(key);
     if (existing) {
-      duplicates.push({ title: line.title, droppedLineNumber: existing.lineNumber, keptLineNumber: line.lineNumber });
+      duplicates.push({
+        title: line.title,
+        droppedLineNumber: existing.lineNumber,
+        keptLineNumber: line.lineNumber,
+      });
     }
     seen.set(key, line);
   }
@@ -122,27 +133,48 @@ function deduplicateLines(parsed: ParsedLine[]): { deduped: ParsedLine[]; duplic
   return { deduped: Array.from(seen.values()), duplicates };
 }
 
-function resolveNewAmount(importAmount: number, currentAmount: number, mode: ImportMode): number {
+function resolveNewAmount(
+  importAmount: number,
+  currentAmount: number,
+  mode: ImportMode,
+): number {
   if (mode === "append") return currentAmount + importAmount;
   return Math.max(currentAmount, importAmount);
 }
 
-function getCurrentAmount(cards: MagicCardLike[], setId: string, collectorNumber: string, isFoil: boolean): number {
+function getCurrentAmount(
+  cards: MagicCardLike[],
+  setId: string,
+  collectorNumber: string,
+  isFoil: boolean,
+): number {
   const card = cards.find(
-    (c) => c.series.toUpperCase() === setId && c.cardnumber === collectorNumber && c.is_foil === isFoil,
+    (c) =>
+      c.series.toUpperCase() === setId &&
+      c.cardnumber === collectorNumber &&
+      c.is_foil === isFoil,
   );
   return card?.amount_owned ?? 0;
 }
 
 export default function ImportTab(): ReactNode {
-  const { cards, accountId, accountName, accountKey, isLoading, invalidateCardData, setCardDataNeeded } =
-    useContext(AccountContext);
+  const {
+    cards,
+    accountId,
+    accountName,
+    accountKey,
+    isLoading,
+    invalidateCardData,
+    setCardDataNeeded,
+  } = useContext(AccountContext);
   const [inputText, setInputText] = useState("");
   const [mode, setMode] = useState<ImportMode>("at-least");
   const [decks, setDecks] = useState<CardDeckPreview[]>([]);
   const [decksLoading, setDecksLoading] = useState(false);
   const [selectedDeckId, setSelectedDeckId] = useState<number | "none">("none");
-  const [deckRole, setDeckRole] = useState<"mainboard" | "sideboard">("mainboard");
+  const [deckRole, setDeckRole] = useState<"mainboard" | "sideboard">(
+    "mainboard",
+  );
   const [preview, setPreview] = useState<{
     rows: PreviewRow[];
     invalid: InvalidLine[];
@@ -172,7 +204,12 @@ export default function ImportTab(): ReactNode {
     const overLimit = deduped.length > MAX_IMPORT;
 
     const rows: PreviewRow[] = deduped.slice(0, MAX_IMPORT).map((p) => {
-      const currentAmount = getCurrentAmount(cards, p.setId, p.collectorNumber, p.isFoil);
+      const currentAmount = getCurrentAmount(
+        cards,
+        p.setId,
+        p.collectorNumber,
+        p.isFoil,
+      );
       return {
         title: p.title,
         setId: p.setId,
@@ -205,24 +242,48 @@ export default function ImportTab(): ReactNode {
     let deckFailed = false;
 
     try {
-      const { successful, failed: allFailed } = await saveCardChanges(accountName, accountKey, changes);
+      const { successful, failed: allFailed } = await saveCardChanges(
+        accountName,
+        accountKey,
+        changes,
+      );
       const totalSaved = successful.length;
 
       const skippedCards: SkippedCard[] = allFailed.map((f) => {
         const row = preview.rows.find(
-          (r) => r.setId === f.setId && r.collectorNumber === f.collectorNumber && r.isFoil === f.isFoil,
+          (r) =>
+            r.setId === f.setId &&
+            r.collectorNumber === f.collectorNumber &&
+            r.isFoil === f.isFoil,
         );
         return { title: row?.title ?? `${f.setId} ${f.collectorNumber}`, ...f };
       });
 
       if (selectedDeckId !== "none") {
         setAddingToDeck(true);
-        const skippedKeys = new Set(allFailed.map((f) => `${f.setId}-${f.collectorNumber}-${f.isFoil}`));
+        const skippedKeys = new Set(
+          allFailed.map((f) => `${f.setId}-${f.collectorNumber}-${f.isFoil}`),
+        );
         const deckCards = preview.rows
-          .filter((row) => !skippedKeys.has(`${row.setId}-${row.collectorNumber}-${row.isFoil}`))
-          .map((row) => ({ setId: row.setId, collectorNumber: row.collectorNumber, isFoil: row.isFoil }));
+          .filter(
+            (row) =>
+              !skippedKeys.has(
+                `${row.setId}-${row.collectorNumber}-${row.isFoil}`,
+              ),
+          )
+          .map((row) => ({
+            setId: row.setId,
+            collectorNumber: row.collectorNumber,
+            isFoil: row.isFoil,
+          }));
         try {
-          deckAdded = await addImportedCardsToDeck(accountName, accountKey, selectedDeckId, deckRole, deckCards);
+          deckAdded = await addImportedCardsToDeck(
+            accountName,
+            accountKey,
+            selectedDeckId,
+            deckRole,
+            deckCards,
+          );
         } catch {
           deckFailed = true;
         }
@@ -230,21 +291,35 @@ export default function ImportTab(): ReactNode {
 
       invalidateCardData();
       setCardDataNeeded(true);
-      setImportResult({ ownershipCount: totalSaved, skippedCards, deckAdded, deckFailed, failed: false });
+      setImportResult({
+        ownershipCount: totalSaved,
+        skippedCards,
+        deckAdded,
+        deckFailed,
+        failed: false,
+      });
       setPreview(null);
       setInputText("");
     } catch {
-      setImportResult({ ownershipCount: 0, skippedCards: [], deckAdded: null, deckFailed: false, failed: true });
+      setImportResult({
+        ownershipCount: 0,
+        skippedCards: [],
+        deckAdded: null,
+        deckFailed: false,
+        failed: true,
+      });
     } finally {
       setImporting(false);
       setAddingToDeck(false);
     }
   }
 
-  const changedRows = preview?.rows.filter((r) => r.newAmount !== r.currentAmount) ?? [];
+  const changedRows =
+    preview?.rows.filter((r) => r.newAmount !== r.currentAmount) ?? [];
   const deckIsSelected = selectedDeckId !== "none";
   const selectedDeckName = decks.find((d) => d.id === selectedDeckId)?.name;
-  const importButtonDisabled = importing || (changedRows.length === 0 && !deckIsSelected);
+  const importButtonDisabled =
+    importing || (changedRows.length === 0 && !deckIsSelected);
 
   return (
     <Box>
@@ -252,7 +327,15 @@ export default function ImportTab(): ReactNode {
         Import Cards
       </Typography>
 
-      <Box sx={{ display: "flex", gap: 2, mb: 1, alignItems: "center", flexWrap: "wrap" }}>
+      <Box
+        sx={{
+          display: "flex",
+          gap: 2,
+          mb: 1,
+          alignItems: "center",
+          flexWrap: "wrap",
+        }}
+      >
         <FormControl size="small">
           <InputLabel>Template</InputLabel>
           <Select value="default" label="Template" sx={{ minWidth: 160 }}>
@@ -278,15 +361,29 @@ export default function ImportTab(): ReactNode {
         {isLoading && <CircularProgress size={20} />}
       </Box>
 
-      <Box sx={{ display: "flex", gap: 2, mb: 2, alignItems: "center", flexWrap: "wrap" }}>
+      <Box
+        sx={{
+          display: "flex",
+          gap: 2,
+          mb: 2,
+          alignItems: "center",
+          flexWrap: "wrap",
+        }}
+      >
         <FormControl size="small">
           <InputLabel>Add to deck</InputLabel>
           <Select
             value={selectedDeckId}
             label="Add to deck"
-            onChange={(e) => setSelectedDeckId(e.target.value as number | "none")}
+            onChange={(e) =>
+              setSelectedDeckId(e.target.value as number | "none")
+            }
             sx={{ minWidth: 200 }}
-            endAdornment={decksLoading ? <CircularProgress size={16} sx={{ mr: 2 }} /> : undefined}
+            endAdornment={
+              decksLoading ? (
+                <CircularProgress size={16} sx={{ mr: 2 }} />
+              ) : undefined
+            }
           >
             <MenuItem value="none">None</MenuItem>
             {decks.map((deck) => (
@@ -301,7 +398,9 @@ export default function ImportTab(): ReactNode {
           <Select
             value={deckRole}
             label="Role"
-            onChange={(e) => setDeckRole(e.target.value as "mainboard" | "sideboard")}
+            onChange={(e) =>
+              setDeckRole(e.target.value as "mainboard" | "sideboard")
+            }
             sx={{ minWidth: 140 }}
           >
             <MenuItem value="mainboard">Mainboard</MenuItem>
@@ -320,13 +419,21 @@ export default function ImportTab(): ReactNode {
           setPreview(null);
           setImportResult(null);
         }}
-        placeholder={"1 Archmage of Runes (FDN) 30\n1 Contingency Plan (EMN) 52 *F*"}
-        slotProps={{ htmlInput: { style: { fontFamily: "monospace", fontSize: 13 } } }}
+        placeholder={
+          "1 Archmage of Runes (FDN) 30\n1 Contingency Plan (EMN) 52 *F*"
+        }
+        slotProps={{
+          htmlInput: { style: { fontFamily: "monospace", fontSize: 13 } },
+        }}
         sx={{ mb: 1 }}
       />
 
       <Box sx={{ mb: 2 }}>
-        <Button variant="contained" onClick={handlePreview} disabled={!inputText.trim()}>
+        <Button
+          variant="contained"
+          onClick={handlePreview}
+          disabled={!inputText.trim()}
+        >
           Preview
         </Button>
       </Box>
@@ -335,14 +442,15 @@ export default function ImportTab(): ReactNode {
         <Box>
           {preview.overLimit && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              Your list contains more than {MAX_IMPORT} cards. Please split it into smaller batches and import them
-              separately.
+              Your list contains more than {MAX_IMPORT} cards. Please split it
+              into smaller batches and import them separately.
             </Alert>
           )}
 
           {preview.invalid.length > 0 && (
             <Alert severity="warning" sx={{ mb: 2 }}>
-              {preview.invalid.length} line(s) could not be parsed and will be skipped:
+              {preview.invalid.length} line(s) could not be parsed and will be
+              skipped:
               <ul style={{ margin: "4px 0 0", paddingLeft: 20 }}>
                 {preview.invalid.map((inv) => (
                   <li key={inv.lineNumber}>
@@ -355,11 +463,13 @@ export default function ImportTab(): ReactNode {
 
           {preview.duplicates.length > 0 && (
             <Alert severity="warning" sx={{ mb: 2 }}>
-              {preview.duplicates.length} duplicate(s) found — keeping the last occurrence of each:
+              {preview.duplicates.length} duplicate(s) found — keeping the last
+              occurrence of each:
               <ul style={{ margin: "4px 0 0", paddingLeft: 20 }}>
                 {preview.duplicates.map((dup) => (
                   <li key={dup.keptLineNumber}>
-                    <strong>{dup.title}</strong>: line {dup.droppedLineNumber} replaced by line {dup.keptLineNumber}
+                    <strong>{dup.title}</strong>: line {dup.droppedLineNumber}{" "}
+                    replaced by line {dup.keptLineNumber}
                   </li>
                 ))}
               </ul>
@@ -382,7 +492,12 @@ export default function ImportTab(): ReactNode {
                 </TableHead>
                 <TableBody>
                   {preview.rows.map((row, i) => (
-                    <TableRow key={i} sx={{ opacity: row.newAmount === row.currentAmount ? 0.4 : 1 }}>
+                    <TableRow
+                      key={i}
+                      sx={{
+                        opacity: row.newAmount === row.currentAmount ? 0.4 : 1,
+                      }}
+                    >
                       <TableCell>{row.title}</TableCell>
                       <TableCell>{row.setId}</TableCell>
                       <TableCell>{row.collectorNumber}</TableCell>
@@ -399,17 +514,32 @@ export default function ImportTab(): ReactNode {
 
               {importing ? (
                 <Box sx={{ mb: 1 }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                    Importing {changedRows.length} card{changedRows.length !== 1 ? "s" : ""}…
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 0.5 }}
+                  >
+                    Importing {changedRows.length} card
+                    {changedRows.length !== 1 ? "s" : ""}…
                   </Typography>
-                  <LinearProgress variant="indeterminate" sx={{ height: 8, borderRadius: 1 }} />
+                  <LinearProgress
+                    variant="indeterminate"
+                    sx={{ height: 8, borderRadius: 1 }}
+                  />
                 </Box>
               ) : addingToDeck ? (
                 <Box sx={{ mb: 1 }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 0.5 }}
+                  >
                     Adding {preview.rows.length} cards to {selectedDeckName}…
                   </Typography>
-                  <LinearProgress variant="indeterminate" sx={{ height: 8, borderRadius: 1 }} />
+                  <LinearProgress
+                    variant="indeterminate"
+                    sx={{ height: 8, borderRadius: 1 }}
+                  />
                 </Box>
               ) : (
                 <Box>
@@ -424,9 +554,16 @@ export default function ImportTab(): ReactNode {
                       : `Add ${preview.rows.length} cards${deckIsSelected ? ` to ${selectedDeckName}` : ""}`}
                   </Button>
 
-                  {!importing && changedRows.length === 0 && !deckIsSelected && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                      No changes — all cards already meet the import condition.
+                  {!importing &&
+                    changedRows.length === 0 &&
+                    !deckIsSelected && (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mt: 1 }}
+                    >
+                      No changes — all cards already meet the import
+                      condition.
                     </Typography>
                   )}
                 </Box>
@@ -434,7 +571,9 @@ export default function ImportTab(): ReactNode {
             </>
           )}
 
-          {!preview.overLimit && preview.rows.length === 0 && !preview.invalid.length && (
+          {!preview.overLimit &&
+            preview.rows.length === 0 &&
+            !preview.invalid.length && (
             <Alert severity="info">No valid cards to import.</Alert>
           )}
         </Box>
@@ -442,7 +581,15 @@ export default function ImportTab(): ReactNode {
 
       {importResult && (
         <Box sx={{ mt: 2 }}>
-          <Alert severity={importResult.failed ? "error" : importResult.deckFailed ? "warning" : "success"}>
+          <Alert
+            severity={
+              importResult.failed
+                ? "error"
+                : importResult.deckFailed
+                  ? "warning"
+                  : "success"
+            }
+          >
             {importResult.failed
               ? `Import stopped after ${importResult.ownershipCount} card(s) due to an error. Please try again.`
               : importResult.deckFailed
@@ -453,7 +600,8 @@ export default function ImportTab(): ReactNode {
           </Alert>
           {importResult.skippedCards.length > 0 && (
             <Alert severity="warning" sx={{ mt: 1 }}>
-              {importResult.skippedCards.length} card(s) were skipped because they could not be found in Scryfall:
+              {importResult.skippedCards.length} card(s) were skipped because
+              they could not be found in Scryfall:
               <ul style={{ margin: "4px 0 0", paddingLeft: 20 }}>
                 {importResult.skippedCards.map((c) => (
                   <li key={`${c.setId}-${c.collectorNumber}-${c.isFoil}`}>

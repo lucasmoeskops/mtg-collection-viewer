@@ -1,7 +1,13 @@
 "use client";
 
 import { AccountContext } from "@/context/AccountContextProvider";
-import { addCardToDeck, getDeck, removeCardFromDeck, setBasicLandCount, updateDeck } from "@/db/decks";
+import {
+  addCardToDeck,
+  getDeck,
+  removeCardFromDeck,
+  setBasicLandCount,
+  updateDeck,
+} from "@/db/decks";
 import MagicCardLike from "@/interfaces/MagicCardLike";
 import { CardDeck } from "@/types/CardDeckData";
 import {
@@ -47,7 +53,12 @@ import { DeckPackage } from "@/types/CardDeckData";
 
 function isValidCommander(cardType: string): boolean {
   const t = cardType.toLowerCase();
-  return t.includes("legendary") && (t.includes("creature") || t.includes("spacecraft") || t.includes("vehicle"));
+  return (
+    t.includes("legendary") &&
+    (t.includes("creature") ||
+      t.includes("spacecraft") ||
+      t.includes("vehicle"))
+  );
 }
 
 function isBasicLand(cardType: string): boolean {
@@ -91,7 +102,10 @@ function getCardTypeBucket(cardType: string): string {
   return "Other";
 }
 
-function sortCards(a: { card: MagicCardLike }, b: { card: MagicCardLike }): number {
+function sortCards(
+  a: { card: MagicCardLike },
+  b: { card: MagicCardLike },
+): number {
   const color = colorPriority(a.card.colors) - colorPriority(b.card.colors);
   if (color !== 0) return color;
   const type = typePriority(a.card.card_type) - typePriority(b.card.card_type);
@@ -102,7 +116,11 @@ function sortCards(a: { card: MagicCardLike }, b: { card: MagicCardLike }): numb
 }
 
 export default function DeckDetail({ deckId }: { deckId: number }) {
-  const { accountId, cards: ownedCards, getSubpageUrl } = useContext(AccountContext);
+  const {
+    accountId,
+    cards: ownedCards,
+    getSubpageUrl,
+  } = useContext(AccountContext);
   const [deck, setDeck] = useState<CardDeck | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -110,20 +128,30 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [saving, setSaving] = useState(false);
-  const [previewCard, setPreviewCard] = useState<{ name: string; image_url: string } | null>(null);
-  const [basicLandCounts, setBasicLandCounts] = useState<Record<string, number>>({});
+  const [previewCard, setPreviewCard] = useState<{
+    name: string;
+    image_url: string;
+  } | null>(null);
+  const [basicLandCounts, setBasicLandCounts] = useState<
+    Record<string, number>
+  >({});
   const [handCards, setHandCards] = useState<HandCard[] | null>(null);
-
-  const loadDeck = useCallback(async () => {
-    const result = await getDeck(accountId, deckId);
-    setDeck(result);
-    setBasicLandCounts(result?.basicLands ?? {});
-    setLoading(false);
-  }, [accountId, deckId]);
+  const [reloadKey, setReloadKey] = useState(0);
+  const reloadDeck = useCallback(() => setReloadKey((k) => k + 1), []);
 
   useEffect(() => {
-    loadDeck();
-  }, [loadDeck]);
+    let cancelled = false;
+    getDeck(accountId, deckId).then((result) => {
+      if (!cancelled) {
+        setDeck(result);
+        setBasicLandCounts(result?.basicLands ?? {});
+        setLoading(false);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [accountId, deckId, reloadKey]);
 
   const commander = deck?.cards.find((c) => c.role === "commander");
 
@@ -150,11 +178,16 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
     return colors.map((c) => LAND_TYPES[c]).filter(Boolean);
   }, [commander]);
 
-  const basicLandsTotal = commanderLandTypes.reduce((sum, lt) => sum + (basicLandCounts[lt] ?? 0), 0);
+  const basicLandsTotal = commanderLandTypes.reduce(
+    (sum, lt) => sum + (basicLandCounts[lt] ?? 0),
+    0,
+  );
   const cardCount = mainboardCards.length + basicLandsTotal;
 
   const deckStats = useMemo(() => {
-    const typeCounts = Object.fromEntries(STAT_TYPE_KEYS.map((k) => [k, 0])) as Record<string, number>;
+    const typeCounts = Object.fromEntries(
+      STAT_TYPE_KEYS.map((k) => [k, 0]),
+    ) as Record<string, number>;
     typeCounts["Lands"] = basicLandsTotal;
     const manaCurve: Record<number, number> = {};
     const symbolCounts: Record<string, number> = {};
@@ -171,7 +204,8 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
       for (const sym of card.manacost?.match(/\{[^}]+\}/g) ?? []) {
         const inner = sym.slice(1, -1);
         if (/^\d+$/.test(inner)) {
-          symbolCounts["Generic"] = (symbolCounts["Generic"] ?? 0) + parseInt(inner, 10);
+          symbolCounts["Generic"] =
+            (symbolCounts["Generic"] ?? 0) + parseInt(inner, 10);
         } else {
           symbolCounts[inner] = (symbolCounts[inner] ?? 0) + 1;
         }
@@ -202,11 +236,14 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
     return map;
   }, [deck, commander]);
 
-  const deckCardIds = useMemo(() => new Set((deck?.cards ?? []).map((c) => c.card.id)), [deck]);
+  const deckCardIds = useMemo(
+    () => new Set((deck?.cards ?? []).map((c) => c.card.id)),
+    [deck],
+  );
 
   const cardPackageMap = useMemo(() => {
     const map = new Map<number, DeckPackage[]>();
-    for (const pkg of (deck?.packages ?? [])) {
+    for (const pkg of deck?.packages ?? []) {
       for (const cardId of pkg.cardIds) {
         if (!map.has(cardId)) map.set(cardId, []);
         map.get(cardId)!.push(pkg);
@@ -218,31 +255,40 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
   const filteredOwned = useMemo(() => {
     const q = search.toLowerCase();
     return ownedCards.filter(
-      (card) => !isBasicLand(card.card_type) && !deckCardIds.has(card.id) && card.name.toLowerCase().includes(q),
+      (card) =>
+        !isBasicLand(card.card_type) &&
+        !deckCardIds.has(card.id) &&
+        card.name.toLowerCase().includes(q),
     );
   }, [ownedCards, deckCardIds, search]);
 
-  const handleAddCard = async (cardId: number, role: "commander" | "mainboard") => {
+  const handleAddCard = async (
+    cardId: number,
+    role: "commander" | "mainboard",
+  ) => {
     await addCardToDeck(deckId, cardId, role);
-    await loadDeck();
+    reloadDeck();
   };
 
   const handleRemove = async (cardId: number) => {
     await removeCardFromDeck(deckId, cardId);
-    await loadDeck();
+    reloadDeck();
   };
 
   const handleMoveToSideboard = async (cardId: number) => {
     await addCardToDeck(deckId, cardId, "sideboard");
-    await loadDeck();
+    reloadDeck();
   };
 
   const handleMoveToMainboard = async (cardId: number) => {
     await addCardToDeck(deckId, cardId, "mainboard");
-    await loadDeck();
+    reloadDeck();
   };
 
-  const handleSetBasicLandCount = async (landType: string, quantity: number) => {
+  const handleSetBasicLandCount = async (
+    landType: string,
+    quantity: number,
+  ) => {
     const clamped = Math.max(0, quantity);
     setBasicLandCounts((prev) => ({ ...prev, [landType]: clamped }));
     await setBasicLandCount(deckId, landType, clamped);
@@ -250,10 +296,17 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
 
   const drawHand = () => {
     const pool: HandCard[] = [
-      ...mainboardCards.filter((c) => c.role !== "commander").map((c) => ({ type: "card" as const, card: c.card })),
+      ...mainboardCards
+        .filter((c) => c.role !== "commander")
+        .map((c) => ({ type: "card" as const, card: c.card })),
       ...Object.entries(basicLandCounts)
         .filter(([landType]) => commanderLandTypes.includes(landType))
-        .flatMap(([landType, count]) => Array.from({ length: count }, () => ({ type: "land" as const, landType }))),
+        .flatMap(([landType, count]) =>
+          Array.from({ length: count }, () => ({
+            type: "land" as const,
+            landType,
+          })),
+        ),
     ];
     for (let i = pool.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -272,10 +325,15 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
   const handleSaveMeta = async () => {
     if (!deck || !editName.trim()) return;
     setSaving(true);
-    await updateDeck(accountId, deckId, editName.trim(), editDescription.trim());
+    await updateDeck(
+      accountId,
+      deckId,
+      editName.trim(),
+      editDescription.trim(),
+    );
     setSaving(false);
     setEditingMeta(false);
-    await loadDeck();
+    reloadDeck();
   };
 
   if (loading) {
@@ -296,8 +354,17 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
         {editingMeta ? (
           <Box display="flex" flexDirection="column" gap={1} flex={1}>
             <Box display="flex" alignItems="center" gap={1}>
-              <TextField size="small" value={editName} onChange={(e) => setEditName(e.target.value)} label="Name" />
-              <IconButton onClick={handleSaveMeta} disabled={saving || !editName.trim()} color="primary">
+              <TextField
+                size="small"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                label="Name"
+              />
+              <IconButton
+                onClick={handleSaveMeta}
+                disabled={saving || !editName.trim()}
+                color="primary"
+              >
                 <Check />
               </IconButton>
               <IconButton onClick={() => setEditingMeta(false)}>
@@ -323,7 +390,11 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
               </IconButton>
             </Box>
             {deck.description && (
-              <Typography color="textSecondary" variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
+              <Typography
+                color="textSecondary"
+                variant="body2"
+                sx={{ whiteSpace: "pre-wrap" }}
+              >
                 {deck.description}
               </Typography>
             )}
@@ -333,9 +404,14 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
 
       {/* Validation chips */}
       <Box display="flex" gap={1} flexWrap="wrap" alignItems="center" mb={3}>
-        <Chip label={`${cardCount} / 100 cards`} color={cardCount === 100 ? "success" : "default"} />
         <Chip
-          label={commander ? `Commander: ${commander.card.name}` : "No commander set"}
+          label={`${cardCount} / 100 cards`}
+          color={cardCount === 100 ? "success" : "default"}
+        />
+        <Chip
+          label={
+            commander ? `Commander: ${commander.card.name}` : "No commander set"
+          }
           color={commander ? "success" : "warning"}
           icon={commander ? <Check /> : <Warning />}
         />
@@ -369,7 +445,12 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
               src={commander.card.image_url}
               alt={commander.card.name}
               onClick={() => setPreviewCard(commander.card)}
-              sx={{ height: 120, borderRadius: 1, boxShadow: 3, cursor: "pointer" }}
+              sx={{
+                height: 120,
+                borderRadius: 1,
+                boxShadow: 3,
+                cursor: "pointer",
+              }}
             />
           )}
           <Box>
@@ -381,7 +462,10 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
               {commander.card.card_type}
             </Typography>
             <Typography variant="body2">
-              Colors: {commander.card.colors.length > 0 ? commander.card.colors.join(", ") : "Colorless"}
+              Colors:{" "}
+              {commander.card.colors.length > 0
+                ? commander.card.colors.join(", ")
+                : "Colorless"}
             </Typography>
           </Box>
         </Box>
@@ -421,7 +505,11 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
                   <TableRow
                     key={card.id}
                     hover
-                    sx={violations.has(card.id) ? { bgcolor: "rgba(244,67,54,0.07)" } : undefined}
+                    sx={
+                      violations.has(card.id)
+                        ? { bgcolor: "rgba(244,67,54,0.07)" }
+                        : undefined
+                    }
                   >
                     <TableCell>
                       <Box display="flex" alignItems="center" gap={1}>
@@ -431,18 +519,34 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
                             src={card.image_url}
                             alt={card.name}
                             onClick={() => setPreviewCard(card)}
-                            sx={{ height: 36, borderRadius: 0.5, flexShrink: 0, cursor: "pointer" }}
+                            sx={{
+                              height: 36,
+                              borderRadius: 0.5,
+                              flexShrink: 0,
+                              cursor: "pointer",
+                            }}
                           />
                         )}
                         <Typography variant="body2">{card.name}</Typography>
                         {violations.has(card.id) && (
                           <Tooltip title={violations.get(card.id)}>
-                            <Warning fontSize="small" sx={{ color: "warning.main", flexShrink: 0 }} />
+                            <Warning
+                              fontSize="small"
+                              sx={{ color: "warning.main", flexShrink: 0 }}
+                            />
                           </Tooltip>
                         )}
                         {(cardPackageMap.get(card.id) ?? []).map((pkg) => (
                           <Tooltip key={pkg.id} title={pkg.name}>
-                            <Avatar sx={{ width: 22, height: 22, fontSize: 10, bgcolor: getPackageColor(pkg.id), flexShrink: 0 }}>
+                            <Avatar
+                              sx={{
+                                width: 22,
+                                height: 22,
+                                fontSize: 10,
+                                bgcolor: getPackageColor(pkg.id),
+                                flexShrink: 0,
+                              }}
+                            >
                               {getPackageInitials(pkg.name)}
                             </Avatar>
                           </Tooltip>
@@ -460,27 +564,47 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Chip label={role} size="small" color={role === "commander" ? "primary" : "default"} />
+                      <Chip
+                        label={role}
+                        size="small"
+                        color={role === "commander" ? "primary" : "default"}
+                      />
                     </TableCell>
                     <TableCell>
                       <Box display="flex">
-                        <CardPackageButton card={card} packages={deck.packages} onChanged={loadDeck} />
-                        {role !== "commander" && isValidCommander(card.card_type) && (
+                        <CardPackageButton
+                          card={card}
+                          packages={deck.packages}
+                          onChanged={reloadDeck}
+                        />
+                        {role !== "commander" &&
+                          isValidCommander(card.card_type) && (
                           <Tooltip title="Set as commander">
-                            <IconButton size="small" onClick={() => handleAddCard(card.id, "commander")}>
+                            <IconButton
+                              size="small"
+                              onClick={() =>
+                                handleAddCard(card.id, "commander")
+                              }
+                            >
                               <Star fontSize="small" />
                             </IconButton>
                           </Tooltip>
                         )}
                         {role !== "commander" && (
                           <Tooltip title="Move to sideboard">
-                            <IconButton size="small" onClick={() => handleMoveToSideboard(card.id)}>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleMoveToSideboard(card.id)}
+                            >
                               <ArrowDownward fontSize="small" />
                             </IconButton>
                           </Tooltip>
                         )}
                         <Tooltip title="Remove from deck">
-                          <IconButton size="small" onClick={() => handleRemove(card.id)}>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleRemove(card.id)}
+                          >
                             <Delete fontSize="small" />
                           </IconButton>
                         </Tooltip>
@@ -498,9 +622,22 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
               <Typography variant="subtitle1" gutterBottom>
                 Basic lands
               </Typography>
-              <Paper variant="outlined" sx={{ p: 2, display: "inline-flex", flexDirection: "column", gap: 1.5 }}>
+              <Paper
+                variant="outlined"
+                sx={{
+                  p: 2,
+                  display: "inline-flex",
+                  flexDirection: "column",
+                  gap: 1.5,
+                }}
+              >
                 {commanderLandTypes.map((landType) => (
-                  <Box key={landType} display="flex" alignItems="center" gap={2}>
+                  <Box
+                    key={landType}
+                    display="flex"
+                    alignItems="center"
+                    gap={2}
+                  >
                     <Typography variant="body2" sx={{ minWidth: 72 }}>
                       {landType}
                     </Typography>
@@ -509,10 +646,25 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
                       size="small"
                       value={basicLandCounts[landType] ?? 0}
                       onChange={(e) =>
-                        setBasicLandCounts((prev) => ({ ...prev, [landType]: Math.max(0, Number(e.target.value)) }))
+                        setBasicLandCounts((prev) => ({
+                          ...prev,
+                          [landType]: Math.max(0, Number(e.target.value)),
+                        }))
                       }
-                      onBlur={(e) => handleSetBasicLandCount(landType, Number(e.target.value))}
-                      slotProps={{ htmlInput: { min: 0, max: 99, step: 1, style: { width: 52, textAlign: "center" } } }}
+                      onBlur={(e) =>
+                        handleSetBasicLandCount(
+                          landType,
+                          Number(e.target.value),
+                        )
+                      }
+                      slotProps={{
+                        htmlInput: {
+                          min: 0,
+                          max: 99,
+                          step: 1,
+                          style: { width: 52, textAlign: "center" },
+                        },
+                      }}
                     />
                   </Box>
                 ))}
@@ -523,7 +675,8 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
           {/* Sideboard */}
           <Box mt={3}>
             <Typography variant="subtitle1" gutterBottom>
-              Sideboard{sideboardCards.length > 0 ? ` (${sideboardCards.length})` : ""}
+              Sideboard
+              {sideboardCards.length > 0 ? ` (${sideboardCards.length})` : ""}
             </Typography>
             <Paper variant="outlined">
               <Table size="small">
@@ -540,7 +693,8 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
                     <TableRow>
                       <TableCell colSpan={4} align="center">
                         <Typography color="textSecondary" variant="body2">
-                          No sideboard cards — move cards here from the deck above.
+                          No sideboard cards — move cards here from the deck
+                          above.
                         </Typography>
                       </TableCell>
                     </TableRow>
@@ -555,10 +709,30 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
                               src={card.image_url}
                               alt={card.name}
                               onClick={() => setPreviewCard(card)}
-                              sx={{ height: 36, borderRadius: 0.5, flexShrink: 0, cursor: "pointer" }}
+                              sx={{
+                                height: 36,
+                                borderRadius: 0.5,
+                                flexShrink: 0,
+                                cursor: "pointer",
+                              }}
                             />
                           )}
                           <Typography variant="body2">{card.name}</Typography>
+                          {(cardPackageMap.get(card.id) ?? []).map((pkg) => (
+                            <Tooltip key={pkg.id} title={pkg.name}>
+                              <Avatar
+                                sx={{
+                                  width: 22,
+                                  height: 22,
+                                  fontSize: 10,
+                                  bgcolor: getPackageColor(pkg.id),
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {getPackageInitials(pkg.name)}
+                              </Avatar>
+                            </Tooltip>
+                          ))}
                         </Box>
                       </TableCell>
                       <TableCell>
@@ -573,13 +747,24 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
                       </TableCell>
                       <TableCell>
                         <Box display="flex">
+                          <CardPackageButton
+                            card={card}
+                            packages={deck.packages}
+                            onChanged={reloadDeck}
+                          />
                           <Tooltip title="Move to mainboard">
-                            <IconButton size="small" onClick={() => handleMoveToMainboard(card.id)}>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleMoveToMainboard(card.id)}
+                            >
                               <ArrowUpward fontSize="small" />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="Remove from deck">
-                            <IconButton size="small" onClick={() => handleRemove(card.id)}>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleRemove(card.id)}
+                            >
                               <Delete fontSize="small" />
                             </IconButton>
                           </Tooltip>
@@ -611,8 +796,15 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
               {filteredOwned.length === 0 && (
                 <ListItem>
                   <ListItemText
-                    primary={search ? "No matching cards" : "All owned cards are already in this deck"}
-                    primaryTypographyProps={{ color: "textSecondary", variant: "body2" }}
+                    primary={
+                      search
+                        ? "No matching cards"
+                        : "All owned cards are already in this deck"
+                    }
+                    primaryTypographyProps={{
+                      color: "textSecondary",
+                      variant: "body2",
+                    }}
                   />
                 </ListItem>
               )}
@@ -624,7 +816,10 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
                     isValidCommander(card.card_type) ? (
                       <Tooltip title="Add as commander">
                         <span>
-                          <IconButton size="small" onClick={() => handleAddCard(card.id, "commander")}>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleAddCard(card.id, "commander")}
+                          >
                             <Star fontSize="small" />
                           </IconButton>
                         </span>
@@ -632,7 +827,9 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
                     ) : undefined
                   }
                 >
-                  <ListItemButton onClick={() => handleAddCard(card.id, "mainboard")}>
+                  <ListItemButton
+                    onClick={() => handleAddCard(card.id, "mainboard")}
+                  >
                     <ListItemText
                       primary={card.name}
                       secondary={card.card_type}
@@ -646,7 +843,10 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
                 <ListItem>
                   <ListItemText
                     primary={`${filteredOwned.length - 150} more — refine your search`}
-                    primaryTypographyProps={{ color: "textSecondary", variant: "caption" }}
+                    primaryTypographyProps={{
+                      color: "textSecondary",
+                      variant: "caption",
+                    }}
                   />
                 </ListItem>
               )}
@@ -658,8 +858,8 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
       <DeckPackages
         deckId={deckId}
         packages={deck.packages}
-        deckCards={deck.cards.filter((c) => !isBasicLand(c.card.card_type))}
-        onChanged={loadDeck}
+        deckCards={mainboardCards}
+        onChanged={reloadDeck}
       />
 
       <HandDialog
@@ -669,7 +869,11 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
         onCardClick={setPreviewCard}
       />
 
-      <Dialog open={!!previewCard} onClose={() => setPreviewCard(null)} maxWidth="xs">
+      <Dialog
+        open={!!previewCard}
+        onClose={() => setPreviewCard(null)}
+        maxWidth="xs"
+      >
         {previewCard && (
           <Box
             component="img"
