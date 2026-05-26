@@ -3,6 +3,7 @@
 import { AccountContext } from "@/context/AccountContextProvider";
 import {
   addCardToDeck,
+  emptyGarbageBin,
   getDeck,
   removeCardFromDeck,
   setBasicLandCount,
@@ -19,6 +20,7 @@ import {
   Check,
   Close,
   Delete,
+  DeleteSweep,
   Edit,
   Star,
   Warning,
@@ -130,6 +132,7 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
     Record<string, number>
   >({});
   const [handCards, setHandCards] = useState<HandCard[] | null>(null);
+  const [confirmEmptyBin, setConfirmEmptyBin] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const reloadDeck = useCallback(() => setReloadKey((k) => k + 1), []);
 
@@ -161,6 +164,14 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
     () =>
       (deck?.cards ?? [])
         .filter((c) => !isBasicLand(c.card.card_type) && c.role === "sideboard")
+        .sort(sortCards),
+    [deck],
+  );
+
+  const garbageBinCards = useMemo(
+    () =>
+      (deck?.cards ?? [])
+        .filter((c) => c.role === "garbage_bin")
         .sort(sortCards),
     [deck],
   );
@@ -274,6 +285,21 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
 
   const handleMoveToMainboard = async (cardId: number) => {
     await addCardToDeck(deckId, cardId, "mainboard");
+    reloadDeck();
+  };
+
+  const handleMoveToGarbageBin = async (cardId: number) => {
+    await addCardToDeck(deckId, cardId, "garbage_bin");
+    reloadDeck();
+  };
+
+  const handleEmptyBin = async () => {
+    if (!confirmEmptyBin) {
+      setConfirmEmptyBin(true);
+      return;
+    }
+    setConfirmEmptyBin(false);
+    await emptyGarbageBin(deckId);
     reloadDeck();
   };
 
@@ -595,10 +621,10 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
                             </IconButton>
                           </Tooltip>
                         )}
-                        <Tooltip title="Remove from deck">
+                        <Tooltip title="Move to garbage bin">
                           <IconButton
                             size="small"
-                            onClick={() => handleRemove(card.id)}
+                            onClick={() => handleMoveToGarbageBin(card.id)}
                           >
                             <Delete fontSize="small" />
                           </IconButton>
@@ -764,6 +790,99 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
                             </IconButton>
                           </Tooltip>
                         </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Paper>
+          </Box>
+
+          {/* Garbage bin */}
+          <Box mt={3}>
+            <Box display="flex" alignItems="center" gap={1} mb={1}>
+              <Typography variant="subtitle1">
+                Garbage bin{garbageBinCards.length > 0 ? ` (${garbageBinCards.length})` : ""}
+              </Typography>
+              {garbageBinCards.length > 0 && (
+                <Tooltip
+                  title={confirmEmptyBin ? "Click again to confirm" : "Empty garbage bin"}
+                >
+                  <IconButton
+                    size="small"
+                    color={confirmEmptyBin ? "error" : "default"}
+                    onClick={handleEmptyBin}
+                    onBlur={() => setConfirmEmptyBin(false)}
+                  >
+                    <DeleteSweep fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Box>
+            <Paper variant="outlined">
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Card</TableCell>
+                    <TableCell>Type</TableCell>
+                    <TableCell>Mana</TableCell>
+                    <TableCell />
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {garbageBinCards.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} align="center">
+                        <Typography color="textSecondary" variant="body2">
+                          No cards in the garbage bin.
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {garbageBinCards.map(({ card }) => (
+                    <TableRow key={card.id} hover>
+                      <TableCell>
+                        <Box display="flex" alignItems="center" gap={1}>
+                          {card.image_url && (
+                            <Box
+                              component="img"
+                              src={card.image_url}
+                              alt={card.name}
+                              onClick={() => setPreviewCard(card)}
+                              sx={{ height: 36, borderRadius: 0.5, flexShrink: 0, cursor: "pointer" }}
+                            />
+                          )}
+                          <Typography variant="body2">{card.name}</Typography>
+                          {(cardPackageMap.get(card.id) ?? []).map((pkg) => (
+                            <Tooltip key={pkg.id} title={pkg.name}>
+                              <Avatar
+                                sx={{ width: 22, height: 22, fontSize: 10, bgcolor: getPackageColor(pkg.id), flexShrink: 0 }}
+                              >
+                                {getPackageInitials(pkg.name)}
+                              </Avatar>
+                            </Tooltip>
+                          ))}
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" color="textSecondary">
+                          {card.card_type}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" color="textSecondary">
+                          {card.manacost}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Tooltip title="Restore to mainboard">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleMoveToMainboard(card.id)}
+                          >
+                            <ArrowUpward fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
                       </TableCell>
                     </TableRow>
                   ))}

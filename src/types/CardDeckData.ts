@@ -11,7 +11,7 @@ export type CardDeck = {
 
 export type CardDeckCard = {
   card: MagicCardLike;
-  role: "commander" | "mainboard" | "sideboard";
+  role: "commander" | "mainboard" | "sideboard" | "garbage_bin";
 };
 
 export type DeckPackage = {

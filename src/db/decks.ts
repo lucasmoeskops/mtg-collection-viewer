@@ -197,7 +197,7 @@ export async function updateDeck(
 export async function addCardToDeck(
   deckId: number,
   cardId: number,
-  role: "commander" | "mainboard" | "sideboard",
+  role: "commander" | "mainboard" | "sideboard" | "garbage_bin",
 ): Promise<void> {
   const sql = getClient();
   if (!sql) throw new Error("Database client not initialized");
@@ -254,6 +254,13 @@ export async function removeCardFromDeck(
   if (!sql) throw new Error("Database client not initialized");
 
   await sql`DELETE FROM mtg_deck_card WHERE deck = ${deckId} AND card = ${cardId}`;
+}
+
+export async function emptyGarbageBin(deckId: number): Promise<void> {
+  const sql = getClient();
+  if (!sql) throw new Error("Database client not initialized");
+
+  await sql`DELETE FROM mtg_deck_card WHERE deck = ${deckId} AND role = 'garbage_bin'`;
 }
 
 export async function addImportedCardsToDeck(
