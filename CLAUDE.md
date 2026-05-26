@@ -49,7 +49,7 @@ Card filter state (`CardSelectionContext`) is persisted in URL query parameters 
 | `mtg_data`              | Card catalogue (name, series, cardnumber, colors, rarity, prices…)                            |
 | `mtg_account_card`      | Card ownership (account_id, card_id, amount, foil variants)                                   |
 | `mtg_deck`              | Decks (id, account_id, name, description)                                                     |
-| `mtg_deck_card`         | Deck contents (deck_id, card_id, role) where role is `commander`, `mainboard`, or `sideboard` |
+| `mtg_deck_card`         | Deck contents (deck_id, card_id, role) where role is `commander`, `mainboard`, `sideboard`, or `garbage_bin` |
 | `mtg_deck_basic_land`   | Basic land quantities per deck (deck, land_type, quantity) — PRIMARY KEY (deck, land_type)    |
 | `mtg_deck_package`      | Named strategy packages per deck (id, deck, name, description, target)                        |
 | `mtg_deck_package_card` | Cards assigned to packages (package, card) — PRIMARY KEY (package, card)                      |
@@ -59,7 +59,7 @@ Card filter state (`CardSelectionContext`) is persisted in URL query parameters 
 
 URL structure: `/[username]/decks` (list) and `/[username]/decks/[deckId]` (editor). The Decks tab only appears when authenticated.
 
-Server actions live in `src/db/decks.ts`: `getDeckList`, `getDeck`, `createDeck`, `deleteDeck`, `updateDeck`, `addCardToDeck`, `removeCardFromDeck`, `setBasicLandCount`. Package actions live in `src/db/packages.ts`: `createPackage`, `updatePackage`, `deletePackage`, `addCardToPackage`, `removeCardFromPackage`.
+Server actions live in `src/db/decks.ts`: `getDeckList`, `getDeck`, `createDeck`, `deleteDeck`, `updateDeck`, `addCardToDeck`, `removeCardFromDeck`, `emptyGarbageBin`, `setBasicLandCount`. Package actions live in `src/db/packages.ts`: `createPackage`, `updatePackage`, `deletePackage`, `addCardToPackage`, `removeCardFromPackage`.
 
 Key design decisions in `DeckDetail`:
 

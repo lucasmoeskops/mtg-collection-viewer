@@ -38,6 +38,10 @@ export default async function Colofon() {
         <ListItem>
           Deck detail shows total price (estimate) in the deck. Basic lands are not counted.
         </ListItem>
+        <ListItem>
+          Added a garbage bin panel where cards are moved to when deleting them from the deck.
+          This allows accidental deletions to be restoreed.
+        </ListItem>
       </List>
       <Typography variant="body2" gutterBottom>
         <strong>2026.5.21</strong>:
