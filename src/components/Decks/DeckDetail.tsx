@@ -5,7 +5,6 @@ import {
   addCardToDeck,
   emptyGarbageBin,
   getDeck,
-  removeCardFromDeck,
   setBasicLandCount,
   updateDeck,
 } from "@/db/decks";
@@ -270,11 +269,6 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
     role: "commander" | "mainboard",
   ) => {
     await addCardToDeck(deckId, cardId, role);
-    reloadDeck();
-  };
-
-  const handleRemove = async (cardId: number) => {
-    await removeCardFromDeck(deckId, cardId);
     reloadDeck();
   };
 
@@ -781,10 +775,10 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
                               <ArrowUpward fontSize="small" />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title="Remove from deck">
+                          <Tooltip title="Move to garbage bin">
                             <IconButton
                               size="small"
-                              onClick={() => handleRemove(card.id)}
+                              onClick={() => handleMoveToGarbageBin(card.id)}
                             >
                               <Delete fontSize="small" />
                             </IconButton>
