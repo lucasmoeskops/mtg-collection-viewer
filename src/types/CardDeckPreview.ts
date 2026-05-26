@@ -4,4 +4,5 @@ export type CardDeckPreview = {
   description: string;
   commander_name?: string;
   commander_image_url?: string;
+  card_count: number;
 };

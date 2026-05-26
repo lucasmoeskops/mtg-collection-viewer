@@ -21,7 +21,7 @@ npm run fix        # Prettier format + ESLint auto-fix
 - `src/context/` — Client-side React Context providers for global UI state
 - `src/components/` — React components; most are `"use client"`
 - `src/types/`, `src/interfaces/`, `src/enums/` — Shared TypeScript definitions
-- `src/procedures/` — Card filtering and selection logic
+- `src/procedures/` — Shared pure logic (card filtering, deck card count)
 - `src/scryfall/` — Scryfall API integration for importing card data
 
 ### Authentication
@@ -64,6 +64,7 @@ Server actions live in `src/db/decks.ts`: `getDeckList`, `getDeck`, `createDeck`
 Key design decisions in `DeckDetail`:
 
 - Basic lands are managed separately via `mtg_deck_basic_land` (not as card rows) because they need quantity tracking and aren't singleton. Only land types within the commander's color identity count toward the 100-card total and appear in the UI — stored counts for other types are preserved but ignored.
+- The 100-card count is computed by `computeDeckCardCount` in `src/procedures/deck-card-count.ts`, shared between the deck list (server-side, in `getDeckList`) and the detail view (client-side). Only `commander` and `mainboard` roles count — this is an explicit allowlist so future roles (e.g. a "garbage bin" panel) don't accidentally contribute to the total.
 - Cards are validated client-side: color identity violations (mainboard cards with colors outside the commander's identity) and tokens are flagged with a red row tint and warning icon.
 - Valid commanders must be Legendary and either a Creature, Spacecraft, or Vehicle (checked via `card_type` string).
 - Statistics (type distribution, mana curve, mana symbol counts) and sideboard are computed entirely client-side from the loaded deck.

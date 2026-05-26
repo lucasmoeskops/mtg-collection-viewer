@@ -9,6 +9,7 @@ import {
   updateDeck,
 } from "@/db/decks";
 import MagicCardLike from "@/interfaces/MagicCardLike";
+import { LAND_TYPES, computeDeckCardCount } from "@/procedures/deck-card-count";
 import { CardDeck } from "@/types/CardDeckData";
 import {
   ArrowBack,
@@ -65,13 +66,6 @@ function isBasicLand(cardType: string): boolean {
   return cardType.toLowerCase().includes("basic land");
 }
 
-const LAND_TYPES: Record<string, string> = {
-  W: "Plains",
-  U: "Island",
-  B: "Swamp",
-  R: "Mountain",
-  G: "Forest",
-};
 
 const COLOR_ORDER: Record<string, number> = { W: 0, U: 1, B: 2, R: 3, G: 4 };
 
@@ -158,7 +152,7 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
   const mainboardCards = useMemo(
     () =>
       (deck?.cards ?? [])
-        .filter((c) => !isBasicLand(c.card.card_type) && c.role !== "sideboard")
+        .filter((c) => !isBasicLand(c.card.card_type) && (c.role === "mainboard" || c.role === "commander"))
         .sort(sortCards),
     [deck],
   );
@@ -178,11 +172,9 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
     return colors.map((c) => LAND_TYPES[c]).filter(Boolean);
   }, [commander]);
 
-  const basicLandsTotal = commanderLandTypes.reduce(
-    (sum, lt) => sum + (basicLandCounts[lt] ?? 0),
-    0,
-  );
-  const cardCount = mainboardCards.length + basicLandsTotal;
+  const basicLandsTotal = commanderLandTypes.reduce((sum, lt) => sum + (basicLandCounts[lt] ?? 0), 0);
+  const cardCount = computeDeckCardCount(mainboardCards.length, basicLandCounts, commander?.card.colors ?? []);
+  const deckPriceCents = mainboardCards.reduce((sum, { card }) => sum + card.price_estimate, 0);
 
   const deckStats = useMemo(() => {
     const typeCounts = Object.fromEntries(
@@ -407,6 +399,9 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
         <Chip
           label={`${cardCount} / 100 cards`}
           color={cardCount === 100 ? "success" : "default"}
+        />
+        <Chip
+          label={`€${Math.floor(deckPriceCents / 100)}.${String(deckPriceCents % 100).padStart(2, "0")}`}
         />
         <Chip
           label={

@@ -20,22 +20,25 @@ export default async function Colofon() {
         as backend service.
       </Typography>
       <Typography variant="body1" gutterBottom>
-        Version 2026.5.22
-      </Typography>
-      <List>
-        <ListItem>
-          Side board doesn&apos;t count towards packages anymore.
-        </ListItem>
-        <ListItem>
-          Fixed an issue where the user had to log in twice to log in successfully.
-        </ListItem>
-      </List>
-      <Typography variant="body1" gutterBottom>
-        Version 2026.5.21
+        Version 2026.5.26
       </Typography>
       <Typography variant="h5" gutterBottom sx={{ marginTop: "20px" }}>
         Change Log
       </Typography>
+      <Typography variant="body2" gutterBottom>
+        Version 2026.5.26
+      </Typography>
+      <Typography variant="body2" gutterBottom>
+        Version 2026.5.22
+      </Typography>
+      <List>
+        <ListItem>
+          Deck overview shows total cards in the deck.
+        </ListItem>
+        <ListItem>
+          Deck detail shows total price (estimate) in the deck. Basic lands are not counted.
+        </ListItem>
+      </List>
       <Typography variant="body2" gutterBottom>
         <strong>2026.5.21</strong>:
       </Typography>
