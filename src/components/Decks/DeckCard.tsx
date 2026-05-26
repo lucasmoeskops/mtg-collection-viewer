@@ -8,6 +8,7 @@ import {
   CardActionArea,
   CardContent,
   CardMedia,
+  Chip,
   IconButton,
   Tooltip,
   Typography,
@@ -69,6 +70,12 @@ export default function DeckCard({
               {deck.description}
             </Typography>
           )}
+          <Chip
+            label={`${deck.card_count} / 100 cards`}
+            color={deck.card_count === 100 ? "success" : "default"}
+            size="small"
+            sx={{ mt: 1 }}
+          />
         </CardContent>
       </CardActionArea>
       <Box sx={{ position: "absolute", top: 4, right: 4 }}>

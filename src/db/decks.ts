@@ -1,6 +1,7 @@
 "use server";
 
 import { fromDbCard } from "@/interfaces/MagicCardLike";
+import { computeDeckCardCount } from "@/procedures/deck-card-count";
 import { CardDeck } from "@/types/CardDeckData";
 import { CardDeckPreview } from "@/types/CardDeckPreview";
 import getAuthenticatedAccountData from "./authenticate";
@@ -18,10 +19,24 @@ export async function getDeckList(
     SELECT DISTINCT ON (d.id)
       d.id, d.name, d.description,
       c.name AS commander_name,
-      c.image_url AS commander_image_url
+      c.image_url AS commander_image_url,
+      c.colors AS commander_colors,
+      COALESCE(card_counts.count, 0) AS mainboard_and_commander_count,
+      COALESCE(land_totals.basic_lands, '{}'::jsonb) AS basic_lands
     FROM mtg_deck d
     LEFT JOIN mtg_deck_card dc ON d.id = dc.deck AND dc.role = 'commander'
     LEFT JOIN mtg_data c ON dc.card = c.id
+    LEFT JOIN (
+      SELECT deck, COUNT(*) AS count
+      FROM mtg_deck_card
+      WHERE role IN ('commander', 'mainboard')
+      GROUP BY deck
+    ) card_counts ON d.id = card_counts.deck
+    LEFT JOIN (
+      SELECT deck, jsonb_object_agg(land_type, quantity) AS basic_lands
+      FROM mtg_deck_basic_land
+      GROUP BY deck
+    ) land_totals ON d.id = land_totals.deck
     WHERE d.account = ${account_id}
     ORDER BY d.id
   `;
@@ -32,6 +47,11 @@ export async function getDeckList(
     description: row.description,
     commander_name: row.commander_name ?? undefined,
     commander_image_url: row.commander_image_url ?? undefined,
+    card_count: computeDeckCardCount(
+      Number(row.mainboard_and_commander_count),
+      (row.basic_lands ?? {}) as Record<string, number>,
+      (row.commander_colors ?? []) as string[],
+    ),
   }));
 }
 
