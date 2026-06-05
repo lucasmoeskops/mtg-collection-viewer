@@ -19,8 +19,8 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "MTG Collection Viewer",
-  description: "By Lucas Moeskops",
+  title: "Grimorium",
+  description: "The ultimate collection manager",
 };
 
 export default async function RootLayout({
