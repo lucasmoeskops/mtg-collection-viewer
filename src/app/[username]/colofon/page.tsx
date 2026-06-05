@@ -28,9 +28,6 @@ export default async function Colofon() {
       <Typography variant="body2" gutterBottom>
         Version 2026.5.26
       </Typography>
-      <Typography variant="body2" gutterBottom>
-        Version 2026.5.22
-      </Typography>
       <List>
         <ListItem>
           Deck overview shows total cards in the deck.
@@ -41,6 +38,17 @@ export default async function Colofon() {
         <ListItem>
           Added a garbage bin panel where cards are moved to when deleting them from the deck.
           This allows accidental deletions to be restoreed.
+        </ListItem>
+      </List>
+      <Typography variant="body2" gutterBottom>
+        Version 2026.5.22
+      </Typography>
+      <List>
+        <ListItem>
+          Side board doesn&apos;t count towards packages anymore.
+        </ListItem>
+        <ListItem>
+          Fixed an issue where the user had to log in twice to log in successfully.
         </ListItem>
       </List>
       <Typography variant="body2" gutterBottom>
