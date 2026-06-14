@@ -1,6 +1,6 @@
 {
-  "name": "mtg-card-viewer",
-  "version": "0.1.0",
+  "name": "grimorium",
+  "version": "26.6.14",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",

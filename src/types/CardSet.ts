@@ -1,5 +1,5 @@
 import MagicCardLike from "@/interfaces/MagicCardLike";
-import { rateLimitedFetch, setsEndpoint } from "@/scryfall/utils";
+import { getUserAgent, rateLimitedFetch, setsEndpoint } from "@/scryfall/utils";
 
 export interface CardSet {
   code: string;
@@ -25,7 +25,9 @@ export async function fetchSets(): Promise<CardSet[]> {
   if (!cache.sets.length) {
     let response;
     try {
-      response = await rateLimitedFetch(setsEndpoint);
+      response = await rateLimitedFetch(setsEndpoint, {
+        headers: { "User-Agent": getUserAgent() },
+      });
     } catch (e) {
       console.log("Error:", e);
       return [];

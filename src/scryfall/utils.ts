@@ -1,3 +1,4 @@
+import { version } from './../../package.json'
 export const timeBetweenConsecutiveCalls = 500; // milliseconds (Scryfall allows max 2 card fetches/second)
 export const setsEndpoint = "https://api.scryfall.com/sets";
 export const cardsSearchEndpoint = "https://api.scryfall.com/cards/search";
@@ -40,6 +41,10 @@ export type ScryFallCard = {
   };
 };
 
+export function getUserAgent(): string {
+  return `grimorium/${version} (${navigator.userAgent})`;
+}
+
 export async function rateLimitedFetch(
   input: RequestInfo,
   init?: RequestInit,
@@ -80,7 +85,9 @@ export async function fetchDataPaginated<T>(
       url.searchParams.append(key, value),
     );
 
-    const response = await rateLimitedFetch(url.toString());
+    const response = await rateLimitedFetch(url.toString(), {
+      headers: { "User-Agent": getUserAgent() },
+    });
 
     if (response.status === 404) {
       return results;
@@ -132,7 +139,7 @@ export async function fetchCardsCollection(
     while (true) {
       const response = await rateLimitedFetch(cardsCollectionEndpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "User-Agent": getUserAgent() },
         body: JSON.stringify({ identifiers: batch }),
       });
 
@@ -145,8 +152,9 @@ export async function fetchCardsCollection(
       }
 
       if (!response.ok) {
+        const json = await response.json();
         throw new Error(
-          `Error fetching card collection: ${response.statusText}`,
+          `Error fetching card collection: ${response.statusText} (${json.details || "No details provided"})`,
         );
       }
 
