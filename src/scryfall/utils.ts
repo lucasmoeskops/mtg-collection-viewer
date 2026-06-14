@@ -42,7 +42,7 @@ export type ScryFallCard = {
 };
 
 export function getUserAgent(): string {
-  return `grimorium/${version} (${navigator.userAgent})`;
+  return `grimorium/${version} ()`;
 }
 
 export async function rateLimitedFetch(
