@@ -1,7 +1,7 @@
 "use client";
 
 import { CardDeckPreview } from "@/types/CardDeckPreview";
-import { Delete } from "@mui/icons-material";
+import { ContentCopy, Delete } from "@mui/icons-material";
 import {
   Box,
   Card,
@@ -19,12 +19,14 @@ import { useState } from "react";
 interface DeckCardProps {
   deck: CardDeckPreview;
   onDelete: (deckId: number) => void;
+  onCopy: (deckId: number) => void;
   getSubpageUrl: (subpage: string) => string;
 }
 
 export default function DeckCard({
   deck,
   onDelete,
+  onCopy,
   getSubpageUrl,
 }: DeckCardProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -78,12 +80,16 @@ export default function DeckCard({
           />
         </CardContent>
       </CardActionArea>
-      <Box sx={{ position: "absolute", top: 4, right: 4 }}>
-        <Tooltip
-          title={
-            confirmDelete ? "Click again to confirm deletion" : "Delete deck"
-          }
-        >
+      <Box sx={{ position: "absolute", top: 4, right: 4, display: "flex", bgcolor: "rgba(255,255,255,0.82)", borderRadius: 1 }}>
+        <Tooltip title="Copy deck">
+          <IconButton
+            size="small"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCopy(deck.id); }}
+          >
+            <ContentCopy fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title={confirmDelete ? "Click again to confirm deletion" : "Delete deck"}>
           <IconButton
             size="small"
             color={confirmDelete ? "error" : "default"}

@@ -1,7 +1,7 @@
 "use client";
 
 import { AccountContext } from "@/context/AccountContextProvider";
-import { createDeck, deleteDeck, getDeckList } from "@/db/decks";
+import { copyDeck, createDeck, deleteDeck, getDeckList } from "@/db/decks";
 import { CardDeckPreview } from "@/types/CardDeckPreview";
 import { Add } from "@mui/icons-material";
 import {
@@ -15,12 +15,14 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { useRouter } from "next/navigation";
 import { useCallback, useContext, useEffect, useState } from "react";
 import DeckCard from "./DeckCard";
 
 export default function DeckList() {
   const { accountId, isAuthenticated, getSubpageUrl } =
     useContext(AccountContext);
+  const router = useRouter();
   const [decks, setDecks] = useState<CardDeckPreview[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newName, setNewName] = useState("");
@@ -53,6 +55,11 @@ export default function DeckList() {
   const handleDelete = async (deckId: number) => {
     await deleteDeck(accountId, deckId);
     await loadDecks();
+  };
+
+  const handleCopy = async (deckId: number) => {
+    const newDeckId = await copyDeck(accountId, deckId);
+    router.push(getSubpageUrl(`decks/${newDeckId}`));
   };
 
   if (!isAuthenticated) return null;
@@ -118,6 +125,7 @@ export default function DeckList() {
               <DeckCard
                 deck={deck}
                 onDelete={handleDelete}
+                onCopy={handleCopy}
                 getSubpageUrl={getSubpageUrl}
               />
             </Box>

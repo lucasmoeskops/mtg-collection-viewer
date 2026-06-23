@@ -19,6 +19,8 @@ import {
 } from "@mui/material";
 import { MouseEvent, useContext, useState } from "react";
 
+let lastUsedDeckId: number | "" = "";
+
 export function AddToDeckButton({ card }: { card: MagicCardLike }) {
   const {
     accountId,
@@ -38,8 +40,10 @@ export function AddToDeckButton({ card }: { card: MagicCardLike }) {
   const handleOpen = async (event: MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
     setAdded(false);
-    setSelectedDeckId("");
-    setDecks(await getDeckList(accountId));
+    const fetchedDecks = await getDeckList(accountId);
+    setDecks(fetchedDecks);
+    const stillExists = lastUsedDeckId !== "" && fetchedDecks.some((d) => d.id === lastUsedDeckId);
+    setSelectedDeckId(stillExists ? lastUsedDeckId : "");
   };
 
   const handleAdd = async () => {
@@ -87,7 +91,9 @@ export function AddToDeckButton({ card }: { card: MagicCardLike }) {
               value={selectedDeckId}
               label="Select deck"
               onChange={(e) => {
-                setSelectedDeckId(e.target.value as number);
+                const id = e.target.value as number;
+                setSelectedDeckId(id);
+                lastUsedDeckId = id;
                 setAdded(false);
               }}
             >
