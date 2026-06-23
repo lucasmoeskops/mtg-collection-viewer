@@ -46,6 +46,7 @@ import {
 } from "@mui/material";
 import Link from "next/link";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import DeckHistory from "./DeckHistory";
 import DeckStats, { STAT_TYPE_KEYS } from "./DeckStats";
 import DeckPackages from "./DeckPackages";
 import HandDialog, { HandCard } from "./HandDialog";
@@ -969,6 +970,8 @@ export default function DeckDetail({ deckId }: { deckId: number }) {
         deckCards={mainboardCards}
         onChanged={reloadDeck}
       />
+
+      <DeckHistory deckId={deckId} refreshKey={reloadKey} />
 
       <HandDialog
         handCards={handCards}

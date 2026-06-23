@@ -27,6 +27,20 @@ export default async function Colofon() {
         Change Log
       </Typography>
       <Typography variant="body2" gutterBottom>
+        Version 2026.6.23
+      </Typography>
+      <List>
+        <ListItem>
+          Added history panel to deck detail page showing modifications to the deck and their timestamps. 
+        </ListItem>
+        <ListItem>
+          Added copy functionality for decks. 
+        </ListItem>
+        <ListItem>
+          Convenience feature: when adding another card to your deck from the Browse tab after a first, it will prefill the last used deck in the dropdown. 
+        </ListItem>
+      </List>
+      <Typography variant="body2" gutterBottom>
         Version 2026.6.14
       </Typography>
       <List>

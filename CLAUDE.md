@@ -53,13 +53,14 @@ Card filter state (`CardSelectionContext`) is persisted in URL query parameters 
 | `mtg_deck_basic_land`   | Basic land quantities per deck (deck, land_type, quantity) — PRIMARY KEY (deck, land_type)    |
 | `mtg_deck_package`      | Named strategy packages per deck (id, deck, name, description, target)                        |
 | `mtg_deck_package_card` | Cards assigned to packages (package, card) — PRIMARY KEY (package, card)                      |
+| `mtg_deck_history`      | Deck action log (deck_id, card_id, card_name, from_role, to_role, created_at)                 |
 | `mtg_price`             | Price history (card_id, timestamp, price_cents)                                               |
 
 ### Commander deck management
 
 URL structure: `/[username]/decks` (list) and `/[username]/decks/[deckId]` (editor). The Decks tab only appears when authenticated.
 
-Server actions live in `src/db/decks.ts`: `getDeckList`, `getDeck`, `createDeck`, `deleteDeck`, `updateDeck`, `addCardToDeck`, `removeCardFromDeck`, `emptyGarbageBin`, `setBasicLandCount`. Package actions live in `src/db/packages.ts`: `createPackage`, `updatePackage`, `deletePackage`, `addCardToPackage`, `removeCardFromPackage`.
+Server actions live in `src/db/decks.ts`: `getDeckList`, `getDeck`, `createDeck`, `deleteDeck`, `updateDeck`, `addCardToDeck`, `removeCardFromDeck`, `emptyGarbageBin`, `setBasicLandCount`, `getDeckHistory`, `copyDeck`. Package actions live in `src/db/packages.ts`: `createPackage`, `updatePackage`, `deletePackage`, `addCardToPackage`, `removeCardFromPackage`.
 
 Key design decisions in `DeckDetail`:
 
@@ -69,6 +70,12 @@ Key design decisions in `DeckDetail`:
 - Valid commanders must be Legendary and either a Creature, Spacecraft, or Vehicle (checked via `card_type` string).
 - Statistics (type distribution, mana curve, mana symbol counts) and sideboard are computed entirely client-side from the loaded deck.
 - Packages are named strategy containers (e.g. "Sacrifice Package") that cross-reference mainboard cards. A package has an optional target count; the UI shows current vs. target with a colored badge. Each deck card row shows small colored avatar chips for its packages. Package color and initials are derived from the package id via `src/components/Decks/packageColors.ts`.
+- Every mutating deck action is logged to `mtg_deck_history` via the unexported `logDeckAction` helper in `decks.ts`.
+- `copyDeck` duplicates a deck in a single transaction. It contains an explicit checklist comment of every table it copies — **if you add a new deck-related table, update `copyDeck` and its checklist**. Each entry stores `from_role` and `to_role` (`null` = not in deck), which models all transitions uniformly and makes future undo/redo straightforward — the inverse of any entry is just swapping the two fields. The history panel is `src/components/Decks/DeckHistory.tsx`; it receives a `refreshKey` prop and resets to page 0 after each mutation.
+
+### Add to deck button
+
+`src/components/Decks/AddToDeckButton.tsx` has a module-level `lastUsedDeckId` variable that pre-selects the most recently picked deck when the popover opens. It is intentionally module-level (shared across all button instances on the page, reset on full navigation) rather than stored in state or `sessionStorage`.
 
 ### Card save logic
 

@@ -4,6 +4,7 @@ import { fromDbCard } from "@/interfaces/MagicCardLike";
 import { computeDeckCardCount } from "@/procedures/deck-card-count";
 import { CardDeck } from "@/types/CardDeckData";
 import { CardDeckPreview } from "@/types/CardDeckPreview";
+import { DeckHistoryEntry } from "@/types/DeckHistoryEntry";
 import getAuthenticatedAccountData from "./authenticate";
 import { getClient } from "./client";
 import getMTGCardId from "./get-mtg-card-id";
@@ -194,6 +195,21 @@ export async function updateDeck(
   `;
 }
 
+async function logDeckAction(
+  deckId: number,
+  cardId: number | null,
+  cardName: string | null,
+  fromRole: string | null,
+  toRole: string | null,
+): Promise<void> {
+  const sql = getClient();
+  if (!sql) return;
+  await sql`
+    INSERT INTO mtg_deck_history (deck_id, card_id, card_name, from_role, to_role)
+    VALUES (${deckId}, ${cardId}, ${cardName}, ${fromRole}, ${toRole})
+  `;
+}
+
 export async function addCardToDeck(
   deckId: number,
   cardId: number,
@@ -202,19 +218,33 @@ export async function addCardToDeck(
   const sql = getClient();
   if (!sql) throw new Error("Database client not initialized");
 
+  let oldCommander: { id: number; name: string } | null = null;
+
   if (role === "commander") {
-    // Demote any existing commander to mainboard first
+    const oldCommanderRows = await sql`
+      SELECT dc.card, d.name
+      FROM mtg_deck_card dc
+      JOIN mtg_data d ON dc.card = d.id
+      WHERE dc.deck = ${deckId} AND dc.role = 'commander'
+      LIMIT 1
+    `;
+    if (oldCommanderRows.length > 0 && Number(oldCommanderRows[0].card) !== cardId) {
+      oldCommander = { id: Number(oldCommanderRows[0].card), name: oldCommanderRows[0].name as string };
+    }
     await sql`
       UPDATE mtg_deck_card SET role = 'mainboard'
       WHERE deck = ${deckId} AND role = 'commander'
     `;
   }
 
-  const existing = await sql`
-    SELECT id FROM mtg_deck_card WHERE deck = ${deckId} AND card = ${cardId} LIMIT 1
-  `;
+  const [existingRows, cardNameRows] = await Promise.all([
+    sql`SELECT role FROM mtg_deck_card WHERE deck = ${deckId} AND card = ${cardId} LIMIT 1`,
+    sql`SELECT name FROM mtg_data WHERE id = ${cardId} LIMIT 1`,
+  ]);
+  const fromRole = existingRows.length > 0 ? (existingRows[0].role as string) : null;
+  const cardName = cardNameRows.length > 0 ? (cardNameRows[0].name as string) : null;
 
-  if (existing.length > 0) {
+  if (existingRows.length > 0) {
     await sql`
       UPDATE mtg_deck_card SET role = ${role}
       WHERE deck = ${deckId} AND card = ${cardId}
@@ -225,6 +255,11 @@ export async function addCardToDeck(
       VALUES (${deckId}, ${cardId}, ${role})
     `;
   }
+
+  if (oldCommander) {
+    await logDeckAction(deckId, oldCommander.id, oldCommander.name, "commander", "mainboard");
+  }
+  await logDeckAction(deckId, cardId, cardName, fromRole, role);
 }
 
 export async function setBasicLandCount(
@@ -253,14 +288,39 @@ export async function removeCardFromDeck(
   const sql = getClient();
   if (!sql) throw new Error("Database client not initialized");
 
+  const rows = await sql`
+    SELECT dc.role, d.name
+    FROM mtg_deck_card dc
+    JOIN mtg_data d ON dc.card = d.id
+    WHERE dc.deck = ${deckId} AND dc.card = ${cardId}
+    LIMIT 1
+  `;
+  const fromRole = rows.length > 0 ? (rows[0].role as string) : null;
+  const cardName = rows.length > 0 ? (rows[0].name as string) : null;
+
   await sql`DELETE FROM mtg_deck_card WHERE deck = ${deckId} AND card = ${cardId}`;
+
+  if (fromRole !== null) {
+    await logDeckAction(deckId, cardId, cardName, fromRole, null);
+  }
 }
 
 export async function emptyGarbageBin(deckId: number): Promise<void> {
   const sql = getClient();
   if (!sql) throw new Error("Database client not initialized");
 
+  const rows = await sql`
+    SELECT dc.card, d.name
+    FROM mtg_deck_card dc
+    JOIN mtg_data d ON dc.card = d.id
+    WHERE dc.deck = ${deckId} AND dc.role = 'garbage_bin'
+  `;
+
   await sql`DELETE FROM mtg_deck_card WHERE deck = ${deckId} AND role = 'garbage_bin'`;
+
+  for (const row of rows) {
+    await logDeckAction(deckId, Number(row.card), row.name as string, "garbage_bin", null);
+  }
 }
 
 export async function addImportedCardsToDeck(
@@ -296,4 +356,102 @@ export async function addImportedCardsToDeck(
   }
 
   return added;
+}
+
+export async function copyDeck(accountId: number, sourceDeckId: number): Promise<number> {
+  const sql = getClient();
+  if (!sql) throw new Error("Database client not initialized");
+
+  // ── What this function copies ──────────────────────────────────────────────────────────────
+  // If you add a new deck-related table, extend this function accordingly.
+  //   ✓ mtg_deck              (creates new row with "Copy of …" name)
+  //   ✓ mtg_deck_card
+  //   ✓ mtg_deck_basic_land
+  //   ✓ mtg_deck_package      (old→new ID mapping required for mtg_deck_package_card)
+  //   ✓ mtg_deck_package_card
+  //   ✓ mtg_deck_history
+  // ──────────────────────────────────────────────────────────────────────────────────────────
+
+  return await sql.begin(async (tx) => {
+    const sourceRows = await tx`
+      SELECT name, description FROM mtg_deck WHERE id = ${sourceDeckId} AND account = ${accountId} LIMIT 1
+    `;
+    if (!sourceRows.length) throw new Error("Deck not found");
+    const { name, description } = sourceRows[0];
+
+    const newDeckRows = await tx`
+      INSERT INTO mtg_deck (account, name, description)
+      VALUES (${accountId}, ${"Copy of " + name}, ${description})
+      RETURNING id
+    `;
+    const newDeckId = Number(newDeckRows[0].id);
+
+    await tx`
+      INSERT INTO mtg_deck_card (deck, card, role)
+      SELECT ${newDeckId}, card, role FROM mtg_deck_card WHERE deck = ${sourceDeckId}
+    `;
+
+    await tx`
+      INSERT INTO mtg_deck_basic_land (deck, land_type, quantity)
+      SELECT ${newDeckId}, land_type, quantity FROM mtg_deck_basic_land WHERE deck = ${sourceDeckId}
+    `;
+
+    const oldPackages = await tx`
+      SELECT id, name, description, target FROM mtg_deck_package WHERE deck = ${sourceDeckId} ORDER BY id
+    `;
+    for (const pkg of oldPackages) {
+      const newPkgRows = await tx`
+        INSERT INTO mtg_deck_package (deck, name, description, target)
+        VALUES (${newDeckId}, ${pkg.name as string}, ${pkg.description}, ${pkg.target})
+        RETURNING id
+      `;
+      const newPkgId = Number(newPkgRows[0].id);
+      await tx`
+        INSERT INTO mtg_deck_package_card (package, card)
+        SELECT ${newPkgId}, card FROM mtg_deck_package_card WHERE package = ${Number(pkg.id)}
+      `;
+    }
+
+    await tx`
+      INSERT INTO mtg_deck_history (deck_id, card_id, card_name, from_role, to_role, created_at)
+      SELECT ${newDeckId}, card_id, card_name, from_role, to_role, created_at
+      FROM mtg_deck_history WHERE deck_id = ${sourceDeckId}
+    `;
+
+    return newDeckId;
+  });
+}
+
+export async function getDeckHistory(
+  deckId: number,
+  page: number,
+  pageSize: number,
+): Promise<{ entries: DeckHistoryEntry[]; total: number }> {
+  const sql = getClient();
+  if (!sql) return { entries: [], total: 0 };
+
+  const offset = page * pageSize;
+
+  const [countRows, rows] = await Promise.all([
+    sql`SELECT COUNT(*) AS count FROM mtg_deck_history WHERE deck_id = ${deckId}`,
+    sql`
+      SELECT id, card_id, card_name, from_role, to_role, created_at
+      FROM mtg_deck_history
+      WHERE deck_id = ${deckId}
+      ORDER BY created_at DESC
+      LIMIT ${pageSize} OFFSET ${offset}
+    `,
+  ]);
+
+  return {
+    total: Number(countRows[0].count),
+    entries: rows.map((row) => ({
+      id: Number(row.id),
+      cardId: row.card_id != null ? Number(row.card_id) : null,
+      cardName: (row.card_name as string) ?? null,
+      fromRole: (row.from_role as string) ?? null,
+      toRole: (row.to_role as string) ?? null,
+      createdAt: (row.created_at as Date).toISOString(),
+    })),
+  };
 }
