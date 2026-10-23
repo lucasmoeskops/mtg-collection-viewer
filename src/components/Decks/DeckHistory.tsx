@@ -19,6 +19,14 @@ function formatRole(role: string): string {
 }
 
 function formatAction(entry: DeckHistoryEntry): string {
+  if (entry.actionType === "basic_land") {
+    const land = entry.cardName ?? "basic land";
+    const from = entry.fromQuantity ?? 0;
+    const to = entry.toQuantity ?? 0;
+    if (from === 0) return `Added ${to} ${land}`;
+    if (to === 0) return `Removed all ${land}`;
+    return `Changed ${land} count from ${from} to ${to}`;
+  }
   const name = entry.cardName ?? "Unknown card";
   const { fromRole, toRole } = entry;
   if (toRole === "commander") return `Set ${name} as commander`;

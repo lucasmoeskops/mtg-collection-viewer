@@ -4,5 +4,8 @@ export type DeckHistoryEntry = {
   cardName: string | null;
   fromRole: string | null;
   toRole: string | null;
+  actionType: string;
+  fromQuantity: number | null;
+  toQuantity: number | null;
   createdAt: string;
 };

@@ -201,12 +201,15 @@ async function logDeckAction(
   cardName: string | null,
   fromRole: string | null,
   toRole: string | null,
+  actionType: string = "card_role",
+  fromQuantity: number | null = null,
+  toQuantity: number | null = null,
 ): Promise<void> {
   const sql = getClient();
   if (!sql) return;
   await sql`
-    INSERT INTO mtg_deck_history (deck_id, card_id, card_name, from_role, to_role)
-    VALUES (${deckId}, ${cardId}, ${cardName}, ${fromRole}, ${toRole})
+    INSERT INTO mtg_deck_history (deck_id, card_id, card_name, from_role, to_role, action_type, from_quantity, to_quantity)
+    VALUES (${deckId}, ${cardId}, ${cardName}, ${fromRole}, ${toRole}, ${actionType}, ${fromQuantity}, ${toQuantity})
   `;
 }
 
@@ -270,6 +273,9 @@ export async function setBasicLandCount(
   const sql = getClient();
   if (!sql) throw new Error("Database client not initialized");
 
+  const existingRows = await sql`SELECT quantity FROM mtg_deck_basic_land WHERE deck = ${deckId} AND land_type = ${landType} LIMIT 1`;
+  const oldQuantity = existingRows.length > 0 ? Number(existingRows[0].quantity) : 0;
+
   if (quantity <= 0) {
     await sql`DELETE FROM mtg_deck_basic_land WHERE deck = ${deckId} AND land_type = ${landType}`;
   } else {
@@ -278,6 +284,11 @@ export async function setBasicLandCount(
       VALUES (${deckId}, ${landType}, ${quantity})
       ON CONFLICT (deck, land_type) DO UPDATE SET quantity = EXCLUDED.quantity
     `;
+  }
+
+  const newQuantity = Math.max(0, quantity);
+  if (oldQuantity !== newQuantity) {
+    await logDeckAction(deckId, null, landType, null, null, "basic_land", oldQuantity, newQuantity);
   }
 }
 
@@ -413,8 +424,8 @@ export async function copyDeck(accountId: number, sourceDeckId: number): Promise
     }
 
     await tx`
-      INSERT INTO mtg_deck_history (deck_id, card_id, card_name, from_role, to_role, created_at)
-      SELECT ${newDeckId}, card_id, card_name, from_role, to_role, created_at
+      INSERT INTO mtg_deck_history (deck_id, card_id, card_name, from_role, to_role, action_type, from_quantity, to_quantity, created_at)
+      SELECT ${newDeckId}, card_id, card_name, from_role, to_role, action_type, from_quantity, to_quantity, created_at
       FROM mtg_deck_history WHERE deck_id = ${sourceDeckId}
     `;
 
@@ -435,7 +446,7 @@ export async function getDeckHistory(
   const [countRows, rows] = await Promise.all([
     sql`SELECT COUNT(*) AS count FROM mtg_deck_history WHERE deck_id = ${deckId}`,
     sql`
-      SELECT id, card_id, card_name, from_role, to_role, created_at
+      SELECT id, card_id, card_name, from_role, to_role, action_type, from_quantity, to_quantity, created_at
       FROM mtg_deck_history
       WHERE deck_id = ${deckId}
       ORDER BY created_at DESC
@@ -451,6 +462,9 @@ export async function getDeckHistory(
       cardName: (row.card_name as string) ?? null,
       fromRole: (row.from_role as string) ?? null,
       toRole: (row.to_role as string) ?? null,
+      actionType: (row.action_type as string) ?? "card_role",
+      fromQuantity: row.from_quantity != null ? Number(row.from_quantity) : null,
+      toQuantity: row.to_quantity != null ? Number(row.to_quantity) : null,
       createdAt: (row.created_at as Date).toISOString(),
     })),
   };

@@ -43,18 +43,18 @@ Card filter state (`CardSelectionContext`) is persisted in URL query parameters 
 
 ### Data model
 
-| Table                   | Purpose                                                                                       |
-| ----------------------- | --------------------------------------------------------------------------------------------- |
-| `mtg_account`           | Users (id, username, dbkey, settings JSON)                                                    |
-| `mtg_data`              | Card catalogue (name, series, cardnumber, colors, rarity, prices…)                            |
-| `mtg_account_card`      | Card ownership (account_id, card_id, amount, foil variants)                                   |
-| `mtg_deck`              | Decks (id, account_id, name, description)                                                     |
-| `mtg_deck_card`         | Deck contents (deck_id, card_id, role) where role is `commander`, `mainboard`, `sideboard`, or `garbage_bin` |
-| `mtg_deck_basic_land`   | Basic land quantities per deck (deck, land_type, quantity) — PRIMARY KEY (deck, land_type)    |
-| `mtg_deck_package`      | Named strategy packages per deck (id, deck, name, description, target)                        |
-| `mtg_deck_package_card` | Cards assigned to packages (package, card) — PRIMARY KEY (package, card)                      |
-| `mtg_deck_history`      | Deck action log (deck_id, card_id, card_name, from_role, to_role, created_at)                 |
-| `mtg_price`             | Price history (card_id, timestamp, price_cents)                                               |
+| Table                   | Purpose                                                                                                                |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `mtg_account`           | Users (id, username, dbkey, settings JSON)                                                                             |
+| `mtg_data`              | Card catalogue (name, series, cardnumber, colors, rarity, prices…)                                                     |
+| `mtg_account_card`      | Card ownership (account_id, card_id, amount, foil variants)                                                            |
+| `mtg_deck`              | Decks (id, account_id, name, description)                                                                              |
+| `mtg_deck_card`         | Deck contents (deck_id, card_id, role) where role is `commander`, `mainboard`, `sideboard`, or `garbage_bin`           |
+| `mtg_deck_basic_land`   | Basic land quantities per deck (deck, land_type, quantity) — PRIMARY KEY (deck, land_type)                             |
+| `mtg_deck_package`      | Named strategy packages per deck (id, deck, name, description, target)                                                 |
+| `mtg_deck_package_card` | Cards assigned to packages (package, card) — PRIMARY KEY (package, card)                                               |
+| `mtg_deck_history`      | Deck action log (deck_id, card_id, card_name, from_role, to_role, action_type, from_quantity, to_quantity, created_at) |
+| `mtg_price`             | Price history (card_id, timestamp, price_cents)                                                                        |
 
 ### Commander deck management
 
@@ -70,7 +70,7 @@ Key design decisions in `DeckDetail`:
 - Valid commanders must be Legendary and either a Creature, Spacecraft, or Vehicle (checked via `card_type` string).
 - Statistics (type distribution, mana curve, mana symbol counts) and sideboard are computed entirely client-side from the loaded deck.
 - Packages are named strategy containers (e.g. "Sacrifice Package") that cross-reference mainboard cards. A package has an optional target count; the UI shows current vs. target with a colored badge. Each deck card row shows small colored avatar chips for its packages. Package color and initials are derived from the package id via `src/components/Decks/packageColors.ts`.
-- Every mutating deck action is logged to `mtg_deck_history` via the unexported `logDeckAction` helper in `decks.ts`.
+- Every mutating deck action is logged to `mtg_deck_history` via the unexported `logDeckAction` helper in `decks.ts`. Entries have an `action_type`: `card_role` (card moved between roles) or `basic_land` (land count changed; land type in `card_name`, counts in `from_quantity`/`to_quantity`). Schema changes live as SQL files in `migrations/`, applied by hand.
 - `copyDeck` duplicates a deck in a single transaction. It contains an explicit checklist comment of every table it copies — **if you add a new deck-related table, update `copyDeck` and its checklist**. Each entry stores `from_role` and `to_role` (`null` = not in deck), which models all transitions uniformly and makes future undo/redo straightforward — the inverse of any entry is just swapping the two fields. The history panel is `src/components/Decks/DeckHistory.tsx`; it receives a `refreshKey` prop and resets to page 0 after each mutation.
 
 ### Add to deck button
