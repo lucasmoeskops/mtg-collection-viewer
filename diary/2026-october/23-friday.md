@@ -24,3 +24,25 @@ It is good to find that past work was left in a state that could still be read a
 
 Author: Lucas Moeskops <lucasmoeskops@gmail.com>
 Co-author: Claude Opus 5.5 <noreply@anthropic.com>
+
+## Moving the Docker image to Node 24
+
+The Node.js security release of the 21st of October fixes ten vulnerabilities. The one that matters most to us is a Brotli decoder flaw in `node:zlib` that can lead to remote code execution, because Node's own `fetch` decompresses Brotli responses, likely including those from Scryfall. The plan was to pick up the fixes at the next image rebuild. Looking at the `Dockerfile` turned that plan around: it still started from `node:20-alpine`, and Node 20 reached its end of life in April. No rebuild would ever have brought these fixes in. The image now starts from `node:24.22.1-alpine`, and `.node-version` follows suit, so local development and the container run the same version again (locally it was 24.2.0). One caveat: the image has not been built yet, so the first `docker compose build` will be the real test.
+
+### Decision: which release line
+
+- **22.x**: patched, but already in maintenance.
+- **26.x**: the newest, but not yet LTS.
+- **24.x** (chosen): the current LTS, and the line local development already used.
+
+### Decision: pinned or floating image tag
+
+- **`node:24-alpine`**: picks up future patches by itself, but only when the build pulls the base image fresh. A cached copy would silently keep the old version.
+- **`node:24.22.1-alpine`** (chosen): guarantees these fixes are in, at the cost of raising the pin by hand for each future security release.
+
+A quiet lesson today: a base image left alone keeps aging, and no rebuild will update it.
+
+---
+
+Author: Lucas Moeskops <lucasmoeskops@gmail.com>
+Co-author: Claude Opus 5.5 <noreply@anthropic.com>
