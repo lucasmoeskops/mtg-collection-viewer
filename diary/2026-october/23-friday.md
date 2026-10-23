@@ -46,3 +46,14 @@ A quiet lesson today: a base image left alone keeps aging, and no rebuild will u
 
 Author: Lucas Moeskops <lucasmoeskops@gmail.com>
 Co-author: Claude Opus 5.5 <noreply@anthropic.com>
+
+## The migration, applied at last
+
+The question left open this morning has an answer: the basic land migration had never been run. The `mtg_deck_history` table still had its original seven columns, so the moment the new code went live every deck change would have failed. With Postgres living inside a Docker container, the SQL file was piped in from the host with `docker compose exec -T db psql … -1 < migrations/add_basic_land_history.sql`. The `-1` flag ran it as one transaction, so it would either succeed fully or change nothing. It succeeded. Both branches are merged and twelve stale local branches have been cleared away. The last thing to verify is the first build of the Node 24 image.
+
+A tidy end to the day: the code, the database and the diary agree again.
+
+---
+
+Author: Lucas Moeskops <lucasmoeskops@gmail.com>
+Co-author: Claude Opus 5.5 <noreply@anthropic.com>
