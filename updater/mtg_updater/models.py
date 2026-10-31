@@ -1,41 +1,5 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
-from dataclasses import dataclass
-from datetime import date
-from typing import Dict, List, Optional
-
-
-@dataclass
-class MTGSet:
-    code: str
-    name: str
-    release_date: date
-
-
-@dataclass
-class MTGCard:
-    id: str
-    set_code: str
-    set_name: str
-    name: str
-    card_number: str
-    language: str
-    preview_url: Optional[str]
-    card_type: str
-    cardmarket_url: str
-    rarity: str
-    prices: Dict[str, str]
-    release_date: date
-    is_token: bool
-    colors: List[str]
-    oracle_text: str
-    artist: str
-    mana_cost: str
-
-
-class MTGCardDataManager(models.Manager):
-    def get_unique(self, set_code, card_number, is_foil):
-        return self.get(series=set_code, cardnumber=card_number, is_foil=is_foil)
 
 
 class MTGCardData(models.Model):
@@ -56,21 +20,9 @@ class MTGCardData(models.Model):
     artist = models.TextField()
     text = models.TextField()
 
-    objects = MTGCardDataManager()
-
     class Meta:
         db_table = 'mtg_data'
         unique_together = (('series', 'cardnumber', 'is_foil'),)
-        managed = False
-
-
-class AccountCard(models.Model):
-    account = models.PositiveIntegerField()
-    card = models.PositiveIntegerField()
-    amount = models.PositiveIntegerField()
-
-    class Meta:
-        db_table = 'mtg_account_card'
         managed = False
 
 

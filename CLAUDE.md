@@ -60,7 +60,7 @@ Card filter state (`CardSelectionContext`) is persisted in URL query parameters 
 
 ### Price updater and collection value
 
-`updater/` is a small Python Django project (its own `requirements.txt`) that imports weekly price files: `python manage.py bulk_update <file> <dollar_per_euro> <timestamp>`. A daily cron creates a new price file once the previous one is 7 days old. The updater uses the same `DATABASE_URL` (falling back to the `mtg` pg service). Its models are `managed = False`: schema changes live only in `migrations/`. Replaying old price files adds history for newly added cards; it does not overwrite the current `price_estimate`.
+`updater/` is a small Python Django project (its own `requirements.txt`) that imports weekly price files: `python manage.py bulk_update <file> <dollar_per_euro> <timestamp>`. A daily cron creates a new price file once the previous one is 7 days old. The updater uses the same `DATABASE_URL` (falling back to the `mtg` pg service). Its models are `managed = False`: schema changes live only in `migrations/`. It only handles prices; card metadata is maintained by the Next.js app (`src/scryfall/`). Replaying old price files adds history for newly added cards; it does not overwrite the current `price_estimate`.
 
 Each run creates or reuses (±5 days, mirroring the price row deduplication) an `mtg_price_import` row and tags its price rows with it. When it finishes it calls the SQL function `compute_collection_values(import_id, source, account?)`: per owned card, the latest price at or before the import's `price_timestamp`, times the amount.
 
@@ -101,6 +101,10 @@ Key design decisions in `DeckDetail`:
 ### Scryfall image proxying
 
 `next.config.ts` proxies images from `cards.scryfall.io`. Card metadata is imported via `src/scryfall/` utilities and stored locally in the database.
+
+## Change log for users
+
+Whenever something is added or changed that an app user might be interested in (features, visible fixes), add an entry to the change log in `src/app/[username]/colofon/page.tsx`. Entries are grouped per version, newest first, as `Version YYYY.M.D` with a `<List>` of `<ListItem>`s written for users, not developers. When starting a new version, bump `version` in `package.json` to match (format `YY.M.D`, e.g. `26.6.23`); the colofon displays it. Internal changes (refactors, tooling, the updater itself) don't need an entry.
 
 ## Code style
 

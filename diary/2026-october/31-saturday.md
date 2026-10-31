@@ -28,3 +28,16 @@ Still to do: apply the migration, point the cron at `updater/`, and, as a second
 
 Author: Lucas Moeskops <lucasmoeskops@gmail.com>
 Co-author: Claude Opus 5.5 <noreply@anthropic.com>
+
+## The updater sheds its old skin
+
+Part of the Django updater was a forgotten ancestor of the collection editor: a search view, a form and a template. The Next.js app has long since done that job better, and the form still hard-coded account 1. All of it is gone now. So is the path that refreshed card metadata from full Scryfall dumps: it was already broken, and the Next.js app maintains card data itself. What remains is one management command that does one thing, importing prices, with settings slimmed down to a database connection. Every file now takes the price path, whether or not it carries card names. A run against a fresh test database confirmed that nothing that matters was lost.
+
+A new habit starts today as well: user-facing changes get a line in the colofon's change log. The collection value graph is its first entry, under version 2026.10.31.
+
+Less code, same job: the best kind of change.
+
+---
+
+Author: Lucas Moeskops <lucasmoeskops@gmail.com>
+Co-author: Claude Opus 5.5 <noreply@anthropic.com>

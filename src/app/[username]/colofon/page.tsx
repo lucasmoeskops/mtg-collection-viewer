@@ -27,6 +27,15 @@ export default async function Colofon() {
         Change Log
       </Typography>
       <Typography variant="body2" gutterBottom>
+        Version 2026.10.31
+      </Typography>
+      <List>
+        <ListItem>
+          Merchant mode: the graph button next to the total card value shows how the value of your whole collection
+          developed with every weekly price update. Dashed parts are estimates based on your current collection.
+        </ListItem>
+      </List>
+      <Typography variant="body2" gutterBottom>
         Version 2026.6.23
       </Typography>
       <List>
