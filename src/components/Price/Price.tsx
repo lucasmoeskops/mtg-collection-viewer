@@ -2,11 +2,12 @@ import { IconButton, Popover, Typography } from "@mui/material";
 import { padStart } from "lodash";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import { MouseEvent, useState } from "react";
+import { PricePoint } from "@/types/PricePoint";
 import { PriceGraph } from "../PriceGraph/PriceGraph";
 
 export interface PriceHistoryProps {
-  cardId: number;
-  cardName: string;
+  title: string;
+  load: () => Promise<PricePoint[]>;
 }
 
 export interface PriceProps {
@@ -43,7 +44,7 @@ export function Price(props: PriceProps) {
   );
 }
 
-function GraphPopover({ history }: { history: PriceHistoryProps }) {
+export function GraphPopover({ history }: { history: PriceHistoryProps }) {
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
@@ -87,10 +88,10 @@ function GraphPopover({ history }: { history: PriceHistoryProps }) {
         }}
       >
         <Typography sx={{ p: 2, textAlign: "center" }}>
-          Price history for {history.cardName}
+          {history.title}
         </Typography>
         <div style={{ width: "100%", height: "300px" }}>
-          <PriceGraph cardId={history.cardId} />
+          <PriceGraph load={history.load} />
         </div>
       </Popover>
     </>

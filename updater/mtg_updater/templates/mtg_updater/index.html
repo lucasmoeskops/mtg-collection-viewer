@@ -1,0 +1,162 @@
+<html>
+    <body>
+        <style>
+            label {
+                display: block;
+            }
+
+            .split-h {
+                display: flex;
+                flex-direction: row;
+            }
+
+            #card-preview-container {
+                position: fixed;
+                right: 0;
+                top: 0;
+            }
+        </style>
+        <div class="split-h">
+            <form method="post">
+                {% csrf_token %}
+                {{ form.errors }}
+                <label for="set">
+                    Set:
+                    <select id="set" name="set">
+                        <option value="">No set</option>
+                        {% for set in sets %}
+                            <option value="{{ set.code }}">{{ set.release_date|date:'Y' }} - {{ set.name }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label for="card-query">
+                    Query:
+                    <input type="text" name="card_query" id="card-query" autofocus ya/>
+                    
+                </label>
+                <div id="card-container">
+                </div>
+                <label for="is-foil">
+                    Is foil:
+                    <input type="checkbox" name="is_foil" id="is-foil" />
+                </label>
+                <label for="amount-owned">
+                    Amount owned:
+                    <input type="number" name="amount_owned" id="amount-owned" value="1"/>
+                </label>
+                <div id="strategy-container">
+                    <label for="strategy-set">
+                        Set data:
+                        <input type="radio" name="strategy" id="strategy-set" value="set" />
+                    </label>
+                    <label for="strategy-append">
+                        Append data:
+                        <input type="radio" name="strategy" id="strategy-append" value="append" checked />
+                    </label>
+                </div>
+                <button type="submit">Submit</button>
+            </form>
+            <div>
+                <div id="card-preview-container">
+                    
+                </div>
+            </div>
+        </div>
+        <script>
+            const lastSet = localStorage.getItem('lastSet');
+            const setElement = document.getElementById('set');
+            if (lastSet) {
+                setElement.value = lastSet;
+            }
+            setElement.addEventListener('change', () => {
+                localStorage.setItem('lastSet', setElement.value);
+            });
+
+            const cardQueryElement = document.getElementById('card-query');
+            const cardContainer = document.getElementById('card-container');
+            const cardPreviewContainer = document.getElementById('card-preview-container');
+            let cardSelected = false;
+            function setCardPreview(url) {
+                return () => {
+                    if (cardSelected) {
+                        return;
+                    }
+                    cardPreviewContainer.innerHTML = "";
+                    const iframeElement = document.createElement('img');
+                    iframeElement.setAttribute('src', url);
+                    cardPreviewContainer.appendChild(iframeElement);
+                }
+            }
+            const priceLookup = {usd: "$", eur: "€", usd_foil: "foil$", eur_foil: "foil€"}
+            function priceDecorate(kind, price) {
+                const spanElement = document.createElement('span');
+                let intPrice = parseInt(price.replace('.', ''), 10);
+                let color = '#fff';
+                if (intPrice > 500) {
+                    let thickness = 0;
+                    while (intPrice > 500 && thickness < 50) {
+                        intPrice -= 500;
+                        thickness += 1;
+                    }
+                    color = `gold; border: ${thickness}px solid orange`;
+                } else if (intPrice > 100) {
+                    color = 'silver';
+                } else if (intPrice > 20) {
+                    color = 'navajowhite';
+                } else if (intPrice > 10) {
+                    color = 'lightblue';
+                }
+                spanElement.innerText = `${priceLookup[kind] || kind}${price}`;
+                spanElement.style = `display: inline-block; background-color: ${color}; margin: 2px`
+                return spanElement;
+            }
+            async function buildCardResults() {
+                const query = cardQueryElement.value;
+                const params = new URLSearchParams()
+                params.set('query', query)
+                if (setElement.value) {
+                    params.set('set_code', setElement.value);
+                }
+                const response = await fetch('/api/search-cards/?' + params.toString())
+                const json = await response.json()
+                cardContainer.innerHTML = "";
+                for (const card of json.cards) {
+                    const labelElement = document.createElement('label');
+                    labelElement.setAttribute('for', card.id);
+                    const spanElement = document.createElement('span');
+                    const priceString = Object.entries(card.prices).map(([k, v]) => priceDecorate(k, v).outerHTML).join(', ');
+                    spanElement.innerHTML = `${card.name} [${card.set_name};${card.card_number};${priceString}]`;
+                    const element = document.createElement('input');
+                    element.setAttribute('type', 'radio');
+                    element.setAttribute('id', card.id);
+                    element.setAttribute('name', 'card_id');
+                    element.setAttribute('value', card.id);
+                    labelElement.appendChild(element);
+                    labelElement.appendChild(spanElement);
+                    cardContainer.appendChild(labelElement);
+                    labelElement.addEventListener('mouseover', setCardPreview(card.preview_url));
+                    element.addEventListener('change', () => {
+                        if (element.checked) {
+                            cardSelected = false;
+                            setCardPreview(card.preview_url)();
+                            cardSelected = true;
+                        }
+                    })
+                }
+            }
+            cardQueryElement.addEventListener('change', () => {
+                buildCardResults();
+            })
+
+            const lastIsFoil = localStorage.getItem('lastIsFoil');
+            const isFoilElement = document.getElementById('is-foil');
+            if (lastIsFoil) {
+                isFoilElement.value = lastIsFoil;
+            }
+            isFoilElement.addEventListener('change', () => {
+                localStorage.setItem('lastIsFoil', isFoilElement.value);
+            });
+        </script>
+    </body>
+</html>
+

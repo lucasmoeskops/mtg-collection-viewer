@@ -54,7 +54,20 @@ Card filter state (`CardSelectionContext`) is persisted in URL query parameters 
 | `mtg_deck_package`      | Named strategy packages per deck (id, deck, name, description, target)                                                 |
 | `mtg_deck_package_card` | Cards assigned to packages (package, card) — PRIMARY KEY (package, card)                                               |
 | `mtg_deck_history`      | Deck action log (deck_id, card_id, card_name, from_role, to_role, action_type, from_quantity, to_quantity, created_at) |
-| `mtg_price`             | Price history (card_id, timestamp, price_cents)                                                                        |
+| `mtg_price`             | Price history (mtg_data_id, timestamp, price_cents, non_foil_price_cents, import_id)                                   |
+| `mtg_price_import`      | One row per handled price file (price_timestamp, started_at, finished_at, source_file, dollar_per_euro, cards_updated) |
+| `mtg_collection_value`  | Cached collection value per account per import (value_cents, card_count, priced_count, source, calculated_at)          |
+
+### Price updater and collection value
+
+`updater/` is a small Python Django project (its own `requirements.txt`) that imports weekly price files: `python manage.py bulk_update <file> <dollar_per_euro> <timestamp>`. A daily cron creates a new price file once the previous one is 7 days old. The updater uses the same `DATABASE_URL` (falling back to the `mtg` pg service). Its models are `managed = False`: schema changes live only in `migrations/`. Replaying old price files adds history for newly added cards; it does not overwrite the current `price_estimate`.
+
+Each run creates or reuses (±5 days, mirroring the price row deduplication) an `mtg_price_import` row and tags its price rows with it. When it finishes it calls the SQL function `compute_collection_values(import_id, source, account?)`: per owned card, the latest price at or before the import's `price_timestamp`, times the amount.
+
+- `snapshot` values are computed by the updater right after a recent import, so they reflect what the account owned at that moment. They are final: a `backfill` never overwrites one.
+- `backfill` values are computed after the fact with the then-current collection (estimates). `getCollectionValueHistory` in `src/db/collection-value.ts` lazily computes missing ones, and recomputes backfills whose `calculated_at < finished_at` (the import was re-run). `finished_at` and `calculated_at` are both set on the database clock in one transaction to keep that comparison meaningful.
+
+Merchant mode shows the graph next to "Total card value" via `CollectionValueHistory` (whole collection, not the filtered selection; estimated segments are dashed). `PriceGraph` takes a `load` function, so card price history and collection value share it.
 
 ### Commander deck management
 

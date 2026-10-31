@@ -12,6 +12,8 @@ import MagicCardLike from "@/interfaces/MagicCardLike";
 import { CardSelectionContext } from "@/types/CardSelectionContext";
 import { ViewModes } from "@/types/ViewModes";
 import { AddToDeckButton } from "@/components/Decks/AddToDeckButton";
+import { CollectionValueHistory } from "@/components/CollectionValueHistory/CollectionValueHistory";
+import { getPriceHistoryForCard } from "@/db/server";
 
 export const Browse: ViewMode = newViewMode({
   id: ViewModes.BROWSE,
@@ -71,7 +73,10 @@ export const Merchant: ViewMode = newViewMode({
         label="Price change since july 2025"
         price={card.price_estimate}
         avgPrice={card.avg_price}
-        history={{ cardId: card.id, cardName: card.name }}
+        history={{
+          title: `Price history for ${card.name}`,
+          load: () => getPriceHistoryForCard(card.id),
+        }}
       />
     </>
   ),
@@ -84,7 +89,7 @@ export const Merchant: ViewMode = newViewMode({
           label="Total card value"
           priceEstimate={getTotalCardValue(cards, context)}
         />
-        ,{" "}
+        <CollectionValueHistory />,{" "}
         <PriceDelta
           label="Total card value change since july 2025"
           price={getTotalCardValue(cards, context)}

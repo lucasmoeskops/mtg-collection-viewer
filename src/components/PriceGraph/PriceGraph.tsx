@@ -1,5 +1,5 @@
 import { registerChartJs } from "@/helpers/setup-chartjs";
-import { getPriceHistoryForCard } from "@/db/server";
+import { PricePoint } from "@/types/PricePoint";
 import { Typography } from "@mui/material";
 import { Chart } from "chart.js";
 import { padStart } from "lodash";
@@ -34,11 +34,11 @@ function getTimeLabelForValue(value: string): string {
     : MONTH_NAMES[date.getMonth()];
 }
 
-export function PriceGraph({ cardId }: { cardId: number }) {
-  const [data, setData] = useState<
-    { timestamp: string; price: number }[] | null
-  >(null);
+export function PriceGraph({ load }: { load: () => Promise<PricePoint[]> }) {
+  const [data, setData] = useState<PricePoint[] | null>(null);
   const chartRef = useRef<HTMLCanvasElement>(null);
+  // The graph lives in a popover that mounts fresh on every open, so loading once on mount is enough
+  const loadRef = useRef(load);
 
   useEffect(() => {
     registerChartJs();
@@ -65,6 +65,10 @@ export function PriceGraph({ cardId }: { cardId: number }) {
               data: data.map((point) => point.price),
               borderColor: "blue",
               fill: false,
+              segment: {
+                borderDash: (segment) =>
+                  data[segment.p1DataIndex].estimated ? [6, 4] : undefined,
+              },
             },
           ],
         },
@@ -112,10 +116,10 @@ export function PriceGraph({ cardId }: { cardId: number }) {
   }, [data]);
 
   useEffect(() => {
-    getPriceHistoryForCard(cardId).then((fetchedData) => {
+    loadRef.current().then((fetchedData) => {
       setData(fetchedData);
     });
-  }, [cardId]);
+  }, []);
 
   if (!data) {
     return (
