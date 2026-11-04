@@ -27,6 +27,15 @@ export default async function Colofon() {
         Change Log
       </Typography>
       <Typography variant="body2" gutterBottom>
+        Version 2026.11.4
+      </Typography>
+      <List>
+        <ListItem>
+          Your collection value history is now available through an API, including card counts, optionally limited to a
+          time period. Ask the administrator for an API key.
+        </ListItem>
+      </List>
+      <Typography variant="body2" gutterBottom>
         Version 2026.10.31
       </Typography>
       <List>

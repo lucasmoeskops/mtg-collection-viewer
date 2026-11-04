@@ -30,6 +30,12 @@ Custom username + API key auth (not OAuth). `getAuthenticatedAccountData(usernam
 
 `authenticate()` sets both `isAuthenticated` and `accountId` on success. This is load-bearing: `setAccountIdByUsername` has an early-return guard (`username === accountName && accountId !== -1`) that preserves auth state after a login redirect. If `accountId` were not set by `authenticate()`, the guard would not fire and `isAuthenticated` would be silently reset to `false` by the viewer load path.
 
+### HTTP API
+
+Route handlers live under `src/app/api/` (the static `api` segment wins over `[username]`, so no account can be named `api` usefully). Auth is a per-account `mtg_account.api_key` (nullable = no API access, separate from `dbkey`), sent as `Authorization: Bearer <key>` and checked together with the username in the URL; any failure returns the same 401. Keys are handed out by hand: `UPDATE mtg_account SET api_key = gen_random_uuid()::TEXT WHERE username = '…' RETURNING api_key;`.
+
+- `GET /api/[username]/collection-value?from=YYYY-MM-DD&to=YYYY-MM-DD` — collection value per finished price import (`timestamp`, `valueCents`, `cardCount`, `pricedCount`, `estimated`), in EUR. Bounds are optional, inclusive, ISO dates or timestamps; a date-only `to` covers the whole day (UTC).
+
 ### State management
 
 All global state lives in React Contexts in `src/context/`. Key ones:
@@ -45,7 +51,7 @@ Card filter state (`CardSelectionContext`) is persisted in URL query parameters 
 
 | Table                   | Purpose                                                                                                                |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `mtg_account`           | Users (id, username, dbkey, settings JSON)                                                                             |
+| `mtg_account`           | Users (id, username, dbkey, settings JSON, api_key)                                                                    |
 | `mtg_data`              | Card catalogue (name, series, cardnumber, colors, rarity, prices…)                                                     |
 | `mtg_account_card`      | Card ownership (account_id, card_id, amount, foil variants)                                                            |
 | `mtg_deck`              | Decks (id, account_id, name, description)                                                                              |
@@ -66,6 +72,8 @@ Each run creates or reuses (±5 days, mirroring the price row deduplication) an 
 
 - `snapshot` values are computed by the updater right after a recent import, so they reflect what the account owned at that moment. They are final: a `backfill` never overwrites one.
 - `backfill` values are computed after the fact with the then-current collection (estimates). `getCollectionValueHistory` in `src/db/collection-value.ts` lazily computes missing ones, and recomputes backfills whose `calculated_at < finished_at` (the import was re-run). `finished_at` and `calculated_at` are both set on the database clock in one transaction to keep that comparison meaningful.
+
+The query itself lives in `src/db/collection-value-history.ts`, deliberately **not** a `"use server"` module (every export of one becomes a client-callable action); `getCollectionValueHistory` and the API route both use it.
 
 Merchant mode shows the graph next to "Total card value" via `CollectionValueHistory` (whole collection, not the filtered selection; estimated segments are dashed). `PriceGraph` takes a `load` function, so card price history and collection value share it.
 
