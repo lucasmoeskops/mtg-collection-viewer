@@ -35,6 +35,9 @@ Custom username + API key auth (not OAuth). `getAuthenticatedAccountData(usernam
 Route handlers live under `src/app/api/` (the static `api` segment wins over `[username]`, so no account can be named `api` usefully). Auth is a per-account `mtg_account.api_key` (nullable = no API access, separate from `dbkey`), sent as `Authorization: Bearer <key>` and checked together with the username in the URL; any failure returns the same 401. Keys are handed out by hand: `UPDATE mtg_account SET api_key = gen_random_uuid()::TEXT WHERE username = '…' RETURNING api_key;`.
 
 - `GET /api/[username]/collection-value?from=YYYY-MM-DD&to=YYYY-MM-DD` — collection value per finished price import (`timestamp`, `valueCents`, `cardCount`, `pricedCount`, `estimated`), in EUR. Bounds are optional, inclusive, ISO dates or timestamps; a date-only `to` covers the whole day (UTC).
+- `GET /api/[username]/collection-value/[set]?from=…&to=…` — the same, for the account's cards of one set (Scryfall set code, case-insensitive; 400 if malformed, 404 if not in `mtg_data`). Imports where the set wasn't owned give 0.
+
+Both routes go through `src/app/api/collection-value-response.ts` (auth, parameter parsing, errors).
 
 ### State management
 
@@ -63,6 +66,7 @@ Card filter state (`CardSelectionContext`) is persisted in URL query parameters 
 | `mtg_price`             | Price history (mtg_data_id, timestamp, price_cents, non_foil_price_cents, import_id)                                   |
 | `mtg_price_import`      | One row per handled price file (price_timestamp, started_at, finished_at, source_file, dollar_per_euro, cards_updated) |
 | `mtg_collection_value`  | Cached collection value per account per import (value_cents, card_count, priced_count, source, calculated_at)          |
+| `mtg_collection_set_value` | Per-set breakdown of `mtg_collection_value` (account, import_id, series, same value columns) — written together     |
 
 ### Price updater and collection value
 
@@ -73,7 +77,9 @@ Each run creates or reuses (±5 days, mirroring the price row deduplication) an 
 - `snapshot` values are computed by the updater right after a recent import, so they reflect what the account owned at that moment. They are final: a `backfill` never overwrites one.
 - `backfill` values are computed after the fact with the then-current collection (estimates). `getCollectionValueHistory` in `src/db/collection-value.ts` lazily computes missing ones, and recomputes backfills whose `calculated_at < finished_at` (the import was re-run). `finished_at` and `calculated_at` are both set on the database clock in one transaction to keep that comparison meaningful.
 
-The query itself lives in `src/db/collection-value-history.ts`, deliberately **not** a `"use server"` module (every export of one becomes a client-callable action); `getCollectionValueHistory` and the API route both use it.
+The function first replaces the per-set breakdown in `mtg_collection_set_value` as a whole (one price lookup per card) and then upserts the total as its sum. Invariant: every total has a breakdown, so the lazy check only looks at totals. The snapshot rule holds per (account, import) breakdown; breakdowns of snapshots taken before the table existed (migration `add_collection_set_value.sql`) are backfill estimates under a snapshot total.
+
+The query itself lives in `src/db/collection-value-history.ts`, deliberately **not** a `"use server"` module (every export of one becomes a client-callable action); `getCollectionValueHistory` (which takes a username, not an id) and the API routes all use it.
 
 Merchant mode shows the graph next to "Total card value" via `CollectionValueHistory` (whole collection, not the filtered selection; estimated segments are dashed). `PriceGraph` takes a `load` function, so card price history and collection value share it.
 

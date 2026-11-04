@@ -7,7 +7,7 @@ import { GraphPopover } from "../Price/Price";
 
 /** Graph button for the value of the whole collection over time (not just the selected cards). */
 export function CollectionValueHistory() {
-  const { accountId } = useContext(AccountContext);
+  const { accountId, accountName } = useContext(AccountContext);
 
   if (accountId === -1) {
     return null;
@@ -17,7 +17,7 @@ export function CollectionValueHistory() {
     <GraphPopover
       history={{
         title: "Collection value over time (all cards, dashed = estimated)",
-        load: () => getCollectionValueHistory(accountId),
+        load: () => getCollectionValueHistory(accountName),
       }}
     />
   );

@@ -34,6 +34,9 @@ export default async function Colofon() {
           Your collection value history is now available through an API, including card counts, optionally limited to a
           time period. Ask the administrator for an API key.
         </ListItem>
+        <ListItem>
+          The API can also show the value history of the cards you own from a single set.
+        </ListItem>
       </List>
       <Typography variant="body2" gutterBottom>
         Version 2026.10.31
