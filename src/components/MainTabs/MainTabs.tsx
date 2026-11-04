@@ -30,6 +30,7 @@ export default function MainTabs(): ReactNode {
       showMerchantMode ? Merchant.id : undefined,
       showCollectionMode ? Collection.id : undefined,
       "colofon",
+      "api", // No tab of its own: linked from Settings and the colofon
       "logout",
     ].filter((item) => item !== undefined);
     if (isAuthenticated) {
@@ -48,7 +49,8 @@ export default function MainTabs(): ReactNode {
     }
   }, [isAuthenticated, router, secondValue, getSubpageUrl, validOptions]);
 
-  const activeTab = validOptions.includes(secondValue) ? secondValue : "";
+  // Pages without a tab (api) highlight none
+  const activeTab = validOptions.includes(secondValue) ? (secondValue === "api" ? false : secondValue) : "";
 
   return (
     <Box sx={{ borderBottom: 1, borderColor: "divider" }}>

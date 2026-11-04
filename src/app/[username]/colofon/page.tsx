@@ -2,7 +2,9 @@ import { Box, List, ListItem, Typography } from "@mui/material";
 import Link from "next/link";
 import { version } from "../../../../package.json";
 
-export default async function Colofon() {
+export default async function Colofon({ params }: { params: Promise<{ username: string }> }) {
+  const { username } = await params;
+
   return (
     <Box m={2}>
       <Typography variant="h4" gutterBottom>
@@ -21,6 +23,9 @@ export default async function Colofon() {
         as backend service.
       </Typography>
       <Typography variant="body1" gutterBottom>
+        Want to use your collection data elsewhere? See the <Link href={`/${username}/api`}>API specification</Link>.
+      </Typography>
+      <Typography variant="body1" gutterBottom>
         Version {version}
       </Typography>
       <Typography variant="h5" gutterBottom sx={{ marginTop: "20px" }}>
@@ -36,6 +41,9 @@ export default async function Colofon() {
         </ListItem>
         <ListItem>
           The API can also show the value history of the cards you own from a single set.
+        </ListItem>
+        <ListItem>
+          The API specification can be found on its own page, linked from the settings and from this colofon.
         </ListItem>
       </List>
       <Typography variant="body2" gutterBottom>

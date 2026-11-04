@@ -15,6 +15,7 @@ import {
   Typography,
 } from "@mui/material";
 import { debounce } from "lodash";
+import Link from "next/link";
 import { Browse, Merchant } from "@/configuration/grid-views";
 import {
   CardSortingLabels,
@@ -23,7 +24,8 @@ import {
 } from "@/enums/CardSorting";
 
 export default function Settings({}): ReactNode {
-  const { settings, setSettings, isLoading } = useContext(AccountContext);
+  const { settings, setSettings, isLoading, getSubpageUrl } =
+    useContext(AccountContext);
   const {
     browseModeDefaultOrdering,
     merchantModeDefaultOrdering,
@@ -182,6 +184,14 @@ export default function Settings({}): ReactNode {
               });
             }}
           />
+        </FormControl>
+        <FormControl variant="standard">
+          <FormLabel>API</FormLabel>
+          <FormHelperText>
+            Use your collection data in your own scripts or dashboards. See
+            the <Link href={getSubpageUrl("api")}>API specification</Link>;
+            ask the administrator for an API key.
+          </FormHelperText>
         </FormControl>
       </Stack>
     </Box>

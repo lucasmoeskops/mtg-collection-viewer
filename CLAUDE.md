@@ -39,6 +39,8 @@ Route handlers live under `src/app/api/` (the static `api` segment wins over `[u
 
 Both routes go through `src/app/api/collection-value-response.ts` (auth, parameter parsing, errors).
 
+The public specification lives twice: `docs/API.md` (repository) and the page `/[username]/api` (`src/app/[username]/api/page.tsx`, linked from Settings and the colofon, no tab of its own). **When an endpoint changes, update both.**
+
 ### State management
 
 All global state lives in React Contexts in `src/context/`. Key ones:

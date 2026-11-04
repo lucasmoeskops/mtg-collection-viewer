@@ -38,3 +38,24 @@ One thing went worse than expected: a dev server from the earlier test had quiet
 
 Author: Lucas Moeskops <lucasmoeskops@gmail.com>
 Co-author: Claude Opus 5.5 <noreply@anthropic.com>
+
+## The API learns to explain itself
+
+An API nobody can read about is a locked door with the key hidden inside. So the specification now lives in `docs/API.md` for the repository, and on a page of its own in the site, at `/<username>/api`. The page fills in the visitor's own username in its examples. A screenshot in a headless browser confirmed it renders well, tables and code blocks included.
+
+### Decision: one source or two
+
+- **Render the markdown file in the page**: a single source, but it would need a markdown library, and the standalone Docker image doesn't ship the `docs/` folder.
+- **Two copies** (chosen): a repository document and a page written for users, each with a note to keep the other in sync, repeated in CLAUDE.md.
+
+### Decision: where the page lives
+
+- **A tab of its own**: the most visible, but the tab bar is already crowded, and few visitors need it.
+- **Linked from Settings and the colofon** (chosen): logged-in users find it next to their account options, everyone else through the colofon. The page highlights no tab.
+
+What was built today can now also be found by those who come looking for it.
+
+---
+
+Author: Lucas Moeskops <lucasmoeskops@gmail.com>
+Co-author: Claude Opus 5.5 <noreply@anthropic.com>
